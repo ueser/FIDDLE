@@ -1,0 +1,75 @@
+# Compiled source #
+###################
+*.com
+*.class
+*.dll
+*.exe
+*.o
+*.so
+
+*hdf5datasets/checkpoint
+
+# Packages #
+############
+# it's better to unpack these files and commit the raw source
+# git has its own built in compression methods
+*.7z
+*.dmg
+*.gz
+*.iso
+*.jar
+*.rar
+*.tar
+*.zip
+
+*/analysis/*
+
+# Logs and databases #
+######################
+*.log
+*.sql
+*.sqlite
+*.hdf5
+*.h5
+*.wig
+*.bed
+*.dat
+*.mat
+*.t7
+*events.out.tfevents*
+
+# Figures #
+###########
+*.pdf
+*.eps
+*.fig
+*.jpg
+*.jpeg
+*.net
+
+######
+#misc
+#
+*.html
+*.bedgraph
+*.fa
+*.fasta
+*.ckpt*
+*.ipynb
+# OS generated files #
+######################
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+
+*allRecords.txt
+# Folders to untrack ##
+#
+data/*
+visualization*
+results/*
