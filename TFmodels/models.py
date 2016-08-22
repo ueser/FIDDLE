@@ -3,142 +3,207 @@ from __future__ import print_function
 from __future__ import division
 
 import tensorflow as tf
+import numpy as np
+import tensorflow.contrib.slim as slim
 
 
+class NNscaffold(object):
+    """
+    Scaffold class to combine different NN modules at their final layers
+    """
+    def __init__(self, network_architecture,
+                 learning_rate=0.001, batch_size=100):
+        """
+        Initiates a scaffold network with default values
+        Inputs:
+            network_architecture: A nested dictionary where the highest level
+            keywords are the input names. e.g. {
+                                                'NETseq':{
+                                                            'inputShape':[2,500,1],
+                                                            'outputWidth:500',
+                                                            'numberOfFilters':[80,80]},
+                                                'DNAseq':{
+                                                            'inputShape':[4,500,1],
+                                                            'outputWidth:500',
+                                                            'numberOfFilters':[50,20]}}
+
+        """
+        self.network_architecture = network_architecture
+        self.learning_rate = learning_rate
+        self.batch_size = batch_size
+
+        self.inputs={}
+        # tf Graph input
+        for key in network_architecture.keys():
+            self.inputs[key] = tf.placeholder(tf.float32, [None] + network_architecture[key]["inputShape"],name=key)
+
+        self.output = tf.placeholder(tf.float32, [None]+ network_architecture[key]["outputWidth"],name='output')
+        self.dropout = tf.placeholder(tf.float32)
+
+        self.net =list()
+
+        self._encapsulate_models()
 
 
-
-def inference(inputList, inputPlaceholders, conf):
-  """Build the multi modal model up to where it may be used for inference.
-  Args:
-    inputList: A list that contains the names of the input datasets, must match with the hdf5 records
-    inputPlaceholders: List of placeholders that matches with the inputList.
-    conf: Configuration dictionary. Default values are set in config.py
-  Returns:
-    logits: Output tensor with the computed logits.
-  """
-  # Concatenate the outputs of the sub models and add a convolutional layer on top of it
-  if len(inputList)>1:
-      print('Sub models are being created...')
-      modelList=[]
-      for i,inputName in enumerate(inputList):
-          with tf.name_scope(inputName):
-              weights,biases = getConvNetParams(inputName,conf)
-              fc1, shp = makeSubModel(inputPlaceholders[i],conf[inputName],weights,biases)
-              modelList.append(fc1)
-      combinedLayer = tf.concat(1,modelList)
-      print('Done')
-
-      combinedLayer = tf.reshape(combinedLayer, shape=[-1,len(inputList), shp, 1])
-      weightsComb,biasComb, combShape = getCombinedConvParams(conf,len(inputList))
-      convComb = conv2d(combinedLayer,weightsComb['Filters'],biasComb['BiasConv'])
-      fc2 = tf.reshape(convComb, [-1,combShape*1*conf['combinedFilterAmount']])
-      fc2 = tf.add(tf.matmul(fc2, weightsComb['FC']), biasComb['BiasFC'])
-      fc2 = tf.nn.relu(fc2)
-  else:
-      inputName = inputList[0]
-      print(conf)
-      with tf.name_scope(inputName):
-          weights,biases = getConvNetParams(inputName,conf)
-          fc1,shp = makeSubModel(inputPlaceholders[0],conf[inputName],weights,biases)
-  wdOut = tf.Variable(tf.random_normal([shp,conf['outputShape'][0]]),name='outFC')
-  bdOut = tf.Variable(tf.zeros([conf['outputShape'][0]]),name='outBias')
-  fc1 = tf.nn.dropout(fc1,conf['keepProb'])
-  logits = tf.add(tf.matmul(fc1, wdOut), bdOut)
-  return logits
+        # Define loss function based variational upper-bound and
+        # corresponding optimizer
+        self._create_loss_optimizer()
 
 
+    def initialize(self,restore_dirs=None):
+        """
+        Initialize the scaffold model either from saved checkpoints (pre-trained)
+        or from scratch
+        """
 
-def evaluation(logits,target,topK=50):
+        # Launch the session
+        self.sess = tf.Session()
+        if restore_dirs is not None:
+            for key in network_architecture.keys():
+                saver = tf.train.Saver([v.name for v in tf.trainable_variables() if key in v.name])
+                saver.restore(self.sess,restore_dirs[key]+'model.ckpt')
+                print('Session restored for '+key)
+        else:
+            # Initializing the tensor flow variables
+            init = tf.initialize_all_variables()
+            self.sess.run(init)
+            print('Session initialized.')
 
-    correct = tf.nn.in_top_k(logits, target, topK)
-    # Return the number of true entries.
-    return tf.reduce_sum(tf.cast(correct, tf.float32))
-
-# Create some wrappers for simplicity
-def conv2d(x, W, b, strides=1):
-    # Conv2D wrapper, with bias and relu activation
-    x = tf.nn.conv2d(x, W, strides=[1, strides, strides, 1], padding='VALID')
-    x = tf.nn.bias_add(x, b)
-    return tf.nn.relu(x)
-
-
-def maxpool(x, k=2):
-    # MaxPool2D wrapper
-    return tf.nn.max_pool(x, ksize=[1, 1, k, 1], strides=[1,1, k, 1],
-                          padding='VALID')
-
-
-# Create model
-def makeSubModel(x, conf, weights, biases):
-    # Reshape input picture
-    x = tf.reshape(x, shape=[-1, conf['height'],  conf['width'],  conf['channel']])
-    # Convolution Layer
-####3
-    x = tf.nn.tanh(x)
-#####
-    conv1 = conv2d(x, weights['Filters1'], biases['BiasConv1'])
-    # Max Pooling (down-sampling)
-    conv1 = maxpool(conv1, k=conf['poolSize'])
-
-    # Convolution Layer
-    # conv2 = conv2d(conv1, weights['Filters2'], biases['BiasConv2'])
-    # Max Pooling (down-sampling)
-    # conv2 = maxpool(conv2, k=conf['poolSize'])
-
-    # Fully connected layer
-    # Reshape conv2 output to fit fully connected layer input
-    w_shape = conf['width']-conf['filterWidth']+1
-    w_shape = int((w_shape - conf['poolSize'])/conf['poolStride'] +1)
-    # w_shape = int(w_shape)-conf['filterWidth']+1
-    # w_shape = int((w_shape - conf['poolSize'])/conf['poolStride'] +1)
-
-    fc1 = tf.reshape(conv1, [-1,w_shape*1*conf['filterAmount'][0]])
-    # fc1 = tf.add(tf.matmul(fc1, weights['FC1']), biases['BiasFC1'])
-    # fc1 = tf.nn.relu(fc1)
-
-    return fc1, w_shape*1*conf['filterAmount'][0]
+    def _encapsulate_models(self):
+        # Create Convolutional network
+        for key in self.network_architecture.keys():
+            with tf.variable_scope(key):
+                self.net.append(self._create_network(key))
 
 
-def getConvNetParams(inputName,conf):
-    with tf.name_scope(inputName):
-        w_shape = conf[inputName]['width']-conf[inputName]['filterWidth']+1
-        w_shape = (w_shape - conf[inputName]['poolSize'])/conf[inputName]['poolStride'] +1
-        w_shape = int(w_shape)-conf[inputName]['filterWidth']+1
-        w_shape = int((w_shape - conf[inputName]['poolSize'])/conf[inputName]['poolStride'] +1)
-
-        wc1 = tf.Variable(tf.random_normal([conf[inputName]['filterHeight'], conf[inputName]['filterWidth'], 1, conf[inputName]['filterAmount'][0]]),\
-                name='Filters1')
-        wc2 = tf.Variable(tf.random_normal([1, conf[inputName]['filterWidth'],conf[inputName]['filterAmount'][0], conf[inputName]['filterAmount'][1]]),\
-        name='Filters2')
-        wd1 = tf.Variable(tf.random_normal([w_shape*1*conf[inputName]['filterAmount'][1], conf['FC1width']]),\
-        name='FC1')
-
-        bc1 = tf.Variable(tf.zeros([conf[inputName]['filterAmount'][0]]),name='BiasConv1')
-        bc2 = tf.Variable(tf.zeros([conf[inputName]['filterAmount'][1]]),name='BiasConv2')
-        bd1 = tf.Variable(tf.zeros([ conf['FC1width']]),name='BiasFC1')
-
-    weights = { 'Filters1':wc1,
-                'Filters2':wc2,
-                'FC1':wd1}
-    biases = {  'BiasConv1':bc1,
-                'BiasConv2':bc2,
-                'BiasFC1':bd1}
-    return weights, biases
-
-def getCombinedConvParams(conf,numberOfInputs):
-
-    wcComb= tf.Variable(tf.random_normal([numberOfInputs, conf['combinedFilterWidth'], 1, conf['combinedFilterAmount']]),name='CombinedFilters')
-    bcComb = tf.Variable(tf.random_normal([conf['combinedFilterAmount']]),name='CombinedBiasConv')
-    combShape = conf['FC1width']- conf['combinedFilterWidth'] +1
-
-    wdComb = tf.Variable(tf.random_normal([combShape*1*conf['combinedFilterAmount'], 1024]),name='CombinedFC')
-    bdComb = tf.Variable(tf.zeros([1024]),name='CombinedBiasFC')
+        combined_layer = tf.concat(1,self.net)
 
 
-    weights = { 'Filters':wcComb,
-                'FC':wdComb}
-    biases = {  'BiasConv':bcComb,
-                'BiasFC':bdComb}
+        with slim.arg_scope([slim.conv2d],
+                     activation_fn=tf.nn.relu,
+                     weights_initializer=tf.truncated_normal_initializer(0.0, 0.01),
+                     weights_regularizer=slim.l2_regularizer(0.0005),padding='VALID',
+                     stride=1):
+            if len(self.net)>1:
+                combined_layer = tf.reshape(combined_layer, shape=[-1,len(self.net), self.network_architecture[key]["FCwidth"], 1])
+                self.net = slim.conv2d(combined_layer,
+                                   40,
+                                   [len(self.net),10],
+                                   scope='conv1')
+                self.net = slim.avg_pool2d(self.net, self.network_architecture[key]["pool_size"],
+                                        stride=self.network_architecture[key]["pool_stride"],
+                                        scope='pool2')
+                self.net = slim.batch_norm(self.net,activation_fn=None)
+                self.net = slim.flatten(self.net)
+            else:
+                self.net = combined_layer
 
-    return weights, biases, combShape
+            self.net = slim.dropout(self.net, self.dropout, scope='dropout3')
+            self.net = slim.fully_connected(self.net,  self.network_architecture[key]["outputWidth"][0], activation_fn=None, scope='out')
+            self.net = tf.nn.softmax(self.net)
+
+    def _create_network(self,key):
+
+         with slim.arg_scope([slim.conv2d],
+                      activation_fn=tf.nn.relu,
+                      weights_initializer=tf.truncated_normal_initializer(0.0, 0.01),
+                      weights_regularizer=slim.l2_regularizer(0.0005),padding='VALID',
+                      stride=1):
+
+            net = slim.conv2d(  self.inputs[key],
+                                self.network_architecture[key]['numberOfFilters'][0],
+                                self.network_architecture[key]['filterSize'][0],
+                                scope='conv1')
+            net = slim.avg_pool2d(net,
+                                    self.network_architecture[key]["pool_size"],
+                                    stride=self.network_architecture[key]["pool_stride"],
+                                    scope='pool1')
+            net = slim.batch_norm(net,activation_fn=None)
+            net = slim.conv2d(  net,
+                                self.network_architecture[key]['numberOfFilters'][1],
+                                self.network_architecture[key]['filterSize'][1],
+                                scope='conv2')
+            net = slim.avg_pool2d(net, self.network_architecture[key]["pool_size"],
+                                    stride=self.network_architecture[key]["pool_stride"],
+                                    scope='pool2')
+            net = slim.batch_norm(net,activation_fn=None)
+            net = slim.flatten(net)
+            net = slim.dropout(net, self.dropout, scope='dropout2')
+            net = slim.fully_connected(net,  self.network_architecture[key]["FCwidth"], scope='fc3')
+
+            return net
+
+    def _create_loss_optimizer(self):
+
+        loss = tf.reduce_sum(tf.mul(self.output+1e-10,tf.sub(tf.log(self.output+1e-10),tf.log(self.net+1e-10))),1)
+
+        self.cost = tf.reduce_mean(loss)   # average over batch
+        width =  self.network_architecture.values()[0]["outputWidth"][0]
+
+        target = tf.floor((10.*tf.cast(tf.argmax(self.output,dimension=1),tf.float32))/np.float(width))
+        pred = tf.floor((10.*tf.cast(tf.argmax(self.net,dimension=1),tf.float32))/np.float(width))
+
+        self.accuracy = tf.reduce_sum(tf.cast(tf.equal(pred,target),tf.int32))
+
+        self.global_step = tf.Variable(0, name='globalStep', trainable=False)
+
+        # Use ADAM optimizer
+        self.optimizer = \
+            tf.train.AdamOptimizer(learning_rate=self.learning_rate).minimize(self.cost,global_step = self.global_step)
+
+    def train(self, trainInp,trainOut,accuracy=None):
+        """Train model based on mini-batch of input data.
+
+        Return cost of mini-batch.
+        """
+        train_feed = {self.output:trainOut.values()[0], self.dropout:self.network_architecture.values()[0]["dropout"]}
+        train_feed.update({self.inputs[key]: trainInp[key] for key in self.network_architecture.keys()})
+
+        if accuracy is not None:
+            _ , cost,accuracy = self.sess.run((self.optimizer, self.cost, self.accuracy), feed_dict=train_feed)
+        else:
+            _ , cost = self.sess.run((self.optimizer, self.cost), feed_dict=train_feed)
+            accuracy = None
+        return cost,accuracy
+
+    def test(self,testInp,testOut,accuracy=None):
+        """Test model based on mini-batch of input data.
+
+        Return cost of test.
+        """
+        if not hasattr(self,'test_feed'):
+            self.test_feed = {self.output:testOut.values()[0], self.dropout:1}
+            self.test_feed.update({self.inputs[key]: testInp[key] for key in self.network_architecture.keys()})
+        if accuracy is not None:
+            cost,accuracy = self.sess.run((self.cost, self.accuracy), feed_dict=self.test_feed)
+        else:
+            cost = self.sess.run( self.cost, feed_dict=self.test_feed)
+            accuracy = None
+
+        return cost,accuracy
+
+    def getWeight(self,layerName):
+        return self.sess.run([v for v in tf.trainable_variables() if v.name == layerName+'\weights:0'][0])
+
+
+    def predict(self,testInp,testOut):
+        """Return the result of a flow based on mini-batch of input data.
+
+        """
+        if not hasattr(self,'test_feed'):
+            self.test_feed = {self.output:testOut.values()[0], self.dropout:1}
+            self.test_feed.update({self.inputs[key]: testInp[key] for key in self.network_architecture.keys()})
+
+        return self.sess.run( self.net, feed_dict=self.test_feed)
+
+    def summarize(self,step):
+        summaryStr = self.sess.run(self.summary_op, feed_dict=self.test_feed)
+        self.summaryWriter.add_summary(summaryStr, step)
+        self.summaryWriter.flush()
+
+    def create_monitor_variables(self,savePath):
+        # for monitoring
+        tf.scalar_summary('KL divergence', self.cost)
+        tf.scalar_summary('Accuracy', self.accuracy)
+        self.summary_op = tf.merge_all_summaries()
+        self.summaryWriter = tf.train.SummaryWriter(savePath, self.sess.graph)

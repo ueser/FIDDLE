@@ -5,7 +5,7 @@ from __future__ import division
 import numpy as np
 import tensorflow as tf
 #import threading
-
+import config
 
 
 
