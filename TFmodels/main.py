@@ -3,13 +3,13 @@ from __future__ import print_function
 from __future__ import division
 
 import tensorflow as tf
-import threading
+#import threading
 import numpy as np
 import h5py # alternatively, tables module can be used
 from tqdm import tqdm as tq
 import cPickle as pickle
 from dataClass import *
-from auxilary import *
+from models import *
 # from matplotlib import pylab as pl
 
 
@@ -35,7 +35,6 @@ flags.DEFINE_string('resultsDir', '../results', 'Directory for results data')
 
 
 FLAGS = flags.FLAGS
-config.FLAGS=FLAGS
 
 
 
