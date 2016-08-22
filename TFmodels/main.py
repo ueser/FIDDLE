@@ -10,6 +10,7 @@ from tqdm import tqdm as tq
 import cPickle as pickle
 from dataClass import *
 from models import *
+import config
 # from matplotlib import pylab as pl
 
 
@@ -35,7 +36,7 @@ flags.DEFINE_string('resultsDir', '../results', 'Directory for results data')
 
 
 FLAGS = flags.FLAGS
-
+config.FLAGS = FLAGS
 
 
 
