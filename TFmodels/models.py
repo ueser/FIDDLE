@@ -58,16 +58,15 @@ class NNscaffold(object):
 
         # Launch the session
         self.sess = tf.Session()
+        # Initializing the tensor flow variables
+        init = tf.initialize_all_variables()
+        self.sess.run(init)
+        print('Session initialized.')
         if restore_dirs is not None:
-            for key in network_architecture.keys():
-                saver = tf.train.Saver([v.name for v in tf.trainable_variables() if key in v.name])
+            for key in self.network_architecture.keys():
+                saver = tf.train.Saver([v for v in tf.trainable_variables() if key in v.name])
                 saver.restore(self.sess,restore_dirs[key]+'model.ckpt')
                 print('Session restored for '+key)
-        else:
-            # Initializing the tensor flow variables
-            init = tf.initialize_all_variables()
-            self.sess.run(init)
-            print('Session initialized.')
 
     def _encapsulate_models(self):
         # Create Convolutional network
