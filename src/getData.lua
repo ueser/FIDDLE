@@ -132,6 +132,8 @@ sz = myFile:read('trainOut'):dataspaceSize()
 if opt.outType == 'TSSseq' then
     trainOut = myFile:read('trainOut'):partial({J,J+trsize-1},{1,sz[2]},{1,sz[3]},{1,sz[4]})
     testOut = myFile:read('testOut'):partial({J2,J2+tesize-1},{1,sz[2]},{1,sz[3]},{1,sz[4]})
+    -- print(testOut:size())
+    print(trainOut)
 else
     trainOut = myFile:read('trainOut'):partial({J,J+trsize-1},{1,sz[4]})
     testOut = myFile:read('testOut'):partial({J2,J2+tesize-1},{1,sz[4]})

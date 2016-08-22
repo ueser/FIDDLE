@@ -1,3 +1,7 @@
+from __future__ import absolute_import
+from __future__ import print_function
+from __future__ import division
+
 import numpy as np
 import tensorflow as tf
 import threading
@@ -17,25 +21,31 @@ class multiModalData(object):
         self.inputShape = {}
         for inp in inputList:
             self.inputs[inp] = hdf5Pointer.get(inp)
-            self.inputShape[inp] = self.inputs[inp].shape[1:]
+            self.inputShape[inp] = (-1,)+self.inputs[inp].shape[1:] + (1,)
+
         self.outputs = {}
         self.outputShape = {}
         for inp in outputList:
             self.outputs[inp] = hdf5Pointer.get(inp)
-            # print self.outputs[inp].shape[2:]+(1,)
             self.outputShape[inp] = self.outputs[inp].shape[2:]
         self.sampleSize = sampleSize if sampleSize is not None else self.inputs[inputList[0]][:].shape[0]
+        print('Sample size: '+ str(self.sampleSize))
 
     def splitTest(self,ratio=0.8):
         assert self.sampleSize>1, 'Sample size must be greater than 1'
-        assert ratio > 1./self.sampleSize, 'Train ratio is unreasonably low. Please consider a reasonable ratio, e.g. 0.8'
-        if ratio >(1-1./self.sampleSize):
-            print 'Train ratio is unreasonably high. It is set to the default value i.e. 0.8'
-            ratio = 0.8
-        self.trainSize = np.int(self.sampleSize*ratio)
+        if config.FLAGS.trainSize is not None:
+            self.trainSize = config.FLAGS.trainSize
+        else:
+            assert ratio > 1./self.sampleSize, 'Train ratio is unreasonably low. Please consider a reasonable ratio, e.g. 0.8'
+            if ratio >(1-1./self.sampleSize):
+                print('Train ratio is unreasonably high. It is set to the default value i.e. 0.8')
+                ratio = 0.8
+            self.trainSize = np.int(self.sampleSize*ratio)
 
-        self.testSize = self.sampleSize - self.trainSize
-        # self.testSize -= self.testSize % config.FLAGS.batchSize
+        if config.FLAGS.testSize is not None:
+            self.testSize = config.FLAGS.testSize
+        else:
+            self.testSize = self.sampleSize - self.trainSize
 
         allIdx = np.arange(0, self.sampleSize)
         np.random.shuffle(allIdx)
@@ -46,38 +56,44 @@ class multiModalData(object):
 
     def dataBatcher(self,chunkSize=10):
         """ An generator object for batching the input-output """
+
         assert chunkSize>=config.FLAGS.batchSize,'Chunk size must be at least batch size..'
-        print 'batch size: ' + str(config.FLAGS.batchSize)
-        print 'chunk size:' +  str(chunkSize)
-        print 'train size:' +  str(self.trainSize)
+        print('sample size: ' + str(self.sampleSize))
+        print('train size:' +  str(self.trainSize))
+        print('test size:' +  str(self.testSize))
+        print( 'chunk size:' +  str(chunkSize))
+        print( 'batch size: ' + str(config.FLAGS.batchSize))
         while True:
             # shuffle outputs and inputs
             for chunkIdx in range(0,self.trainSize-chunkSize, chunkSize):
                 chunkSliceIdx = np.sort(self.trainIdx[chunkIdx:(chunkIdx + chunkSize)]).tolist()
-                inputChunk=[]
-                outputChunk=[]
+                inputChunk={}
+                outputChunk={}
                 for key in self.inputList:
-                    inputChunk.append(self.inputs[key][chunkSliceIdx])
+                    inputChunk[key] = self.inputs[key][chunkSliceIdx].reshape(self.inputShape[key])
                 for key in self.outputList:
-                    outputChunk.append(np.squeeze(self.outputs[key][chunkSliceIdx,0,:]))
+                    outputChunk[key] = np.squeeze(self.outputs[key][chunkSliceIdx,0,:])
 
                 for batchIdx in range(0, chunkSize-config.FLAGS.batchSize, config.FLAGS.batchSize):
-                    yield [inp[batchIdx:(batchIdx + config.FLAGS.batchSize)] for inp in inputChunk],\
-                     [inp[batchIdx:(batchIdx + config.FLAGS.batchSize)] for inp in outputChunk]
+                    yield {key:inp[batchIdx:(batchIdx + config.FLAGS.batchSize)] for key,inp in inputChunk.items()},\
+                     {key:inp[batchIdx:(batchIdx + config.FLAGS.batchSize)] for key,inp in outputChunk.items()}
 
     def getTestData(self):
         print('start...')
-        inputBatch = []
-        outputBatch = []
-        print self.inputList
+        inputBatch = {}
+        outputBatch = {}
+        # print(self.inputList)
         for key in self.inputList:
-            inputBatch.append(self.inputs[key][self.testIdx])
+            inputBatch[key] = self.inputs[key][self.testIdx].reshape(self.inputShape[key])
             print('input done ' + key)
         for key in self.outputList:
-            outputBatch.append(np.squeeze(self.outputs[key][self.testIdx,0,:]))
+            outputBatch[key] = np.squeeze(self.outputs[key][self.testIdx,0,:])
 
         return inputBatch, outputBatch
 
+
+
+#### Under development #####
 
 class CustomRunner(object):
     """
@@ -97,8 +113,7 @@ class CustomRunner(object):
             shp =[sh for sh in config.FLAGS.data.outputShape[outputName]]
             self.outputs.append(tf.placeholder(tf.float32, shape=[None]+shp,name=outputName))
             allShapes.append(shp)
-        print allShapes
-        print self.inputs+self.outputs
+        print('Input Shapes:', allShapes)
         # The actual queue of config.FLAGS.data. The queue contains a vector for input and output data
 
         self.queue = tf.RandomShuffleQueue(shapes=allShapes,
