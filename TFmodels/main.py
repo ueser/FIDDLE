@@ -11,6 +11,7 @@ import cPickle as pickle
 from dataClass import *
 from models import *
 import config
+import copy
 # from matplotlib import pylab as pl
 
 
@@ -183,7 +184,7 @@ def get_network_architecture():
         "dropout":0.5
         }
         for inputName in inputList:
-            network_architecture[inputName] = default_arch.copy()
+            network_architecture[inputName] = copy.deepcopy(default_arch)
             network_architecture[inputName]['inputShape'][0]=inputHeights[inputName]
             network_architecture[inputName]['filterSize'][0][0]=inputHeights[inputName]
 

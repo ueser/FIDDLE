@@ -36,7 +36,11 @@ class NNscaffold(object):
         # tf Graph input
         for key in network_architecture.keys():
             self.inputs[key] = tf.placeholder(tf.float32, [None] + network_architecture[key]["inputShape"],name=key)
+        print(network_architecture['RNAseq'])
+        print(network_architecture['DNAseq'])
+        print(network_architecture['NETseq'])
 
+        print(network_architecture['MNaseseq'])
         self.output = tf.placeholder(tf.float32, [None]+ network_architecture[key]["outputWidth"],name='output')
         self.dropout = tf.placeholder(tf.float32)
 
