@@ -184,6 +184,40 @@ class NNscaffold(object):
             accuracy = None
 
         return cost,accuracy
+        
+    def suffnec(self,trainInp,trainOut):
+        """Calculates the sufficiency and necessity score of an input dataset by setting the
+        rest of the inputs to their average values and the input of interest to its average value, respectively.
+
+        Returns cost dictionary.
+        """
+        suffDict ={}
+        suffDict['AllActive'],_=self.test(trainInp,trainOut)
+        for inputName in self.network_architecture.keys():
+
+            self.train_feed = {self.output:trainOut.values()[0], self.dropout:1}
+            for key in self.network_architecture.keys():
+                if key==inputName:
+                    self.train_feed.update({self.inputs[key]: trainInp[key]})
+                else:
+                    self.train_feed.update({self.inputs[key]: np.tile(trainInp[key].mean(axis=0),(trainInp[key].shape[0],1,1,1))})
+
+            suffDict[inputName] = self.sess.run(self.cost, feed_dict=self.train_feed)
+
+        necDict ={}
+        necDict['AllActive']=suffDict['AllActive']
+        for inputName in self.network_architecture.keys():
+
+            self.train_feed = {self.output:trainOut.values()[0], self.dropout:1}
+            for key in self.network_architecture.keys():
+                if key is not inputName:
+                    self.train_feed.update({self.inputs[key]: trainInp[key]})
+                else:
+                    self.train_feed.update({self.inputs[key]: np.tile(trainInp[key].mean(axis=0),(trainInp[key].shape[0],1,1,1))})
+
+            necDict[inputName] = self.sess.run(self.cost, feed_dict=self.train_feed)
+
+        return suffDict, necDict
 
     def getWeight(self,layerName):
         return self.sess.run([v for v in tf.trainable_variables() if v.name == layerName+'\weights:0'][0])
