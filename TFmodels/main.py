@@ -11,6 +11,7 @@ import cPickle as pickle
 from dataClass import *
 from models import *
 import config
+import copy
 # from matplotlib import pylab as pl
 
 
@@ -163,11 +164,13 @@ def get_network_architecture():
         outputList.append(inputDict[kys])
 
 
+    network_architecture={}
     if FLAGS.restore:
 
-        restore_dirs={inputDict[key]:'../results/'+key+'trained/' for key in inputList}
+        restore_dirs={inputDict[key]:'../results/'+key+'trained/' for key in FLAGS.inputs.split('_')}
         for inputName in inputList:
-            network_architecture[inputName] = pickle.load(open(restore_dirs[inputName]+'network_architecture.pkl','rb'))
+            network_architecture.update( pickle.load(open(restore_dirs[inputName]+'network_architecture.pkl','rb')))
+    
     else:
         restore_dirs = None
         inputHeights = {'DNAseq':4,'NETseq':2,'ChIPseq':2,'MNaseseq':2,'RNAseq':1}
@@ -181,9 +184,8 @@ def get_network_architecture():
         "FCwidth":1024,
         "dropout":0.5
         }
-        network_architecture={}
         for inputName in inputList:
-            network_architecture[inputName] = default_arch.copy()
+            network_architecture[inputName] = copy.deepcopy(default_arch)
             network_architecture[inputName]['inputShape'][0]=inputHeights[inputName]
             network_architecture[inputName]['filterSize'][0][0]=inputHeights[inputName]
 

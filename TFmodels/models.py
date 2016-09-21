@@ -36,7 +36,11 @@ class NNscaffold(object):
         # tf Graph input
         for key in network_architecture.keys():
             self.inputs[key] = tf.placeholder(tf.float32, [None] + network_architecture[key]["inputShape"],name=key)
+        print(network_architecture['RNAseq'])
+        print(network_architecture['DNAseq'])
+        print(network_architecture['NETseq'])
 
+        print(network_architecture['MNaseseq'])
         self.output = tf.placeholder(tf.float32, [None]+ network_architecture[key]["outputWidth"],name='output')
         self.dropout = tf.placeholder(tf.float32)
 
@@ -58,16 +62,15 @@ class NNscaffold(object):
 
         # Launch the session
         self.sess = tf.Session()
+        # Initializing the tensor flow variables
+        init = tf.initialize_all_variables()
+        self.sess.run(init)
+        print('Session initialized.')
         if restore_dirs is not None:
-            for key in network_architecture.keys():
-                saver = tf.train.Saver([v.name for v in tf.trainable_variables() if key in v.name])
+            for key in self.network_architecture.keys():
+                saver = tf.train.Saver([v for v in tf.trainable_variables() if key in v.name])
                 saver.restore(self.sess,restore_dirs[key]+'model.ckpt')
                 print('Session restored for '+key)
-        else:
-            # Initializing the tensor flow variables
-            init = tf.initialize_all_variables()
-            self.sess.run(init)
-            print('Session initialized.')
 
     def _encapsulate_models(self):
         # Create Convolutional network
