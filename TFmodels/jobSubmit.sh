@@ -6,7 +6,7 @@ FS=5
 inputList=( 'NS_MS_DS_RS_CS' )
 
 
-#module load dev/tensorflow/NoGPU
+module load dev/tensorflow/NoGPU
 #module load dev/tensorflow/WithGPU
 
 for input in "${inputList[@]}"
