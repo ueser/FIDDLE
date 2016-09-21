@@ -80,6 +80,7 @@ def main(_):
     with open((FLAGS.savePath+"/"+"test.txt"), "w") as testFile:
         testFile.write('Loss\tAccuracy\n')
 
+
     print('Pre-train test run:')
     tssLoss,acc = model.test(testInput,testOutput,accuracy=True)
     print("Pre-train test loss: " + str(tssLoss))
