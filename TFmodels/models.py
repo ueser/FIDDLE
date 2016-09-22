@@ -36,11 +36,8 @@ class NNscaffold(object):
         # tf Graph input
         for key in network_architecture.keys():
             self.inputs[key] = tf.placeholder(tf.float32, [None] + network_architecture[key]["inputShape"],name=key)
-        print(network_architecture['RNAseq'])
-        print(network_architecture['DNAseq'])
-        print(network_architecture['NETseq'])
+            print(network_architecture[key])
 
-        print(network_architecture['MNaseseq'])
         self.output = tf.placeholder(tf.float32, [None]+ network_architecture[key]["outputWidth"],name='output')
         self.dropout = tf.placeholder(tf.float32)
 
@@ -71,6 +68,18 @@ class NNscaffold(object):
                 saver = tf.train.Saver([v for v in tf.trainable_variables() if key in v.name])
                 saver.restore(self.sess,restore_dirs[key]+'model.ckpt')
                 print('Session restored for '+key)
+    def load(self,modelPath):
+        """
+            loads the pretrained model from the specified path
+        """
+        # Launch the session
+        self.sess = tf.Session()
+        # Initializing the tensor flow variables
+        init = tf.initialize_all_variables()
+        self.sess.run(init)
+        saver = tf.train.Saver(tf.trainable_variables())
+        saver.restore(self.sess,modelPath+'/model.ckpt')
+        print('Model loaded with the pretrained parameters')
 
     def _encapsulate_models(self):
         # Create Convolutional network
@@ -78,9 +87,7 @@ class NNscaffold(object):
             with tf.variable_scope(key):
                 self.net.append(self._create_network(key))
 
-
         combined_layer = tf.concat(1,self.net)
-
 
         with slim.arg_scope([slim.conv2d],
                      activation_fn=tf.nn.relu,
@@ -138,9 +145,9 @@ class NNscaffold(object):
 
     def _create_loss_optimizer(self):
 
-        loss = tf.reduce_sum(tf.mul(self.output+1e-10,tf.sub(tf.log(self.output+1e-10),tf.log(self.net+1e-10))),1)
+        self.loss = tf.reduce_sum(tf.mul(self.output+1e-10,tf.sub(tf.log(self.output+1e-10),tf.log(self.net+1e-10))),1)
 
-        self.cost = tf.reduce_mean(loss)   # average over batch
+        self.cost = tf.reduce_mean(self.loss)   # average over batch
         width =  self.network_architecture.values()[0]["outputWidth"][0]
 
         target = tf.floor((10.*tf.cast(tf.argmax(self.output,dimension=1),tf.float32))/np.float(width))
@@ -184,17 +191,25 @@ class NNscaffold(object):
             accuracy = None
 
         return cost,accuracy
-        
+
     def suffnec(self,trainInp,trainOut):
         """Calculates the sufficiency and necessity score of an input dataset by setting the
         rest of the inputs to their average values and the input of interest to its average value, respectively.
 
         Returns cost dictionary.
         """
-        suffDict ={}
-        suffDict['AllActive'],_=self.test(trainInp,trainOut)
-        for inputName in self.network_architecture.keys():
 
+        print('Calculating sufficiency...')
+        suffDict ={}
+
+
+        self.train_feed = {self.output:trainOut.values()[0], self.dropout:1}
+        for key in self.network_architecture.keys():
+            self.train_feed.update({self.inputs[key]: np.tile(trainInp[key].mean(axis=0),(trainInp[key].shape[0],1,1,1))})
+        suffDict['NoneActive'] = self.sess.run(self.loss, feed_dict=self.train_feed)
+
+        for inputName in self.network_architecture.keys():
+            print('...'+inputName)
             self.train_feed = {self.output:trainOut.values()[0], self.dropout:1}
             for key in self.network_architecture.keys():
                 if key==inputName:
@@ -202,20 +217,27 @@ class NNscaffold(object):
                 else:
                     self.train_feed.update({self.inputs[key]: np.tile(trainInp[key].mean(axis=0),(trainInp[key].shape[0],1,1,1))})
 
-            suffDict[inputName] = self.sess.run(self.cost, feed_dict=self.train_feed)
+            suffDict[inputName] = self.sess.run(self.loss, feed_dict=self.train_feed)
 
+        print('Calculating necessity...')
         necDict ={}
-        necDict['AllActive']=suffDict['AllActive']
         for inputName in self.network_architecture.keys():
-
+            print('...'+inputName)
             self.train_feed = {self.output:trainOut.values()[0], self.dropout:1}
             for key in self.network_architecture.keys():
                 if key is not inputName:
                     self.train_feed.update({self.inputs[key]: trainInp[key]})
                 else:
                     self.train_feed.update({self.inputs[key]: np.tile(trainInp[key].mean(axis=0),(trainInp[key].shape[0],1,1,1))})
+            necDict[inputName] = self.sess.run(self.loss, feed_dict=self.train_feed)
 
-            necDict[inputName] = self.sess.run(self.cost, feed_dict=self.train_feed)
+        self.train_feed = {self.output:trainOut.values()[0], self.dropout:1}
+        for key in self.network_architecture.keys():
+            self.train_feed.update({self.inputs[key]: trainInp[key]})
+        necDict['AllActive'] = self.sess.run(self.loss, feed_dict=self.train_feed)
+
+
+
 
         return suffDict, necDict
 
