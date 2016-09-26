@@ -47,7 +47,7 @@ def main(_):
     if not tf.gfile.Exists(FLAGS.savePath):
         tf.gfile.MakeDirs(FLAGS.savePath)
 
-    network_architecture, restore_dirs, outputList = get_network_architecture()
+    network_architecture, outputList = get_network_architecture()
 
     pickle.dump(network_architecture,open(FLAGS.savePath+"/network_architecture.pkl",'wb'), protocol=pickle.HIGHEST_PROTOCOL)
     # FLAGS.configuration = conf
@@ -56,6 +56,7 @@ def main(_):
     FLAGS.data = multiModalData(hdf5Pointer,network_architecture.keys(),outputList,sampleSize=FLAGS.sampleSize)
     FLAGS.data.splitTest(FLAGS.trainRatio)
     print('Done')
+
 
 
     print('Setting batcher...')
@@ -69,7 +70,10 @@ def main(_):
                  learning_rate=FLAGS.learningRate,
                  batch_size=FLAGS.batchSize)
 
-    model.initialize(restore_dirs)
+    if FLAGS.restore:
+        model.load()
+    else:
+        model.initialize()
     model.create_monitor_variables(FLAGS.savePath)
 
     # Launch the graph

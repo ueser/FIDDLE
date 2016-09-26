@@ -35,9 +35,10 @@ def get_network_architecture():
     network_architecture={}
     if config.FLAGS.restore:
 
-        restore_dirs={inputDict[key]:'../results/'+key+'trained/' for key in config.FLAGS.inputs.split('_')}
-        for inputName in inputList:
-            network_architecture.update( pickle.load(open(restore_dirs[inputName]+'network_architecture.pkl','rb')))
+        network_architecture = pickle.load(open(config.FLAGS.savePath+'/network_architecture.pkl','rb'))
+        # restore_dirs={inputDict[key]:'../results/'+key+'trained/' for key in config.FLAGS.inputs.split('_')}
+        # for inputName in inputList:
+        #     network_architecture.update( pickle.load(open(restore_dirs[inputName]+'network_architecture.pkl','rb')))
 
     else:
         restore_dirs = None
@@ -57,4 +58,4 @@ def get_network_architecture():
             network_architecture[inputName]['inputShape'][0]=inputHeights[inputName]
             network_architecture[inputName]['filterSize'][0][0]=inputHeights[inputName]
 
-    return network_architecture, restore_dirs, outputList
+    return network_architecture, outputList
