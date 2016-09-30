@@ -41,7 +41,7 @@ def get_network_architecture():
 
     else:
         restore_dirs = None
-        inputHeights = {'DNAseq':4,'NETseq':2,'ChIPseq':2,'MNaseseq':2,'RNAseq':1}
+        inputHeights = {'DNAseq':4,'NETseq':2,'ChIPseq':2,'MNaseseq':2,'RNAseq':1,'TSSseq':2}
         default_arch ={
         "inputShape": [4,500,1],
         "outputWidth": [500],
