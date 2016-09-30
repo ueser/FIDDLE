@@ -7,7 +7,7 @@ import numpy as np
 import tensorflow.contrib.slim as slim
 
 
-class NNscaffold(object):
+class NNunified(object):
     """
     Scaffold class to combine different NN modules at their final layers
     """
