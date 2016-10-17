@@ -119,24 +119,24 @@ class NNscaffold(object):
                       weights_initializer=tf.truncated_normal_initializer(0.0, 0.01),
                       weights_regularizer=slim.l2_regularizer(0.0005),padding='VALID',
                       stride=1):
-
-            net = slim.conv2d(  self.inputs[key],
+            net={}
+            net[key+'_conv1'] = slim.conv2d(  self.inputs[key],
                                 self.network_architecture[key]['numberOfFilters'][0],
                                 self.network_architecture[key]['filterSize'][0],
                                 scope='conv1')
-            net = slim.avg_pool2d(net,
+            net[key+'_pool1'] = slim.avg_pool2d(net[key+'_conv1'],
                                     self.network_architecture[key]["pool_size"],
                                     stride=self.network_architecture[key]["pool_stride"],
                                     scope='pool1')
-            net = slim.batch_norm(net,activation_fn=None)
-            net = slim.conv2d(  net,
+            net[key+'_batch_norm1'] = slim.batch_norm(net[key+'_pool1'],activation_fn=None,scope='batch_norm1')
+            net[key+'_conv2'] = slim.conv2d(net[key+'_batch_norm1'],
                                 self.network_architecture[key]['numberOfFilters'][1],
                                 self.network_architecture[key]['filterSize'][1],
                                 scope='conv2')
-            net = slim.avg_pool2d(net, self.network_architecture[key]["pool_size"],
+            net[key+'_pool2'] = slim.avg_pool2d(net[key+'_conv2'], self.network_architecture[key]["pool_size"],
                                     stride=self.network_architecture[key]["pool_stride"],
                                     scope='pool2')
-            net = slim.batch_norm(net,activation_fn=None)
+            net = slim.batch_norm(net[key+'_pool2'],activation_fn=None)
             net = slim.flatten(net)
             net = slim.dropout(net, self.dropout, scope='dropout2')
             net = slim.fully_connected(net,  self.network_architecture[key]["FCwidth"], scope='fc3')

@@ -19,7 +19,9 @@ class multiModalData(object):
         self.inputs = {}
         self.inputShape = {}
         for inp in inputList:
+            print(hdf5Pointer.keys())
             self.inputs[inp] = hdf5Pointer.get(inp)
+            print(self.inputs[inp].shape)
             self.inputShape[inp] = (-1,)+self.inputs[inp].shape[1:] + (1,)
 
         self.outputs = {}
@@ -40,9 +42,10 @@ class multiModalData(object):
                 print('Train ratio is unreasonably high. It is set to the default value i.e. 0.8')
                 ratio = 0.8
             self.trainSize = np.int(self.sampleSize*ratio)
-
+        print(config.FLAGS.testSize)
         if config.FLAGS.testSize is not None:
             self.testSize = config.FLAGS.testSize
+
         else:
             self.testSize = self.sampleSize - self.trainSize
 
@@ -81,7 +84,7 @@ class multiModalData(object):
         print('start...')
         inputBatch = {}
         outputBatch = {}
-        # print(self.inputList)
+        print(len(self.testIdx))
         for key in self.inputList:
             inputBatch[key] = self.inputs[key][self.testIdx].reshape(self.inputShape[key])
             print('input done ' + key)
