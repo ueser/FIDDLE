@@ -205,7 +205,7 @@ def main():
                     nestVar = 1;
                     break
 
-    print ps
+    print('Total number of samples: '+str(ps))
 
     f.close()
     NSpos.close()
@@ -218,7 +218,10 @@ def main():
     TSpos.close()
     TSneg.close()
     seq.close()
-
+    
+    print('Verifying the saved database...')
+    verifyHDF5(inputList,directory,out_file)
+    print('Passed...')
 def vectorizeSequence(seq):
     # the order of the letters is not arbitrary.
     # Flip the matrix up-down and left-right for reverse compliment
@@ -237,12 +240,12 @@ def checkData(Xdata):
     else:
         return True
 
-def verifyHDF5():
-    f = h5py.File(os.path.join(directory,out_file), "w")
+def verifyHDF5(inputList,directory,out_file):
+    f = h5py.File(os.path.join(directory,out_file), "r")
     for dataName in inputList:
         tmp = f.get(dataName)
-        assert(tmp[-1].sum() >0,'Last entries are null')
-
+        assert tmp[-1].sum() >0,'Last entries are null'
+    f.close()
 ################################################################################
 # __main__
 ################################################################################
