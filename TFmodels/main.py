@@ -18,7 +18,7 @@ import copy
 
 flags = tf.app.flags
 flags.DEFINE_string('runName', 'experiment', 'Running name.')
-flags.DEFINE_string('filename', '../data/hdf5datasets/NSMSDSRSCSTS.hdf5', 'Data path.')
+flags.DEFINE_string('filename', '../data/hdf5datasets/NSMSDSRSCSTSRI.hdf5', 'Data path.')
 flags.DEFINE_string('inputs', 'NS_MS_DS_RS_CS', 'Input symbols [NS: NETseq, MS:MNaseseq, RS:RNAseq, DS:DNAseq, CS:ChIPseq, e.g. NS_RS_MS]')
 flags.DEFINE_string('outputs', 'TS', 'Output symbols [TS: TSSseq, e.g. TS]')
 flags.DEFINE_boolean('dataTesting', False, 'If true, tests for the data and prints statistics about data for unit testing.')
@@ -63,6 +63,7 @@ def main(_):
     with tf.device("/cpu:0"):
         batcher = FLAGS.data.dataBatcher(chunkSize=FLAGS.chunkSize)
         print('Getting test data...')
+        print(FLAGS.testSize)
         testInput, testOutput = FLAGS.data.getTestData()
     print('Done')
 

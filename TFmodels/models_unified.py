@@ -7,7 +7,7 @@ import numpy as np
 import tensorflow.contrib.slim as slim
 
 
-class NNscaffold(object):
+class NNunified(object):
     """
     Scaffold class to combine different NN modules at their final layers
     """
@@ -63,11 +63,11 @@ class NNscaffold(object):
         init = tf.initialize_all_variables()
         self.sess.run(init)
         print('Session initialized.')
-        # if restore_dirs is not None:
-        #     for key in self.network_architecture.keys():
-        #         saver = tf.train.Saver([v for v in tf.trainable_variables() if key in v.name])
-        #         saver.restore(self.sess,restore_dirs[key]+'model.ckpt')
-        #         print('Session restored for '+key)
+        if restore_dirs is not None:
+            for key in self.network_architecture.keys():
+                saver = tf.train.Saver([v for v in tf.trainable_variables() if key in v.name])
+                saver.restore(self.sess,restore_dirs[key]+'model.ckpt')
+                print('Session restored for '+key)
     def load(self,modelPath):
         """
             loads the pretrained model from the specified path
@@ -119,24 +119,24 @@ class NNscaffold(object):
                       weights_initializer=tf.truncated_normal_initializer(0.0, 0.01),
                       weights_regularizer=slim.l2_regularizer(0.0005),padding='VALID',
                       stride=1):
-            net={}
-            net[key+'_conv1'] = slim.conv2d(  self.inputs[key],
+
+            net = slim.conv2d(  self.inputs[key],
                                 self.network_architecture[key]['numberOfFilters'][0],
                                 self.network_architecture[key]['filterSize'][0],
                                 scope='conv1')
-            net[key+'_pool1'] = slim.avg_pool2d(net[key+'_conv1'],
+            net = slim.avg_pool2d(net,
                                     self.network_architecture[key]["pool_size"],
                                     stride=self.network_architecture[key]["pool_stride"],
                                     scope='pool1')
-            net[key+'_batch_norm1'] = slim.batch_norm(net[key+'_pool1'],activation_fn=None,scope='batch_norm1')
-            net[key+'_conv2'] = slim.conv2d(net[key+'_batch_norm1'],
+            net = slim.batch_norm(net,activation_fn=None)
+            net = slim.conv2d(  net,
                                 self.network_architecture[key]['numberOfFilters'][1],
                                 self.network_architecture[key]['filterSize'][1],
                                 scope='conv2')
-            net[key+'_pool2'] = slim.avg_pool2d(net[key+'_conv2'], self.network_architecture[key]["pool_size"],
+            net = slim.avg_pool2d(net, self.network_architecture[key]["pool_size"],
                                     stride=self.network_architecture[key]["pool_stride"],
                                     scope='pool2')
-            net = slim.batch_norm(net[key+'_pool2'],activation_fn=None)
+            net = slim.batch_norm(net,activation_fn=None)
             net = slim.flatten(net)
             net = slim.dropout(net, self.dropout, scope='dropout2')
             net = slim.fully_connected(net,  self.network_architecture[key]["FCwidth"], scope='fc3')

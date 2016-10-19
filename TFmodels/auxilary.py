@@ -8,7 +8,7 @@ import tensorflow as tf
 import cPickle as pickle
 import copy
 import config
-
+import copy
 
 def get_network_architecture():
     """
@@ -21,7 +21,8 @@ def get_network_architecture():
                 'RS':'RNAseq',
                 'DS':'DNAseq',
                 'CS':'ChIPseq',
-                'TS':'TSSseq'}
+                'TS':'TSSseq',
+                'RI':'RandInp'}
 
     inputList=[]
     for kys in config.FLAGS.inputs.split('_'):
@@ -42,7 +43,7 @@ def get_network_architecture():
 
     else:
         restore_dirs = None
-        inputHeights = {'DNAseq':4,'NETseq':2,'ChIPseq':2,'MNaseseq':2,'RNAseq':1}
+        inputHeights = {'DNAseq':4,'NETseq':2,'ChIPseq':2,'MNaseseq':2,'RNAseq':1,'TSSseq':2,'RandInp':1}
         default_arch ={
         "inputShape": [4,500,1],
         "outputWidth": [500],

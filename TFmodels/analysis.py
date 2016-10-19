@@ -18,10 +18,10 @@ import pandas as pd
 
 flags = tf.app.flags
 flags.DEFINE_string('runName', 'experiment', 'Running name.')
-flags.DEFINE_string('filename', '../data/hdf5datasets/NSMSDSRSCSTS.hdf5', 'Data path.')
+flags.DEFINE_string('filename', '../data/hdf5datasets/NSMSDSRSCSTSRI.hdf5', 'Data path.')
 flags.DEFINE_string('inputs', 'NS_MS_DS_RS_CS', 'Input symbols [NS: NETseq, MS:MNaseseq, RS:RNAseq, DS:DNAseq, CS:ChIPseq, e.g. NS_RS_MS]')
 flags.DEFINE_string('outputs', 'TS', 'Output symbols [TS: TSSseq, e.g. TS]')
-flags.DEFINE_boolean('restore', True, 'If true, restores models from the ../results/XXtrained/')
+flags.DEFINE_boolean('restore', False, 'If true, restores models from the ../results/XXtrained/')
 flags.DEFINE_boolean('suffnec', False, 'If true, calculates sufficiency and necessity costs')
 flags.DEFINE_boolean('predict', False, 'If true, predicts the output')
 flags.DEFINE_string('dataDir', '../data', 'Directory for input data')
@@ -74,6 +74,13 @@ def main(_):
     model = NNscaffold(network_architecture)
 
     model.load(FLAGS.savePath)
+    #
+    # print([v.name for v in tf.trainable_variables()])
+    # for v in tf.trainable_variables():
+    #     if v.name =='DNAseq/conv1/weights:0':
+    #         Wtest=v.copy()
+    #         break
+    # refs = model.get_reference(refInput)
 
     if FLAGS.suffnec:
 
