@@ -163,13 +163,13 @@ class NNscaffold(object):
         self.optimizer = \
             tf.train.AdamOptimizer(learning_rate=self.learning_rate).minimize(self.cost,global_step = self.global_step)
 
-    def train(self, trainInp,trainOut,accuracy=None):
+    def train(self, trainInp,trainOut,accuracy=None,inp_dropout=0.9):
         """Train model based on mini-batch of input data.
 
         Return cost of mini-batch.
         """
         train_feed = {self.output:trainOut.values()[0], self.dropout:self.network_architecture.values()[0]["dropout"],\
-        self.keep_prob_input:self.network_architecture.values()[0]["input_dropout"],self.inp_size:trainOut.values()[0].shape[0]}
+        self.keep_prob_input:inp_dropout,self.inp_size:trainOut.values()[0].shape[0]}
         train_feed.update({self.inputs[key]: trainInp[key] for key in self.network_architecture.keys()})
 
         if accuracy is not None:

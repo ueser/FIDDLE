@@ -102,10 +102,11 @@ def main(_):
     trainInput, trainOutput = next(batcher)
 
     for it in xrange(FLAGS.maxEpoch*totIteration):
-
+        ido_ = 0.8 + 0.2*it/50. if it<=50 else 1.
         for iterationNo in tq(range(10)):
             trainInp, trainOut = next(batcher)
-            loss,acc = model.train(trainInp,trainOut,accuracy=True)
+
+            loss,acc = model.train(trainInp,trainOut,accuracy=True,inp_dropout=ido_)
             totalTrainLoss +=loss
             totalTrainAcc +=acc
             step+=1

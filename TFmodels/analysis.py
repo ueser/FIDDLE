@@ -92,7 +92,7 @@ def main(_):
         print('Done...')
 
     if FLAGS.predict:
-        predictions = model.predict(testInput,testOutput)
+        predictions = model.predict(testInput)
         infodata = hdf5Pointer.get('info')[FLAGS.data.testIdx]
         f = h5py.File(FLAGS.savePath+"/"+"predictions.hdf5",'w')
         pred = f.create_dataset('predictions',predictions.shape)
@@ -102,6 +102,7 @@ def main(_):
         info[:] = infodata
 
         f.close()
+        print('Done...')
 
 if __name__ == '__main__':
     tf.app.run()
