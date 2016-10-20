@@ -74,6 +74,8 @@ class multiModalData(object):
                 inputChunk={}
                 outputChunk={}
                 for key in self.inputList:
+                    ## regularization via nullifying input
+
                     inputChunk[key] = self.inputs[key][chunkSliceIdx].reshape(self.inputShape[key])
                 for key in self.outputList:
                     outputChunk[key] = np.squeeze(self.normalize(self.outputs[key][chunkSliceIdx,0,:]))

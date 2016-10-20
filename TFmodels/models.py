@@ -40,7 +40,7 @@ class NNscaffold(object):
 
         self.output = tf.placeholder(tf.float32, [None]+ network_architecture[key]["outputWidth"],name='output')
         self.dropout = tf.placeholder(tf.float32)
-
+        self.keep_prob_input = tf.placeholder(tf.float32)
         self.net =list()
 
         self._encapsulate_models()
@@ -96,6 +96,7 @@ class NNscaffold(object):
                      stride=1):
             if len(self.net)>1:
                 combined_layer = tf.reshape(combined_layer, shape=[-1,len(self.net), self.network_architecture[key]["FCwidth"], 1])
+                combined_layer = tf.nn.dropout(tf.identity(combined_layer),self.keep_prob_input,noise_shape=[self.batch_size,len(self.net),1,1])
                 self.net = slim.conv2d(combined_layer,
                                    40,
                                    [len(self.net),10],
@@ -166,7 +167,8 @@ class NNscaffold(object):
 
         Return cost of mini-batch.
         """
-        train_feed = {self.output:trainOut.values()[0], self.dropout:self.network_architecture.values()[0]["dropout"]}
+        train_feed = {self.output:trainOut.values()[0], self.dropout:self.network_architecture.values()[0]["dropout"],\
+        self.keep_prob_input:self.network_architecture.values()[0]["input_dropout"]}
         train_feed.update({self.inputs[key]: trainInp[key] for key in self.network_architecture.keys()})
 
         if accuracy is not None:
@@ -182,7 +184,7 @@ class NNscaffold(object):
         Return cost of test.
         """
         if not hasattr(self,'test_feed'):
-            self.test_feed = {self.output:testOut.values()[0], self.dropout:1}
+            self.test_feed = {self.output:testOut.values()[0], self.dropout:1,self.keep_prob_input:1.}
             self.test_feed.update({self.inputs[key]: testInp[key] for key in self.network_architecture.keys()})
         if accuracy is not None:
             cost,accuracy = self.sess.run((self.cost, self.accuracy), feed_dict=self.test_feed)
@@ -203,7 +205,7 @@ class NNscaffold(object):
         suffDict ={}
 
 
-        self.train_feed = {self.output:trainOut.values()[0], self.dropout:1}
+        self.train_feed = {self.output:trainOut.values()[0], self.dropout:1,self.keep_prob_input:1.}
         for key in self.network_architecture.keys():
             self.train_feed.update({self.inputs[key]: np.tile(trainInp[key].mean(axis=0),(trainInp[key].shape[0],1,1,1))})
         suffDict['NoneActive'] = self.sess.run(self.loss, feed_dict=self.train_feed)
@@ -250,7 +252,7 @@ class NNscaffold(object):
 
         """
         if not hasattr(self,'test_feed'):
-            self.test_feed = {self.output:testOut.values()[0], self.dropout:1}
+            self.test_feed = {self.output:testOut.values()[0], self.dropout:1, self.keep_prob_input:1.}
             self.test_feed.update({self.inputs[key]: testInp[key] for key in self.network_architecture.keys()})
 
         return self.sess.run( self.net, feed_dict=self.test_feed)

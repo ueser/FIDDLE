@@ -52,7 +52,8 @@ def get_network_architecture():
         "pool_size":[1,2],
         "pool_stride":[1,2],
         "FCwidth":1024,
-        "dropout":0.5
+        "dropout":0.5,
+        "input_dropout":0.8
         }
         for inputName in inputList:
             network_architecture[inputName] = copy.deepcopy(default_arch)
