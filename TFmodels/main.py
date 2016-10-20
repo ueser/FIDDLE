@@ -68,8 +68,7 @@ def main(_):
     print('Done')
 
     model = NNscaffold(network_architecture,
-                 learning_rate=FLAGS.learningRate,
-                 batch_size=FLAGS.batchSize)
+                 learning_rate=FLAGS.learningRate)
 
     if FLAGS.restore:
         model.load()

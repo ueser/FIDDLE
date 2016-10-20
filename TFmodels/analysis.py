@@ -54,7 +54,7 @@ def main(_):
     if not tf.gfile.Exists(FLAGS.savePath):
         tf.gfile.MakeDirs(FLAGS.savePath)
 
-    network_architecture, restore_dirs, outputList = get_network_architecture()
+    network_architecture, outputList = get_network_architecture()
 
     print('Getting HDF5 pointer...')
     hdf5Pointer = h5py.File(FLAGS.filename,'r')
