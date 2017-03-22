@@ -34,8 +34,6 @@ class multiModalData(object):
         self.sampleSize = sampleSize if sampleSize is not None else self.inputs[inputList[0]][:].shape[0]
         print('Sample size: '+ str(self.sampleSize))
 
-
-
     def splitTest(self,ratio=0.8):
         assert self.sampleSize>1, 'Sample size must be greater than 1'
         if config.FLAGS.trainSize is not None:
@@ -58,8 +56,6 @@ class multiModalData(object):
         self.trainIdx = allIdx[:self.trainSize].tolist()
         self.testIdx = np.sort(allIdx[self.trainSize:(self.trainSize+self.testSize)]).tolist()
 
-
-
     def dataBatcher(self,chunkSize=10):
         """ An generator object for batching the input-output """
 
@@ -80,7 +76,7 @@ class multiModalData(object):
 
                     inputChunk[key] = self.inputs[key][chunkSliceIdx].reshape(self.inputShape[key])
                 for key in self.outputList:
-                    if key !=  'DNAseq':
+                    if key != 'DNAseq':
                         outputChunk[key] = np.squeeze(self.normalize(self.outputs[key][chunkSliceIdx,0,:]))
                     else:
                         outputChunk[key] = np.squeeze(self.outputs[key][chunkSliceIdx,:,:])
@@ -110,7 +106,6 @@ class multiModalData(object):
                     {key:np.squeeze(self.normalize(self.outputs[key][:,0,:])) for key in self.outputList}
 
 
-
     def normalize(self,tensor):
         return np.divide(tensor.T+1e-16,tensor.sum(axis=1)+tensor.shape[1]*1e-16).T
 
@@ -119,59 +114,59 @@ class multiModalData(object):
 
 
 #### Under development #####
-#
-# class CustomRunner(object):
-#     """
-#     This class manages the  background threads needed to fill
-#         a queue full of data.
-#     """
-#     def __init__(self):
-#         allShapes=[]
-#         self.inputs = []
-#         self.outputs = []
-#
-#         for inputName in config.FLAGS.data.inputList:
-#             shp =[sh for sh in config.FLAGS.data.inputShape[inputName]]
-#             self.inputs.append(tf.placeholder(tf.float32, shape=[None]+shp,name=inputName))
-#             allShapes.append(shp)
-#         for outputName in config.FLAGS.data.outputList:
-#             shp =[sh for sh in config.FLAGS.data.outputShape[outputName]]
-#             self.outputs.append(tf.placeholder(tf.float32, shape=[None]+shp,name=outputName))
-#             allShapes.append(shp)
-#         print('Input Shapes:', allShapes)
-#         # The actual queue of config.FLAGS.data. The queue contains a vector for input and output data
-#
-#         self.queue = tf.RandomShuffleQueue(shapes=allShapes,
-#                                            dtypes=len(allShapes)*[tf.float32],
-#                                            capacity=200,
-#                                            min_after_dequeue=100)
-#
-#         self.enqueue_op = self.queue.enqueue_many(self.inputs+self.outputs)
-#
-#     def getBatch(self):
-#         """
-#         Return's tensors containing a batch of inpust and outputs
-#         """
-#         dequedBatch = self.queue.dequeue_many(config.FLAGS.batchSize)
-#         inputBatch = dequedBatch[:len(self.inputs)]
-#         outputBatch = dequedBatch[len(self.inputs):]
-#
-#         return inputBatch, outputBatch
-#
-#
-#     def thread_main(self, sess):
-#         """
-#         Function run on alternate thread. Basically, keep adding data to the queue.
-#         """
-#         for inputBatch, outputBatch in config.FLAGS.data.dataBatcher():
-#             sess.run(self.enqueue_op, feed_dict={i: d for i, d in zip(self.inputs+self.outputs, inputBatch+outputBatch)})
-#
-#     def start_threads(self, sess,n_threads=1):
-#         """ Start background threads to feed queue """
-#         threads = []
-#         for n in range(n_threads):
-#             t = threading.Thread(target=self.thread_main, args=(sess,))
-#             t.daemon = True # thread will close when parent quits
-#             t.start()
-#             threads.append(t)
-#         return threads
+
+class CustomRunner(object):
+    """
+    This class manages the  background threads needed to fill
+        a queue full of data.
+    """
+    def __init__(self):
+        allShapes=[]
+        self.inputs = []
+        self.outputs = []
+
+        for inputName in config.FLAGS.data.inputList:
+            shp =[sh for sh in config.FLAGS.data.inputShape[inputName]]
+            self.inputs.append(tf.placeholder(tf.float32, shape=[None]+shp,name=inputName))
+            allShapes.append(shp)
+        for outputName in config.FLAGS.data.outputList:
+            shp =[sh for sh in config.FLAGS.data.outputShape[outputName]]
+            self.outputs.append(tf.placeholder(tf.float32, shape=[None]+shp,name=outputName))
+            allShapes.append(shp)
+        print('Input Shapes:', allShapes)
+        # The actual queue of config.FLAGS.data. The queue contains a vector for input and output data
+
+        self.queue = tf.RandomShuffleQueue(shapes=allShapes,
+                                           dtypes=len(allShapes)*[tf.float32],
+                                           capacity=200,
+                                           min_after_dequeue=100)
+
+        self.enqueue_op = self.queue.enqueue_many(self.inputs+self.outputs)
+
+    def getBatch(self):
+        """
+        Return's tensors containing a batch of inpust and outputs
+        """
+        dequedBatch = self.queue.dequeue_many(config.FLAGS.batchSize)
+        inputBatch = dequedBatch[:len(self.inputs)]
+        outputBatch = dequedBatch[len(self.inputs):]
+
+        return inputBatch, outputBatch
+
+
+    def thread_main(self, sess):
+        """
+        Function run on alternate thread. Basically, keep adding data to the queue.
+        """
+        for inputBatch, outputBatch in config.FLAGS.data.dataBatcher():
+            sess.run(self.enqueue_op, feed_dict={i: d for i, d in zip(self.inputs+self.outputs, inputBatch+outputBatch)})
+
+    def start_threads(self, sess,n_threads=1):
+        """ Start background threads to feed queue """
+        threads = []
+        for n in range(n_threads):
+            t = threading.Thread(target=self.thread_main, args=(sess,))
+            t.daemon = True # thread will close when parent quits
+            t.start()
+            threads.append(t)
+        return threads

@@ -68,9 +68,10 @@ def main():
     MSdata = f.create_dataset("MNaseseq", (dataSize,2,options.width))
     DSdata = f.create_dataset("DNAseq", (dataSize,4,options.width))
     RSdata = f.create_dataset("RNAseq", (dataSize,1,options.width))
-    CSdata = f.create_dataset("ChIPseq", (dataSize,2,options.width))
-    TSdata = f.create_dataset("TSSseq", (dataSize,1,options.width))
-    # PCdata = f.create_dataset("PromoterClass", (dataSize,1,options.width))
+    if assembly =='sacCer3':
+        CSdata = f.create_dataset("ChIPseq", (dataSize,2,options.width))
+        TSdata = f.create_dataset("TSSseq", (dataSize,1,options.width))
+        # PCdata = f.create_dataset("PromoterClass", (dataSize,1,options.width))
     infodata = f.create_dataset("info", (dataSize,4))
 
 
@@ -80,8 +81,9 @@ def main():
     MStmp = np.zeros([options.chunkSize,2,options.width])
     DStmp = np.zeros([options.chunkSize,4,options.width])
     RStmp = np.zeros([options.chunkSize,1,options.width])
-    CStmp = np.zeros([options.chunkSize,2,options.width])
-    TStmp = np.zeros([options.chunkSize,1,options.width])
+    if assembly =='sacCer3':
+        CStmp = np.zeros([options.chunkSize,2,options.width])
+        TStmp = np.zeros([options.chunkSize,1,options.width])
     # PCtmp = np.zeros([options.chunkSize,1,options.width])
 
     infotmp = np.zeros([options.chunkSize,4])
@@ -93,11 +95,12 @@ def main():
     NSneg = gdb.open_track('NSneg')
     MSpos = gdb.open_track('MSpos')
     MSneg = gdb.open_track('MSneg')
-    CSpos = gdb.open_track('TFpos')
-    CSneg = gdb.open_track('TFneg')
     RS = gdb.open_track('RS')
-    TSpos = gdb.open_track('TSpos')
-    TSneg = gdb.open_track('TSneg')
+    if assembly =='sacCer3':
+        CSpos = gdb.open_track('TFpos')
+        CSneg = gdb.open_track('TFneg')
+        TSpos = gdb.open_track('TSpos')
+        TSneg = gdb.open_track('TSneg')
 
     seq = gdb.open_track("seq")
 
@@ -138,15 +141,16 @@ def main():
                 nsN = NSneg.get_nparray(chname,pos+1,(pos+options.width))
                 msP = MSpos.get_nparray(chname,pos+1,(pos+options.width))
                 msN = MSneg.get_nparray(chname,pos+1,(pos+options.width))
-                tfP = CSpos.get_nparray(chname,pos+1,(pos+options.width))
-                tfN = CSneg.get_nparray(chname,pos+1,(pos+options.width))
                 rs = RS.get_nparray(chname,pos+1,(pos+options.width))
-                tsP = TSpos.get_nparray(chname,pos+1,(pos+options.width))
-                tsN = TSneg.get_nparray(chname,pos+1,(pos+options.width))
+                if assembly =='sacCer3':
+                    tfP = CSpos.get_nparray(chname,pos+1,(pos+options.width))
+                    tfN = CSneg.get_nparray(chname,pos+1,(pos+options.width))
+                    tsP = TSpos.get_nparray(chname,pos+1,(pos+options.width))
+                    tsN = TSneg.get_nparray(chname,pos+1,(pos+options.width))
 
 
                 if debugMode:
-                    if not checkData(np.r_[nsP,nsN,msP,msN,rs,tsP,tsN,tfP,tfN]):
+                    if not checkData(np.r_[nsP,nsN,msP,msN,rs]):
                         print('NaN detected in chr' + chname + ' and at the position:' + str(pos))
                         # print nsmstsrsdata
                         # nestVar = 1;
@@ -159,13 +163,11 @@ def main():
                     MStmp[qq,1,:] = msN.T
                     DStmp[qq,:,:] = dsdata.T
                     RStmp[qq,0,:] = rs.T
-                    CStmp[qq,0,:] =tfP.T
-                    CStmp[qq,1,:] = tfN.T
-                    if sum(tsP)==0:
-                        tsP = tsP + 1/np.float(options.width)
-                    else:
-                        tsP = tsP/sum(tsP+1e-5)
-                    TStmp[qq,0,:] =tsP.T
+                    if assembly =='sacCer3':
+                        CStmp[qq,0,:] =tfP.T
+                        CStmp[qq,1,:] = tfN.T
+                        TStmp[qq,0,:] =tsP.T
+                        TStmp[qq,1,:] =tsN.T
                     infotmp[qq,:] = [cc, 1,annotIdx,pos]
                 else:
                     NStmp[qq,0,:] = np.flipud(nsN).T
@@ -174,13 +176,11 @@ def main():
                     MStmp[qq,1,:] = np.flipud(msP).T
                     RStmp[qq,0,:] = np.flipud(rs).T
                     DStmp[qq,:,:] = np.flipud(np.fliplr(dsdata)).T
-                    CStmp[qq,0,:] = np.flipud(tfN).T
-                    CStmp[qq,1,:] = np.flipud(tfP).T
-                    if sum(tsN)==0:
-                        tsN = tsN + 1/np.float(options.width)
-                    else:
-                        tsN = tsN/sum(tsN+1e-5)
-                    TStmp[qq,0,:] =np.flipud(tsN).T
+                    if assembly =='sacCer3':
+                        CStmp[qq,0,:] = np.flipud(tfN).T
+                        CStmp[qq,1,:] = np.flipud(tfP).T
+                        TStmp[qq,0,:] =np.flipud(tsN).T
+                        TStmp[qq,1,:] =np.flipud(tsP).T
                     infotmp[qq,:] = [cc, -1,annotIdx,pos]
 
                 qq+=1
@@ -191,14 +191,18 @@ def main():
                     MSdata[range(ps,ps+stp),:,:] = MStmp
                     DSdata[range(ps,ps+stp),:,:] = DStmp
                     RSdata[range(ps,ps+stp),:,:] = RStmp
-                    CSdata[range(ps,ps+stp),:,:] = CStmp
-                    TSdata[range(ps,ps+stp),:,:] = TStmp
                     infodata[range(ps,ps+stp),:] = infotmp
                     NStmp= np.zeros([options.chunkSize,2,options.width])
                     MStmp = np.zeros([options.chunkSize,2,options.width])
                     DStmp = np.zeros([options.chunkSize,4,options.width])
                     RStmp = np.zeros([options.chunkSize,1,options.width])
                     infotmp = np.zeros([options.chunkSize,4])
+                    if assembly =='sacCer3':
+                        CSdata[range(ps,ps+stp),:,:] = CStmp
+                        TSdata[range(ps,ps+stp),:,:] = TStmp
+                        TStmp = np.zeros([options.chunkSize,2,options.width])
+                        CStmp = np.zeros([options.chunkSize,2,options.width])
+
                     ps+=stp
                     qq=0
                     print >> sys.stderr, '%d  data chunk saved ' % ps
@@ -215,10 +219,11 @@ def main():
     MSpos.close()
     MSneg.close()
     RS.close()
-    CSpos.close()
-    CSneg.close()
-    TSpos.close()
-    TSneg.close()
+    if assembly =='sacCer3':
+        CSpos.close()
+        CSneg.close()
+        TSpos.close()
+        TSneg.close()
     seq.close()
 
 def vectorizeSequence(seq):
@@ -243,7 +248,7 @@ def verifyHDF5():
     f = h5py.File(os.path.join(directory,out_file), "w")
     for dataName in inputList:
         tmp = f.get(dataName)
-        assert(tmp[-1].sum() >0,'Last entries are null')
+        assert tmp[-1].sum() >0,'Last entries are null'
 
 ################################################################################
 # __main__

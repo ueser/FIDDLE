@@ -18,10 +18,10 @@ import copy
 
 flags = tf.app.flags
 flags.DEFINE_string('runName', 'experiment', 'Running name.')
-flags.DEFINE_string('filename', '../data/hdf5datasets/NSMSDSRSCSTSRI.hdf5', 'Data path.')
+flags.DEFINE_string('filename', '../data/hdf5datasets/DS_NS_TS_CN_spt6_200ups_1000dws_of_TSS.h5', 'Data path.')
 flags.DEFINE_string('inputs', 'NS_MS_DS_RS_CS', 'Input symbols [NS: NETseq, MS:MNaseseq, RS:RNAseq, DS:DNAseq, CS:ChIPseq, e.g. NS_RS_MS]')
 flags.DEFINE_string('outputs', 'TS', 'Output symbols [TS: TSSseq, e.g. TS]')
-flags.DEFINE_boolean('dataTesting', False, 'If true, tests for the data and prints statistics about data for unit testing.')
+flags.DEFINE_boolean('predict', False, 'If true, tests for the data and prints statistics about data for unit testing.')
 flags.DEFINE_boolean('restore', False, 'If true, restores models from the ../results/XXtrained/')
 flags.DEFINE_integer('maxEpoch', 1000, 'Number of epochs to run trainer.')
 flags.DEFINE_integer('batchSize', 100, 'Batch size.')
@@ -68,7 +68,7 @@ def main(_):
     print('Done')
 
     model = NNscaffold(network_architecture,
-                 learning_rate=FLAGS.learningRate)
+                 learning_rate=FLAGS.learningRate,outputMode=FLAGS.outputs)
 
     if FLAGS.restore:
         model.load()
@@ -102,7 +102,7 @@ def main(_):
     trainInput, trainOutput = next(batcher)
 
     for it in xrange(FLAGS.maxEpoch*totIteration):
-        ido_ = 0.8 + 0.2*it/50. if it<=50 else 1.
+        ido_ = 0.8 + 0.2*it/10. if it<=10 else 1.
         for iterationNo in tq(range(10)):
             trainInp, trainOut = next(batcher)
 

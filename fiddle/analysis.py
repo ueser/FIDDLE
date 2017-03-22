@@ -18,14 +18,13 @@ import pandas as pd
 
 flags = tf.app.flags
 flags.DEFINE_string('runName', 'experiment', 'Running name.')
-flags.DEFINE_string('filename', '../data/hdf5datasets/DS_NS_TS_CN_spt6_200ups_1000dws_of_TSS.h5', 'Data path.')
+flags.DEFINE_string('filename', '../data/hdf5datasets/NSMSDSRSCSTSRI.hdf5', 'Data path.')
 flags.DEFINE_string('inputs', 'NS_MS_DS_RS_CS', 'Input symbols [NS: NETseq, MS:MNaseseq, RS:RNAseq, DS:DNAseq, CS:ChIPseq, e.g. NS_RS_MS]')
 flags.DEFINE_string('outputs', 'TS', 'Output symbols [TS: TSSseq, e.g. TS]')
 flags.DEFINE_boolean('restore', False, 'If true, restores models from the ../results/XXtrained/')
 flags.DEFINE_boolean('full_data', True, 'If true, uses full data')
 flags.DEFINE_boolean('suffnec', False, 'If true, calculates sufficiency and necessity costs')
 flags.DEFINE_boolean('predict', False, 'If true, predicts the output')
-flags.DEFINE_boolean('representation', False, 'If true, predicts the output')
 flags.DEFINE_string('suffix', '', 'Suffix to save')
 flags.DEFINE_string('dataDir', '../data', 'Directory for input data')
 flags.DEFINE_string('resultsDir', '../results', 'Directory for results data')
@@ -90,14 +89,14 @@ def main(_):
         print('Done')
 
         print('Calculating the scores')
-        suffDict,necDict = model.suffnec(testInput,testOutput)
+        suffDict,necDict = model.suffnec(testInput, testOutput)
         print('Saving...')
         pd.DataFrame(suffDict).to_csv(FLAGS.savePath+"/"+"SufficiencyCosts.csv")
         pd.DataFrame(necDict).to_csv(FLAGS.savePath+"/"+"NecessityCosts.csv")
         print('Done...')
 
     if FLAGS.predict:
-        print(network_architecture.keys())
+
         FLAGS.data = multiModalData(hdf5Pointer,network_architecture.keys(),[])
         print('Done')
 
@@ -129,41 +128,6 @@ def main(_):
                 pred[batchIdx:(batchIdx+5000),:] = prd
             else:
                 predictions = model.predict({key:testInput[key][batchIdx:testInput.values()[0].shape[0]] for key in testInput.keys()})
-                pred[batchIdx:testInput.values()[0].shape[0],:] = predictions
-
-        info[:] = infodata
-        f.close()
-        print('Done...')
-
-    if FLAGS.representation:
-
-        FLAGS.data = multiModalData(hdf5Pointer,network_architecture.keys(),[])
-        print('Done')
-
-
-        # FLAGS.testSize = FLAGS.data.sampleSize
-        FLAGS.data.splitTest()
-
-        print('Setting batcher...')
-        with tf.device("/cpu:0"):
-            batcher = FLAGS.data.dataBatcher(chunkSize=FLAGS.data.sampleSize)
-            print('Getting test data...')
-            testInput, testOutput = FLAGS.data.getTestData()
-            infodata = hdf5Pointer.get('info')[FLAGS.data.testIdx]
-        print('Done')
-        predictions = model.represent({ky:testInput[ky][:2] for ky in testInput.keys()})
-        print((testInput.values()[0].shape[0],)+predictions.shape[1:])
-        f = h5py.File(FLAGS.savePath+"/"+"representation_"+FLAGS.suffix+".hdf5",'w')
-        pred = f.create_dataset('representation',(testInput.values()[0].shape[0],)+predictions.shape[1:])
-        info  = f.create_dataset('info',infodata.shape)
-
-
-        for batchIdx in tq(range(0,testInput.values()[0].shape[0],5000)):
-            if (batchIdx+5000)<testInput.values()[0].shape[0]:
-                prd = model.represent({key:testInput[key][batchIdx:(batchIdx+5000)] for key in testInput.keys()})
-                pred[batchIdx:(batchIdx+5000),:] = prd
-            else:
-                predictions = model.represent({key:testInput[key][batchIdx:testInput.values()[0].shape[0]] for key in testInput.keys()})
                 pred[batchIdx:testInput.values()[0].shape[0],:] = predictions
 
         info[:] = infodata
