@@ -23,6 +23,7 @@ flags.DEFINE_string('runName', 'experiment', 'Running name.')
 flags.DEFINE_string('chromSizes', '../data/sacCer3.chrom.sizes', 'Chromosome sizes files from UCSC.')
 flags.DEFINE_string('trainRegions', '../data/regions/train_regions.bed', 'Regions to train [bed or gff files]')
 flags.DEFINE_string('validRegions', '../data/regions/validation_regions.bed', 'Regions to validate [bed or gff files]')
+flags.DEFINE_string('configuration', 'configuration.json', 'configuration file [json file]')
 flags.DEFINE_boolean('predict', False, 'If true, tests for the data and prints statistics about data for unit testing.')
 flags.DEFINE_boolean('restore', False, 'If true, restores models from the ../results/XXtrained/')
 flags.DEFINE_string('restorePath', '../results/test', 'Regions to validate [bed or gff files]')
@@ -54,11 +55,13 @@ def main(_):
     # Read in chromosome size file to directory format
     print('Reading in chromosome sizes file')
     with open(FLAGS.chromSizes, 'r') as f:
-        chrom_sizes = {line.split('\t')[0]: (1, int(line.split('\t')[-1].split('\n')[0])) for line in f.readlines() if line.split('\t')[0] != 'chrM'}
+        chrom_sizes = {line.split(' ')[0]: (1, int(line.split(' ')[-1].split('\n')[0]))
+                       for line in f.readlines() if line.split(' ')[0] != 'chrM'}
+
 
     # Read in configurations json file to dictionary format
     print('Inputting configurations file')
-    with open('configurations_test.json') as fp:
+    with open(FLAGS.configuration) as fp:
         config = byteify(json.load(fp))
     data_tracks = {}
     for key, vals in six.iteritems(config['Tracks']):

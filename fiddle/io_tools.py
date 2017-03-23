@@ -154,7 +154,8 @@ def save_for_fast_training_hdf5(output_dir, data_tracks, regions, filename):
             else: # one hot encode DNAseq data
                 for i, caller in enumerate(data_tracks["DNAseq"]['caller']):
                     # pull out data from fasta file at region of interest
-                    fastaMatrix = one_hot_encode_sequence(caller(reg.chrom, 0, regions.chromsizes[reg.chrom][1]))
+                    # pdb.set_trace()
+                    fastaMatrix = one_hot_encode_sequence(caller(str(reg.chrom), 0, regions.chromsizes[reg.chrom][1]))
                 fetched_data = fastaMatrix
                 vector = fetched_data[:, reg.start:reg.end]
             if not sanity_check(vector):
