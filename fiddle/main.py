@@ -17,9 +17,6 @@ import json
 
 flags = tf.app.flags
 flags.DEFINE_string('runName', 'experiment', 'Running name.')
-flags.DEFINE_string('chromSizes', '../data/sacCer3.chrom.sizes', 'Chromosome sizes files from UCSC.')
-flags.DEFINE_string('trainRegions', '../data/regions/train_regions.bed', 'Regions to train [bed or gff files]')
-flags.DEFINE_string('validRegions', '../data/regions/validation_regions.bed', 'Regions to validate [bed or gff files]')
 flags.DEFINE_string('dataDir', '../data/hdf5datasets/CN2TS_500bp', 'Regions to train [bed or gff files]')
 flags.DEFINE_string('configuration', 'configuration.json', 'configuration file [json file]')
 flags.DEFINE_string('architecture', 'architecture.json', 'configuration file [json file]')
@@ -32,7 +29,6 @@ flags.DEFINE_integer('filterWidth', 10, 'Filter width for convolutional network'
 flags.DEFINE_integer('sampleSize', None, 'Sample size.')
 flags.DEFINE_integer('testSize', None, 'Test size.')
 flags.DEFINE_integer('trainSize', None, 'Train size.')
-flags.DEFINE_boolean('overwrite', False, 'Overwrite the mmap files?')
 flags.DEFINE_integer('chunkSize', 1000, 'Chunk size.')
 flags.DEFINE_float('learningRate', 0.001, 'Initial learning rate.')
 flags.DEFINE_float('trainRatio', 0.8, 'Train data ratio')
@@ -66,10 +62,6 @@ def main(_):
     data = MultiModalData(train_h5_handle, batch_size=FLAGS.batchSize)
     batcher = data.batcher()
     print('Storing validation data to the memory')
-    # validation_data = {key: validation_h5_handle[key][:1000].reshape(1000,
-    #                                                                  validation_h5_handle[key].shape[1],
-    #                                                                  validation_h5_handle[key].shape[2],
-    #                                                                  1) for key in all_keys}
     validation_data = {key: validation_h5_handle[key][:1000] for key in all_keys}
     if FLAGS.restore:
         model.load(FLAGS.restorePath)
@@ -166,32 +158,3 @@ if __name__ == '__main__':
     except:
         type, value, tb = sys.exc_info()
         traceback.print_exc()
-
-
-
-#flags.DEFINE_boolean('mmap', False, 'If true, Creates memory mapped objects for streamed training')
-
-#    # 3) Construct data_tracks dictionary along with concurrent memory map or hdf5
-# memory mapping to be tossed
-#    data_tracks = {}
-#    if FLAGS.mmap:
-#        print('3) Extracting memory mapped metadata')
-#        for key, vals in six.iteritems(config['Tracks']):
-#            data_tracks[key] = {}
-#            data_tracks[key]['path_to_mmap'] = vals['data_dir']
-#            data_tracks[key]['metadata'] = {}
-#            filetype = vals['orig_files']['type']
-#            if filetype == 'fasta':
-#                data_tracks[key]['caller'] = extract_fasta_to_file(vals['orig_files']['pos'], vals['data_dir'], FLAGS.overwrite)
-#                data_tracks[key]['metadata']['input_height'] = 4
-#            elif filetype == 'bigwig':
-#                if 'neg' in vals['orig_files'].keys():
-#                    data_tracks[key]['caller'] = extract_bigwig_to_file([vals['orig_files']['pos'], vals['orig_files']['neg']],
-#                                                          vals['data_dir'], chrom_sizes, FLAGS.overwrite)
-#                    data_tracks[key]['metadata']['input_height'] = 2
-#                elif 'pos' in vals['orig_files'].keys():
-#                    data_tracks[key]['caller'] = extract_bigwig_to_file([vals['orig_files']['pos']],
-#                                                              vals['data_dir'], chrom_sizes, FLAGS.overwrite)
-#                    data_tracks[key]['metadata']['input_height'] = 1
-#            else:
-#                raise NotImplementedError
