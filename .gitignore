@@ -76,3 +76,4 @@ Thumbs.db
 data/*
 visualization*
 results/*
+venv/
