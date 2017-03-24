@@ -8,12 +8,12 @@ import numpy as np
 from tqdm import tqdm as tq
 from models import *
 from io_tools import *
-import json
 import six
 from collections import Counter
 import os
-import copy
 import h5py
+import json
+
 
 flags = tf.app.flags
 flags.DEFINE_string('runName', 'experiment', 'Running name.')
@@ -22,6 +22,7 @@ flags.DEFINE_string('trainRegions', '../data/regions/train_regions.bed', 'Region
 flags.DEFINE_string('validRegions', '../data/regions/validation_regions.bed', 'Regions to validate [bed or gff files]')
 flags.DEFINE_string('dataDir', '../data/hdf5datasets/CN2TS_500bp', 'Regions to train [bed or gff files]')
 flags.DEFINE_string('configuration', 'configuration.json', 'configuration file [json file]')
+flags.DEFINE_string('architecture', 'architecture.json', 'configuration file [json file]')
 flags.DEFINE_boolean('predict', False, 'If true, tests for the data and prints statistics about data for unit testing.')
 flags.DEFINE_boolean('restore', False, 'If true, restores models from the ../results/XXtrained/')
 flags.DEFINE_string('restorePath', '../results/test', 'Regions to validate [bed or gff files]')
@@ -36,7 +37,6 @@ flags.DEFINE_integer('chunkSize', 1000, 'Chunk size.')
 flags.DEFINE_float('learningRate', 0.001, 'Initial learning rate.')
 flags.DEFINE_float('trainRatio', 0.8, 'Train data ratio')
 flags.DEFINE_float('dropout', 0.5, 'Keep probability for training dropout.')
-flags.DEFINE_string('dataDir', '../data', 'Directory for input data')
 flags.DEFINE_string('resultsDir', '../results', 'Directory for results data')
 FLAGS = flags.FLAGS
 
@@ -45,22 +45,22 @@ from tensorflow.python import debug as tf_debug
 ################debugger#####################
 
 def main(_):
-    train_h5_handle  = h5py.File(FLAGS.trainData,'r')
-    validation_h5_handle  = h5py.File(FLAGS.validationData,'r')
+    train_h5_handle  = h5py.File(os.path.join(FLAGS.dataDir, 'train.h5'),'r')
+    validation_h5_handle  = h5py.File(os.path.join(FLAGS.dataDir, 'validation.h5'),'r')
     # Initialize results directory
     FLAGS.savePath = FLAGS.resultsDir + '/' + FLAGS.runName
     if not tf.gfile.Exists(FLAGS.savePath):
         tf.gfile.MakeDirs(FLAGS.savePath)
 
-    model = NNscaffold(architecture_path='architecture.json', learning_rate=FLAGS.learningRate)
-    json.dump(architecture, open(FLAGS.savePath + "/architecture.json", 'w'))
+    model = NNscaffold(configuration_path=FLAGS.configuration, architecture_path=FLAGS.architecture, learning_rate=FLAGS.learningRate)
+    json.dump(model.architecture, open(FLAGS.savePath + "/architecture.json", 'w'))
 
     #####################################
     # Train region and data definition #
     #####################################
 
     print('Creating multithread runner data object')
-    data = MultiThreadRunner(train_h5_handle, model.inputs, model.outputs, architecture)
+    data = MultiThreadRunner(train_h5_handle, model.inputs, model.outputs)
 
     print('Storing validation data to the memory')
     validation_data = {key: val[:] for key, val in validation_h5_handle.items()}
@@ -133,20 +133,6 @@ def main(_):
 
     model.sess.close()
 
-
-def byteify(json_out):
-    '''
-    Recursively reads in .json to string conversion into python dictionary format
-    '''
-    if isinstance(json_out, dict):
-        return {byteify(key): byteify(value)
-                for key, value in six.iteritems(json_out)}
-    elif isinstance(json_out, list):
-        return [byteify(element) for element in json_out]
-    elif isinstance(json_out, unicode):
-        return json_out.encode('utf-8')
-    else:
-        return json_out
 
 
 def write_to_txt(return_dict, batch_size=FLAGS.batchSize, case='train', verbose=True):

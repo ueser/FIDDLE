@@ -40,8 +40,5 @@
     "Layer1":{
       "filter_width": 15
     }
-  },
-  "Inputs":["NETseq", "MNaseseq", "DNAseq", "RNAseq", "TSSseq"],
-    "Outputs":["TSSseq"],
-    "Stranded":"False"
+  }
 }

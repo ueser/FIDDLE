@@ -5,10 +5,14 @@ from __future__ import division
 import pdb, traceback, sys # EDIT
 import tensorflow as tf
 import numpy as np
-from keras.layers import Input, Dense, Lambda, Convolution2D, concatenate, Reshape,AveragePooling2D, Flatten
+from keras.layers import Input, Dense, Lambda, Conv2D, concatenate, Reshape, AveragePooling2D, Flatten, BatchNormalization
 from keras.models import Model
 from keras import backend as K
-from keras import objectives
+from keras.objectives import kullback_leibler_divergence
+import json, six, copy
+
+
+
 #######################
 # Auxiliary functions #
 #######################
@@ -50,6 +54,21 @@ def transform_track(track_data_placeholder, option='pdf'):
     return output_tensor
 
 
+
+def byteify(json_out):
+    '''
+    Recursively reads in .json to string conversion into python dictionary format
+    '''
+    if isinstance(json_out, dict):
+        return {byteify(key): byteify(value)
+                for key, value in six.iteritems(json_out)}
+    elif isinstance(json_out, list):
+        return [byteify(element) for element in json_out]
+    elif isinstance(json_out, unicode):
+        return json_out.encode('utf-8')
+    else:
+        return json_out
+
 #################
 # Model Classes #
 #################
@@ -57,14 +76,15 @@ def transform_track(track_data_placeholder, option='pdf'):
 class NNscaffold(object):
     """Neural Network object
     """
-    def __init__(self, architecture_path='architecture.json', learning_rate=0.01):
+    def __init__(self, configuration_path='configurations.json', architecture_path='architecture.json', learning_rate=0.01):
         """Initiates a scaffold network with default values
         Args:
             architecture: JSON file outlining neural network scaffold
             learning_rate: floating point number established in main.py FLAGS.learningRate
         """
-
-        self.architecture = self._parse_parameters(architecture_path)
+        with open(configuration_path) as fp:
+            self.config = byteify(json.load(fp))
+        self._parse_parameters(architecture_path)
         self.learning_rate = learning_rate
         self.inputs = {} # initializes input dictionary
         self.representations = list() # initializes representations list
@@ -106,25 +126,25 @@ class NNscaffold(object):
         with open(architecture_path) as fp:
             architecture_template = byteify(json.load(fp))
 
-        architecture = {'Modules': {}, 'Scaffold': {}}
-        architecture['Scaffold'] = architecture_template['Scaffold']
-        architecture['Inputs'] = architecture_template['Inputs']
-        architecture['Outputs'] = architecture_template['Outputs']
+        self.architecture = {'Modules': {}, 'Scaffold': {}}
+        self.architecture['Scaffold'] = architecture_template['Scaffold']
+        self.architecture['Inputs'] = self.config['Options']['Inputs']
+        self.architecture['Outputs'] = self.config['Options']['Outputs']
 
-        for key in data_tracks.keys():
-            architecture['Modules'][key] = copy.deepcopy(architecture_template['Modules'])
-            architecture['Modules'][key]['input_height'] = data_tracks[key]['metadata']['input_height']
-            architecture['Modules'][key]['Layer1']['filter_height'] = architecture['Modules'][key]['input_height']
-            # Parameters customized for specific tracks are read from architecture.json and updates the arch. dict.
+        for key in self.architecture['Inputs']+self.architecture['Outputs']:
+            self.architecture['Modules'][key] = copy.deepcopy(architecture_template['Modules'])
+            self.architecture['Modules'][key]['input_height'] = self.config['Tracks'][key]['input_height']
+            self.architecture['Modules'][key]['Layer1']['filter_height'] = self.config['Tracks'][key]['input_height']
+            # Parameters customized for specific tracks are read from self.architecture.json and updates the arch. dict.
             if key in architecture_template.keys():
                 for key_key in architecture_template[key].keys():
                     sub_val = architecture_template[key][key_key]
                     if type(sub_val) == dict:
                         for key_key_key in sub_val:
-                            architecture['Modules'][key][key_key][key_key_key] = sub_val[key_key_key]
+                            self.architecture['Modules'][key][key_key][key_key_key] = sub_val[key_key_key]
                     else:
-                        architecture['Modules'][key][key_key] = sub_val
-
+                        self.architecture['Modules'][key][key_key] = sub_val
+        
 
     def _combine_representations(self, mode):
         """Concatenates tensors in representations list to either a convolution or fully connected representation
@@ -132,10 +152,10 @@ class NNscaffold(object):
             mode: convolution or fully_connected
         """
         if mode == 'convolution':
-            self.combined_representation = tf.concat(1, self.representations)
+            self.combined_representation = tf.concat(self.representations, 1)
         elif mode == 'fully_connected':
             raise NotImplementedError
-            self.combined_representation = tf.concat(0, self.representations)
+            self.combined_representation = tf.concat(self.representations, 0)
         else:
             raise NotImplementedError
 
@@ -185,7 +205,7 @@ class NNscaffold(object):
             self.net = Conv2D(self.architecture['Scaffold']['Layer1']['number_of_filters'],
                                        [len(self.representations), self.architecture['Scaffold']['Layer1']['filter_width']],
                                        activation=self.architecture['Scaffold']['Layer1']['activation'],
-                                       regularizer='l2', padding='valid', name='conv_combined')(self.net)
+                                       kernel_regularizer='l2', padding='valid', name='conv_combined')(self.net)
             self.net = AveragePooling2D([1, self.architecture['Scaffold']['Layer1']['pool_size']],
                                                        strides=[1, self.architecture['Scaffold']['Layer1']['pool_stride']],
                                                        padding='valid', name='AvgPool_combined')(self.net)
@@ -225,7 +245,7 @@ class NNscaffold(object):
                                   [self.architecture['Modules'][key]['Layer2']['filter_height'],
                                    self.architecture['Modules'][key]['Layer2']['filter_width']],
                                   activation=self.architecture['Modules'][key]['Layer2']['activation'],
-                                  regularizer='l2',
+                                  kernel_regularizer='l2',
                                   padding='valid',
                                   name='conv_2')(net)
 
@@ -249,7 +269,7 @@ class NNscaffold(object):
         self.cost = 0
         for key in self.architecture['Outputs']:
             if key != 'DNAseq':
-                self.loss = objectives.kl_divergence(self.output_tensor[key], self.predictions[key])
+                self.loss = kullback_leibler_divergence(self.output_tensor[key], self.predictions[key])
                 width = self.architecture['Modules'][key]["input_width"] * self.architecture['Modules'][key]["input_height"]
                 target = tf.floor((10.*tf.cast(tf.argmax(self.output_tensor[key], dimension=1), tf.float32))/np.float(width))
                 pred = tf.floor((10.*tf.cast(tf.argmax(self.predictions[key], dimension=1), tf.float32))/np.float(width))

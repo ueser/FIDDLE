@@ -441,12 +441,11 @@ class MultiThreadRunner(object):
     This class manages the  background threads needed to fill
         a queue full of data.
     """
-    def __init__(self, train_h5_handle, inputs, outputs, architecture):
+    def __init__(self, train_h5_handle, inputs, outputs):
         '''
         :param train_h5_handle: hdf5 handle -or pointer-
         :param inputs: a dict object that holds tf placeholders for each input track
         :param outputs: a dict object that holds tf placeholders for each output track
-        :param architecture: a nested dict object that holds architecture of the network
         '''
 
         self.train_h5_handle = train_h5_handle
@@ -454,21 +453,22 @@ class MultiThreadRunner(object):
         self.outputs = outputs
         # The actual queue of config.FLAGS.data. The queue contains a vector for input and output data
         try:
-            all_shapes = [[self.train_h5_handle.get(track_name).shape[1:3], 1]
+            all_shapes = [[self.train_h5_handle.get(track_name).shape[1:3]+ (1,)]
                           for track_name in self.inputs.keys()]+\
-                        [[self.train_h5_handle.get(track_name).shape[1:3], 1]
+                        [[self.train_h5_handle.get(track_name).shape[1:3]+ (1,)]
                           for track_name in self.outputs.keys()]
 
         except KeyError:
             print(self.inputs, self.outputs)
-            print('Architecture keys: ', architecture.keys())
             raise
-        tmp = self.inputs.copy()
-        tmp.update(self.outputs)
+        print(all_shapes)
+
+        all_keys = self.inputs.keys()+self.outputs.keys()
+
         self.queue = tf.RandomShuffleQueue(shapes=all_shapes,
                                            dtypes=len(all_shapes)*[tf.float32],
                                            capacity=2000,
-                                           names=tmp.keys(),
+                                           names=all_keys,
                                            min_after_dequeue=1000)
 
         self.enqueue_op = self.queue.enqueue_many(tmp)
