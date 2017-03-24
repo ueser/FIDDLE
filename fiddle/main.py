@@ -52,23 +52,25 @@ def main(_):
     if not tf.gfile.Exists(FLAGS.savePath):
         tf.gfile.MakeDirs(FLAGS.savePath)
 
-    model = NNscaffold(configuration_path=FLAGS.configuration, architecture_path=FLAGS.architecture, learning_rate=FLAGS.learningRate)
+
+
+    model = NNscaffold(configuration_path=FLAGS.configuration,
+                       architecture_path=FLAGS.architecture,
+                       learning_rate=FLAGS.learningRate)
     json.dump(model.architecture, open(FLAGS.savePath + "/architecture.json", 'w'))
 
-    #####################################
-    # Train region and data definition #
-    #####################################
-
-    print('Creating multithread runner data object')
-    data = MultiThreadRunner(train_h5_handle, model.inputs, model.outputs)
 
     all_keys = list(set(model.architecture['Inputs'] + model.architecture['Outputs']))
-    print('Storing validation data to the memory')
-    validation_data = {key: validation_h5_handle[key][:1000].reshape(1000,
-                                                                     validation_h5_handle[key].shape[1],
-                                                                     validation_h5_handle[key].shape[2],
-                                                                     1) for key in all_keys}
 
+
+    data = MultiModalData(train_h5_handle, batch_size=FLAGS.batchSize)
+    batcher = data.batcher()
+    print('Storing validation data to the memory')
+    # validation_data = {key: validation_h5_handle[key][:1000].reshape(1000,
+    #                                                                  validation_h5_handle[key].shape[1],
+    #                                                                  validation_h5_handle[key].shape[2],
+    #                                                                  1) for key in all_keys}
+    validation_data = {key: validation_h5_handle[key][:1000] for key in all_keys}
     if FLAGS.restore:
         model.load(FLAGS.restorePath)
     else:
@@ -102,7 +104,6 @@ def main(_):
     globalMinLoss = np.inf
     step = 0
 #for it in range(FLAGS.maxEpoch * totIteration): # EDIT: change back
-    data.start_threads(model.sess, n_threads=4)
     for it in range(20):
         print("it = " + str(it))
         ido_ = 0.8 + 0.2 * it / 10. if it <= 10 else 1.
@@ -110,11 +111,11 @@ def main(_):
         t_batcher, t_trainer = 0, 0
         for iterationNo in tq(range(10)):
             with Timer() as t:
-                train_batch = data.get_batch()
-                t_batcher += t.secs
+                train_batch = batcher.next()
+            t_batcher += t.secs
             with Timer() as t:
-                return_dict = Counter(model.train(train_batch, accuracy=True, inp_dropout=ido_))
-                t_trainer += t.secs
+                return_dict = Counter(model.train(train_batch, accuracy=True, inp_dropout=ido_, batch_size=FLAGS.batchSize))
+            t_trainer += t.secs
 
             return_dict_train += return_dict
             step += 1
@@ -126,7 +127,7 @@ def main(_):
 
         print('Iteration: ' + str(it))
         write_to_txt(return_dict_train)
-        write_to_txt(return_dict_valid, batch_size=len(valid_regions), case='validation')
+        write_to_txt(return_dict_valid, batch_size=validation_data.values()[0].shape[0], case='validation')
 
         model.summarize(step)
 

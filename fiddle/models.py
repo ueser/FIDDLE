@@ -44,7 +44,8 @@ def transform_track(track_data_placeholder, option='pdf'):
     """
     if option == 'pdf':
         output_tensor = tf.reshape(track_data_placeholder,
-                        [-1, (track_data_placeholder.get_shape()[1]*track_data_placeholder.get_shape()[2]).value]) + 1e-16
+                                   [-1, (track_data_placeholder.get_shape()[1] * track_data_placeholder.get_shape()[
+                                       2]).value]) + 1e-16
         output_tensor = tf.div(output_tensor, tf.reduce_sum(output_tensor, 1, keep_dims=True))
     # NOT completed yet
     elif option == 'standardize':
@@ -52,8 +53,6 @@ def transform_track(track_data_placeholder, option='pdf'):
         from scipy import stats
         output_tensor = stats.zscore(output_tensor, axis=1)
     return output_tensor
-
-
 
 def byteify(json_out):
     '''
@@ -86,27 +85,29 @@ class NNscaffold(object):
             self.config = byteify(json.load(fp))
         self._parse_parameters(architecture_path)
         self.learning_rate = learning_rate
-        self.inputs = {} # initializes input dictionary
         self.representations = list() # initializes representations list
+        self.inputs = {}  # initializes input dictionary
         for key in self.architecture['Inputs']:
             # feeds to output key a placeholder with key's input height and with
             self.inputs[key] = tf.placeholder(tf.float32, [None, self.architecture['Modules'][key]["input_height"],
-                                                           self.architecture['Modules'][key]["input_width"], 1], name=key)
+                                                           self.architecture['Modules'][key]["input_width"], 1],
+                                              name=key)
             # appends deep learning layer framework for each key to representations list
             self.representations.append(self._create_track_module(key))
-        self.outputs = {} # initializes output dictionary
-        self.output_tensor = {} # initializes output_tensor
+
+        self.output_tensor = {}  # initializes output_tensor
+        self.outputs = {}  # initializes output dictionary
         for key in self.architecture['Outputs']:
             # feeds to output key a placeholder with key's input height and with
             self.outputs[key] = tf.placeholder(tf.float32, [None, self.architecture['Modules'][key]["input_height"],
-                                                            self.architecture['Modules'][key]["input_width"], 1], name='output_' + key)
-            try:
-                # converts output key placeholder to probability distribution function
-                self.output_tensor[key] = transform_track(self.outputs[key], option='pdf')
-            except TypeError:
-                print(key, self.outputs[key])
-                print(type(self.outputs[key].get_shape()[0].value))
-                raise
+                                                            self.architecture['Modules'][key]["input_width"], 1],
+                                               name='output_' + key)
+            # converts output key placeholder to probability distribution function
+            self.output_tensor[key] = transform_track(self.outputs[key], option='pdf')
+
+
+
+
         self.dropout = tf.placeholder(tf.float32) # initializing data type input for dropout
         self.keep_prob_input = tf.placeholder(tf.float32) # initializing data type input for keep_prob_input
         # Used for modality-wise dropout. Equivalent to batch_size for training, test size for testing
@@ -292,15 +293,20 @@ class NNscaffold(object):
         self.optimizer = \
             tf.train.AdamOptimizer(learning_rate=self.learning_rate).minimize(self.cost, global_step=self.global_step)
 
-    def train(self, train_data, accuracy=None, inp_dropout=0.9):
+    def train(self, train_data, accuracy=None, inp_dropout=0.9, batch_size=128):
         """Trains model based on mini-batch of input data. Returns cost of mini-batch.
         """
-        train_feed = {self.outputs[key]: train_data[1][key] for key in self.architecture['Outputs']}
-        train_feed.update({self.inputs[key]: train_data[0][key] for key in self.architecture['Inputs']})
-        tmpKey = train_data[1].keys()[0]
+
+        if train_data==[]:
+            train_feed = {}
+        else:
+            train_feed = {self.outputs[key]: train_data[key] for key in self.architecture['Outputs']}
+            train_feed.update({self.inputs[key]: train_data[key] for key in self.architecture['Inputs']})
+            tmpKey = train_data.keys()[0]
+
         train_feed.update({self.dropout: self.architecture['Scaffold']['dropout'],
                            self.keep_prob_input: inp_dropout,
-                           self.inp_size: train_data[1][tmpKey].shape[0],
+                           self.inp_size: batch_size,
                            K.learning_phase(): 1})
                            # revisit this...
                            #self.inp_size: train_data.values()[0].shape[0]}) # unsure whether accessing 128 or 500...?
@@ -440,7 +446,6 @@ class NNscaffold(object):
             # thing3 = tf.Print(values[1], [values[1]], "this is values[1]")
 #pdb.set_trace()
             res = self.sess.run(values, feed_dict)
-            print('intermediate')
 #pdb.set_trace()
             return {key: value for key, value in zip(keys, res)}
         else:

@@ -2,13 +2,12 @@ import h5py
 import numpy as np
 
 def main():
-    h5pnt = h5py.File('../data/hdf5datasets/CN2TS_DIAandWT_500bp.h5', 'w')
+    h5pnt = h5py.File('/Users/umut/Projects/FIDDLE/data/hdf5datasets/CN2TS_DIAandWT_500bp.h5', 'w')
     max_size = 50000
     dnaseq = h5pnt.create_dataset('dnaseq', (max_size, 4, 500, 1))
     tssseq = h5pnt.create_dataset('tssseq', (max_size, 2, 500, 1))
     chipnexus = h5pnt.create_dataset('chipnexus', (max_size, 2, 500, 1))
     quality = h5pnt.create_dataset('quality', (max_size,))
-
 
     qq = 0
     qq2 = 0
@@ -27,21 +26,17 @@ def main():
             qq2 = (qq + len(idx))
             if (qq + len(idx)) > max_size:
                 qq2 = max_size
-            tssseq[qq:qq2, 0, :] = tmp_ts[idx[qq2 - qq], :500]
-            tssseq[qq:qq2, 1, :] = tmp_ts[idx[qq2 - qq], 500:]
-            chipnexus[qq:qq2, 0, :] = tmp_cn[idx[qq2 - qq], :500]
-            chipnexus[qq:qq2, 1, :] = tmp_cn[idx[qq2 - qq], 500:]
-            dnaseq[qq:qq2, :, :] = seqs_array[idx[qq2 - qq], :, :]
+            tssseq[qq:qq2, 0, :, 0] = tmp_ts[idx[:(qq2 - qq)], :500]
+            tssseq[qq:qq2, 1, :, 0] = tmp_ts[idx[:(qq2 - qq)], 500:]
+            chipnexus[qq:qq2, 0, :, 0] = tmp_cn[idx[:(qq2 - qq)], :500]
+            chipnexus[qq:qq2, 1, :, 0] = tmp_cn[idx[:(qq2 - qq)], 500:]
+            dnaseq[qq:qq2, :, :, 0] = seqs_array[idx[:(qq2 - qq)], :, :]
             quality[qq:qq2] = ix * np.ones((qq2 - qq))
             qq += len(idx)
 
             if qq2 == max_size:
                 break
 
-    dnaseq.close()
-    tssseq.close()
-    chipnexus.close()
-    quality.close()
 
     h5pnt.close()
 

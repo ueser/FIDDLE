@@ -2,11 +2,11 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="af957dae-1932-4bfe-989e-420dfff878bb" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/fiddle/data_prep.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/fiddle/data_prep.py" afterPath="$PROJECT_DIR$/fiddle/data_prep.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/fiddle/io_tools.py" afterPath="$PROJECT_DIR$/fiddle/io_tools.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/fiddle/main.py" afterPath="$PROJECT_DIR$/fiddle/main.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/fiddle/models.py" afterPath="$PROJECT_DIR$/fiddle/models.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/fiddle/timeline.json" afterPath="$PROJECT_DIR$/fiddle/timeline.json" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -34,45 +34,43 @@
       <file leaf-file-name="models.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/fiddle/models.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1302">
-              <caret line="161" column="18" lean-forward="false" selection-start-line="161" selection-start-column="8" selection-end-line="161" selection-end-column="18" />
+            <state relative-caret-position="578">
+              <caret line="454" column="22" lean-forward="true" selection-start-line="454" selection-start-column="22" selection-end-line="454" selection-end-column="22" />
               <folding>
                 <element signature="e#0#38#0" expanded="true" />
-                <marker date="1490368170000" expanded="true" signature="2536:24429" ph="..." />
-                <marker date="1490368170000" expanded="true" signature="23025:23118" ph="..." />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="main.py" pinned="false" current-in-tab="false">
+      <file leaf-file-name="main.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/fiddle/main.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1095">
-              <caret line="104" column="46" lean-forward="false" selection-start-line="104" selection-start-column="46" selection-end-line="104" selection-end-column="46" />
+            <state relative-caret-position="264">
+              <caret line="21" column="22" lean-forward="false" selection-start-line="21" selection-start-column="21" selection-end-line="21" selection-end-column="22" />
               <folding>
                 <element signature="e#0#38#0" expanded="true" />
-                <marker date="1490368313000" expanded="true" signature="5481:5548" ph="..." />
-                <marker date="1490368313000" expanded="true" signature="5481:6267" ph="..." />
-                <marker date="1490368313000" expanded="true" signature="5481:6291" ph="..." />
-                <marker date="1490368313000" expanded="true" signature="6072:6267" ph="..." />
-                <marker date="1490368313000" expanded="true" signature="6381:7010" ph="..." />
-                <marker date="1490368313000" expanded="true" signature="6500:6909" ph="..." />
-                <marker date="1490368313000" expanded="true" signature="6526:6664" ph="..." />
-                <marker date="1490368313000" expanded="true" signature="6724:6834" ph="..." />
-                <marker date="1490368313000" expanded="true" signature="7039:7152" ph="..." />
-                <marker date="1490368313000" expanded="true" signature="7081:7152" ph="..." />
-                <marker date="1490368313000" expanded="true" signature="7156:8763" ph="..." />
+                <marker date="1490395825000" expanded="true" signature="5436:5503" ph="..." />
+                <marker date="1490395825000" expanded="true" signature="5436:6240" ph="..." />
+                <marker date="1490395825000" expanded="true" signature="5436:6264" ph="..." />
+                <marker date="1490395825000" expanded="true" signature="6045:6240" ph="..." />
+                <marker date="1490395825000" expanded="true" signature="6354:6983" ph="..." />
+                <marker date="1490395825000" expanded="true" signature="6473:6882" ph="..." />
+                <marker date="1490395825000" expanded="true" signature="6499:6637" ph="..." />
+                <marker date="1490395825000" expanded="true" signature="6697:6807" ph="..." />
+                <marker date="1490395825000" expanded="true" signature="7012:7125" ph="..." />
+                <marker date="1490395825000" expanded="true" signature="7054:7125" ph="..." />
+                <marker date="1490395825000" expanded="true" signature="7129:8736" ph="..." />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="data_prep.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="data_prep.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/fiddle/data_prep.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="995">
-              <caret line="80" column="0" lean-forward="true" selection-start-line="80" selection-start-column="0" selection-end-line="80" selection-end-column="0" />
+            <state relative-caret-position="240">
+              <caret line="16" column="17" lean-forward="true" selection-start-line="16" selection-start-column="17" selection-end-line="16" selection-end-column="17" />
               <folding />
             </state>
           </provider>
@@ -81,10 +79,11 @@
       <file leaf-file-name="io_tools.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/fiddle/io_tools.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1815">
-              <caret line="482" column="23" lean-forward="false" selection-start-line="482" selection-start-column="23" selection-end-line="482" selection-end-column="23" />
+            <state relative-caret-position="440">
+              <caret line="543" column="28" lean-forward="true" selection-start-line="524" selection-start-column="4" selection-end-line="543" selection-end-column="28" />
               <folding>
                 <element signature="e#0#41#0" expanded="true" />
+                <element signature="e#446#792#0" expanded="false" />
                 <element signature="e#890#2850#0" expanded="false" />
                 <element signature="e#2914#4612#0" expanded="false" />
                 <element signature="e#4696#8055#0" expanded="false" />
@@ -97,13 +96,12 @@
                 <element signature="e#13335#13962#0" expanded="false" />
                 <element signature="e#14037#14125#0" expanded="false" />
                 <element signature="e#14185#14661#0" expanded="false" />
-                <element signature="e#14706#14999#0" expanded="false" />
                 <element signature="e#15053#15180#0" expanded="false" />
-                <element signature="e#15326#16649#0" expanded="false" />
-                <marker date="1490368731000" expanded="true" signature="16684:17622" ph="..." />
-                <marker date="1490368731000" expanded="true" signature="16850:17622" ph="..." />
-                <marker date="1490368731000" expanded="true" signature="17445:17622" ph="..." />
-                <marker date="1490368731000" expanded="true" signature="18462:19097" ph="..." />
+                <element signature="e#18659#18810#0" expanded="false" />
+                <element signature="e#22590#22968#0" expanded="false" />
+                <marker date="1490395282000" expanded="false" signature="15328:16656" ph="..." />
+                <marker date="1490395282000" expanded="true" signature="22165:22563" ph="..." />
+                <marker date="1490395282000" expanded="true" signature="22218:22308" ph="..." />
               </folding>
             </state>
           </provider>
@@ -112,10 +110,11 @@
       <file leaf-file-name="dataClass.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/fiddle/dataClass.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="0">
-              <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+            <state relative-caret-position="570">
+              <caret line="86" column="0" lean-forward="true" selection-start-line="61" selection-start-column="8" selection-end-line="86" selection-end-column="0" />
               <folding>
                 <element signature="e#0#38#0" expanded="true" />
+                <marker date="1490312519000" expanded="true" signature="2227:2303" ph="..." />
               </folding>
             </state>
           </provider>
@@ -175,9 +174,20 @@
       <find>architec</find>
       <find>self.sess =</find>
       <find>tf_debug</find>
+      <find>reshape</find>
+      <find>train</find>
+      <find>output_</find>
+      <find>self.output</find>
+      <find>self.outputs</find>
+      <find>thread</find>
+      <find>batch_size</find>
+      <find>batch_sz</find>
+      <find>batchS</find>
+      <find>intermedia</find>
     </findStrings>
     <replaceStrings>
       <replace>architecture_template</replace>
+      <replace>self.batch_size</replace>
     </replaceStrings>
   </component>
   <component name="Git.Settings">
@@ -196,10 +206,11 @@
         <option value="$PROJECT_DIR$/dev/main.py" />
         <option value="$PROJECT_DIR$/fiddle/architecture.json" />
         <option value="$PROJECT_DIR$/fiddle/CN2TS.config.json" />
+        <option value="$PROJECT_DIR$/fiddle/data_prep.py" />
+        <option value="$PROJECT_DIR$/fiddle/dataClass.py" />
+        <option value="$PROJECT_DIR$/fiddle/io_tools.py" />
         <option value="$PROJECT_DIR$/fiddle/models.py" />
         <option value="$PROJECT_DIR$/fiddle/main.py" />
-        <option value="$PROJECT_DIR$/fiddle/io_tools.py" />
-        <option value="$PROJECT_DIR$/fiddle/data_prep.py" />
       </list>
     </option>
   </component>
@@ -480,7 +491,7 @@
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
-      <option name="time" value="1" />
+      <option name="time" value="2" />
     </breakpoint-manager>
     <watches-manager />
   </component>
@@ -645,34 +656,32 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/fiddle/models.py">
+    <entry file="file://$PROJECT_DIR$/fiddle/data_prep.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1302">
-          <caret line="161" column="18" lean-forward="false" selection-start-line="161" selection-start-column="8" selection-end-line="161" selection-end-column="18" />
-          <folding>
-            <element signature="e#0#38#0" expanded="true" />
-            <marker date="1490368170000" expanded="true" signature="2536:24429" ph="..." />
-            <marker date="1490368170000" expanded="true" signature="23025:23118" ph="..." />
-          </folding>
+        <state relative-caret-position="240">
+          <caret line="16" column="17" lean-forward="true" selection-start-line="16" selection-start-column="17" selection-end-line="16" selection-end-column="17" />
+          <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/fiddle/dataClass.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+        <state relative-caret-position="570">
+          <caret line="86" column="0" lean-forward="true" selection-start-line="61" selection-start-column="8" selection-end-line="86" selection-end-column="0" />
           <folding>
             <element signature="e#0#38#0" expanded="true" />
+            <marker date="1490312519000" expanded="true" signature="2227:2303" ph="..." />
           </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/fiddle/io_tools.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1815">
-          <caret line="482" column="23" lean-forward="false" selection-start-line="482" selection-start-column="23" selection-end-line="482" selection-end-column="23" />
+        <state relative-caret-position="440">
+          <caret line="543" column="28" lean-forward="true" selection-start-line="524" selection-start-column="4" selection-end-line="543" selection-end-column="28" />
           <folding>
             <element signature="e#0#41#0" expanded="true" />
+            <element signature="e#446#792#0" expanded="false" />
             <element signature="e#890#2850#0" expanded="false" />
             <element signature="e#2914#4612#0" expanded="false" />
             <element signature="e#4696#8055#0" expanded="false" />
@@ -685,43 +694,44 @@
             <element signature="e#13335#13962#0" expanded="false" />
             <element signature="e#14037#14125#0" expanded="false" />
             <element signature="e#14185#14661#0" expanded="false" />
-            <element signature="e#14706#14999#0" expanded="false" />
             <element signature="e#15053#15180#0" expanded="false" />
-            <element signature="e#15326#16649#0" expanded="false" />
-            <marker date="1490368731000" expanded="true" signature="16684:17622" ph="..." />
-            <marker date="1490368731000" expanded="true" signature="16850:17622" ph="..." />
-            <marker date="1490368731000" expanded="true" signature="17445:17622" ph="..." />
-            <marker date="1490368731000" expanded="true" signature="18462:19097" ph="..." />
+            <element signature="e#18659#18810#0" expanded="false" />
+            <element signature="e#22590#22968#0" expanded="false" />
+            <marker date="1490395282000" expanded="false" signature="15328:16656" ph="..." />
+            <marker date="1490395282000" expanded="true" signature="22165:22563" ph="..." />
+            <marker date="1490395282000" expanded="true" signature="22218:22308" ph="..." />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/fiddle/models.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="578">
+          <caret line="454" column="22" lean-forward="true" selection-start-line="454" selection-start-column="22" selection-end-line="454" selection-end-column="22" />
+          <folding>
+            <element signature="e#0#38#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/fiddle/main.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1095">
-          <caret line="104" column="46" lean-forward="false" selection-start-line="104" selection-start-column="46" selection-end-line="104" selection-end-column="46" />
+        <state relative-caret-position="264">
+          <caret line="21" column="22" lean-forward="false" selection-start-line="21" selection-start-column="21" selection-end-line="21" selection-end-column="22" />
           <folding>
             <element signature="e#0#38#0" expanded="true" />
-            <marker date="1490368313000" expanded="true" signature="5481:5548" ph="..." />
-            <marker date="1490368313000" expanded="true" signature="5481:6267" ph="..." />
-            <marker date="1490368313000" expanded="true" signature="5481:6291" ph="..." />
-            <marker date="1490368313000" expanded="true" signature="6072:6267" ph="..." />
-            <marker date="1490368313000" expanded="true" signature="6381:7010" ph="..." />
-            <marker date="1490368313000" expanded="true" signature="6500:6909" ph="..." />
-            <marker date="1490368313000" expanded="true" signature="6526:6664" ph="..." />
-            <marker date="1490368313000" expanded="true" signature="6724:6834" ph="..." />
-            <marker date="1490368313000" expanded="true" signature="7039:7152" ph="..." />
-            <marker date="1490368313000" expanded="true" signature="7081:7152" ph="..." />
-            <marker date="1490368313000" expanded="true" signature="7156:8763" ph="..." />
+            <marker date="1490395825000" expanded="true" signature="5436:5503" ph="..." />
+            <marker date="1490395825000" expanded="true" signature="5436:6240" ph="..." />
+            <marker date="1490395825000" expanded="true" signature="5436:6264" ph="..." />
+            <marker date="1490395825000" expanded="true" signature="6045:6240" ph="..." />
+            <marker date="1490395825000" expanded="true" signature="6354:6983" ph="..." />
+            <marker date="1490395825000" expanded="true" signature="6473:6882" ph="..." />
+            <marker date="1490395825000" expanded="true" signature="6499:6637" ph="..." />
+            <marker date="1490395825000" expanded="true" signature="6697:6807" ph="..." />
+            <marker date="1490395825000" expanded="true" signature="7012:7125" ph="..." />
+            <marker date="1490395825000" expanded="true" signature="7054:7125" ph="..." />
+            <marker date="1490395825000" expanded="true" signature="7129:8736" ph="..." />
           </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/fiddle/data_prep.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="995">
-          <caret line="80" column="0" lean-forward="true" selection-start-line="80" selection-start-column="0" selection-end-line="80" selection-end-column="0" />
-          <folding />
         </state>
       </provider>
     </entry>

@@ -406,7 +406,7 @@ def infinite_batch_iter(iterable, batch_size):
 
 #TODO: create an alternative to mmap such that the train data is saved in parallel, or queue multi process
 
-class MultiModalData(object):
+class MMappedMultiModalData(object):
     def __init__(self, data_tracks):
         '''
         :param data_tracks: dict object that holds the names and other properties of input datasets
@@ -436,71 +436,72 @@ class MultiModalData(object):
         return {track_name: self.extractors[track_name](regions)
                 for track_name in self.extractors.keys()}
 
-
+#### Under development ###
 class MultiThreadRunner(object):
     """
     This class manages the  background threads needed to fill
         a queue full of data.
     """
-    def __init__(self, train_h5_handle, inputs, outputs):
+    def __init__(self, train_h5_handle, batch_size=128):
         '''
         :param train_h5_handle: hdf5 handle -or pointer-
         :param inputs: a dict object that holds tf placeholders for each input track
         :param outputs: a dict object that holds tf placeholders for each output track
         '''
-
+        self.batch_size = batch_size
         self.train_h5_handle = train_h5_handle
-        self.inputs = inputs
-        self.outputs = outputs
+        self.inputs = {}  # initializes input dictionary
+        for key in self.architecture['Inputs']:
+            # feeds to output key a placeholder with key's input height and with
+            self.inputs[key] = tf.placeholder(tf.float32, [None, self.architecture['Modules'][key]["input_height"],
+                                                           self.architecture['Modules'][key]["input_width"], 1],
+                                              name=key)
+        self.output_tensor = {}  # initializes output_tensor
+        self.outputs = {}  # initializes output dictionary
+        for key in self.architecture['Outputs']:
+            # feeds to output key a placeholder with key's input height and with
+            self.outputs[key] = tf.placeholder(tf.float32, [None, self.architecture['Modules'][key]["input_height"],
+                                                            self.architecture['Modules'][key]["input_width"], 1],
+                                               name='output_' + key)
+            # converts output key placeholder to probability distribution function
+            self.output_tensor[key] = self._transform_track(self.outputs[key], option='pdf')
+
         all_tracks = self.inputs.copy()
         all_tracks.update(self.outputs)
         all_keys = all_tracks.keys()
-
         # The actual queue of config.FLAGS.data. The queue contains a vector for input and output data
-        try:
-            all_shapes = [[self.train_h5_handle.get(track_name).shape[1],self.train_h5_handle.get(track_name).shape[2], 1]
+        all_shapes = [[self.train_h5_handle.get(track_name).shape[1],self.train_h5_handle.get(track_name).shape[2], 1]
                           for track_name in all_keys]
-
-
-        except KeyError:
-            print(self.inputs, self.outputs)
-            raise
-        print(all_shapes)
-
-
         self.queue = tf.RandomShuffleQueue(shapes=all_shapes,
                                            dtypes=len(all_shapes)*[tf.float32],
                                            capacity=2000,
                                            names=all_keys,
                                            min_after_dequeue=1000)
-
         self.enqueue_op = self.queue.enqueue_many(all_tracks)
 
     def get_batch(self):
         """
         Return's tensors containing a batch of inputs and outputs
         """
-        pdb.set_trace()
-        dequeued_batch = self.queue.dequeue_many(len(self.inputs))
+        dequeued_batch = self.queue.dequeue_many(self.batch_size)
+        return dequeued_batch
 
-        return dequeued_batch[:len(self.inputs)], dequeued_batch[len(self.inputs):]
-
-    def _batcher(self, batch_size=128):
+    def _batcher(self):
 
         max_len = self.train_h5_handle.values()[0].shape[0]
         current_idx = 0
         current_idx_0 = 0
         while True:
-            if (current_idx + batch_size) >= max_len:
+            if (current_idx + self.batch_size) >= max_len:
                 current_idx = current_idx_0 + 13
                 current_idx_0 = current_idx
-            yield {track_name: self.train_h5_handle.get(track_name)[current_idx:(current_idx + batch_size)]
+            yield {track_name: self.train_h5_handle.get(track_name)[current_idx:(current_idx + self.batch_size)]
                    for track_name in self.inputs},\
-                  {track_name: self.train_h5_handle.get(track_name)[current_idx:(current_idx + batch_size)]
+                  {track_name: self.train_h5_handle.get(track_name)[current_idx:(current_idx + self.batch_size)]
                    for track_name in self.outputs}
-            current_idx += batch_size
+            current_idx += self.batch_size
 
-    def thread_main(self, sess):
+    def _thread_main(self, sess):
         """
         Function run on alternate thread. Basically, keep adding data to the queue.
         """
@@ -515,11 +516,43 @@ class MultiThreadRunner(object):
         """ Start background threads to feed queue """
         threads = []
         for n in range(n_threads):
-            t = threading.Thread(target=self.thread_main, args=(sess,))
+            t = threading.Thread(target=self._thread_main, args=(sess,))
             t.daemon = True  # thread will close when parent quits
             t.start()
             threads.append(t)
         return threads
+
+    @staticmethod
+    def _transform_track(track_data_placeholder, option='pdf'):
+        """Converts input placeholder tensor to probability distribution function
+            :param track_data_placeholder:
+            :param option: pdf: converts every entry to a pdf
+            :              categorical: discretisizes the continuous input (To be implemented)
+            :              standardize: zero mean, unit variance
+            :return:
+        """
+        if option == 'pdf':
+            output_tensor = tf.reshape(track_data_placeholder,
+                                       [-1, (track_data_placeholder.get_shape()[1] * track_data_placeholder.get_shape()[
+                                           2]).value]) + 1e-16
+            output_tensor = tf.div(output_tensor, tf.reduce_sum(output_tensor, 1, keep_dims=True))
+        # NOT completed yet
+        elif option == 'standardize':
+            raise NotImplementedError
+            from scipy import stats
+            output_tensor = stats.zscore(output_tensor, axis=1)
+        return output_tensor
+
+class MultiModalData(object):
+    def __init__(self, train_h5_handle, batch_size):
+        self.train_h5_handle = train_h5_handle
+        self.batch_size = batch_size
+
+    def batcher(self):
+        while True:
+            for batchIdx in xrange(0, self.train_h5_handle.values()[0].shape[0], self.batch_size):
+                yield {key: inp[batchIdx:(batchIdx + self.batch_size)] for key, inp in self.train_h5_handle.items()}
+
 
 class Timer(object):
     def __init__(self, verbose=False):
