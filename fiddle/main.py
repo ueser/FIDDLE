@@ -14,6 +14,7 @@ import os
 import h5py
 import json
 
+#testing
 
 flags = tf.app.flags
 flags.DEFINE_string('runName', 'experiment', 'Running name.')
