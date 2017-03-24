@@ -5,8 +5,10 @@ from __future__ import division
 import pdb, traceback, sys # EDIT
 import tensorflow as tf
 import numpy as np
-import tflearn
-
+from keras.layers import Input, Dense, Lambda, Convolution2D, concatenate, Reshape,AveragePooling2D, Flatten
+from keras.models import Model
+from keras import backend as K
+from keras import objectives
 #######################
 # Auxiliary functions #
 #######################
@@ -55,28 +57,29 @@ def transform_track(track_data_placeholder, option='pdf'):
 class NNscaffold(object):
     """Neural Network object
     """
-    def __init__(self, architecture, learning_rate):
+    def __init__(self, architecture_path='architecture.json', learning_rate=0.01):
         """Initiates a scaffold network with default values
         Args:
             architecture: JSON file outlining neural network scaffold
             learning_rate: floating point number established in main.py FLAGS.learningRate
         """
-        self.architecture = architecture
+
+        self.architecture = self._parse_parameters(architecture_path)
         self.learning_rate = learning_rate
         self.inputs = {} # initializes input dictionary
         self.representations = list() # initializes representations list
-        for key in architecture['Inputs']:
+        for key in self.architecture['Inputs']:
             # feeds to output key a placeholder with key's input height and with
-            self.inputs[key] = tf.placeholder(tf.float32, [None, architecture['Modules'][key]["input_height"],
-                                               architecture['Modules'][key]["input_width"], 1], name=key)
+            self.inputs[key] = tf.placeholder(tf.float32, [None, self.architecture['Modules'][key]["input_height"],
+                                                           self.architecture['Modules'][key]["input_width"], 1], name=key)
             # appends deep learning layer framework for each key to representations list
             self.representations.append(self._create_track_module(key))
         self.outputs = {} # initializes output dictionary
         self.output_tensor = {} # initializes output_tensor
-        for key in architecture['Outputs']:
+        for key in self.architecture['Outputs']:
             # feeds to output key a placeholder with key's input height and with
-            self.outputs[key] = tf.placeholder(tf.float32, [None, architecture['Modules'][key]["input_height"],
-                                                architecture['Modules'][key]["input_width"], 1], name='output_' + key)
+            self.outputs[key] = tf.placeholder(tf.float32, [None, self.architecture['Modules'][key]["input_height"],
+                                                            self.architecture['Modules'][key]["input_width"], 1], name='output_' + key)
             try:
                 # converts output key placeholder to probability distribution function
                 self.output_tensor[key] = transform_track(self.outputs[key], option='pdf')
@@ -92,6 +95,36 @@ class NNscaffold(object):
         self._encapsulate_models() # ... what the heck
         # Define loss function based variational upper-bound and corresponding optimizer
         self._create_loss_optimizer()
+
+    def _parse_parameters(self, architecture_path='architecture.json'):
+        #####################################
+        # Architecture and model definition #
+        #####################################
+
+        # Read in the architecture parameters, defined by the user
+        print('Constructing architecture and model definition')
+        with open(architecture_path) as fp:
+            architecture_template = byteify(json.load(fp))
+
+        architecture = {'Modules': {}, 'Scaffold': {}}
+        architecture['Scaffold'] = architecture_template['Scaffold']
+        architecture['Inputs'] = architecture_template['Inputs']
+        architecture['Outputs'] = architecture_template['Outputs']
+
+        for key in data_tracks.keys():
+            architecture['Modules'][key] = copy.deepcopy(architecture_template['Modules'])
+            architecture['Modules'][key]['input_height'] = data_tracks[key]['metadata']['input_height']
+            architecture['Modules'][key]['Layer1']['filter_height'] = architecture['Modules'][key]['input_height']
+            # Parameters customized for specific tracks are read from architecture.json and updates the arch. dict.
+            if key in architecture_template.keys():
+                for key_key in architecture_template[key].keys():
+                    sub_val = architecture_template[key][key_key]
+                    if type(sub_val) == dict:
+                        for key_key_key in sub_val:
+                            architecture['Modules'][key][key_key][key_key_key] = sub_val[key_key_key]
+                    else:
+                        architecture['Modules'][key][key_key] = sub_val
+
 
     def _combine_representations(self, mode):
         """Concatenates tensors in representations list to either a convolution or fully connected representation
@@ -147,25 +180,27 @@ class NNscaffold(object):
     def _encapsulate_models(self):
         with tf.variable_scope('scaffold'):
             self.net = tf.reshape(self.combined_representation, shape=[-1, len(self.representations), self._scaffold_width, 1])
+            # Modality-wise dropout
             self.net = tf.nn.dropout(tf.identity(self.net), self.keep_prob_input, noise_shape=[self.inp_size, len(self.representations), 1, 1])
-            self.net = tflearn.conv_2d(self.net,
-                                       self.architecture['Scaffold']['Layer1']['number_of_filters'],
+            self.net = Conv2D(self.architecture['Scaffold']['Layer1']['number_of_filters'],
                                        [len(self.representations), self.architecture['Scaffold']['Layer1']['filter_width']],
                                        activation=self.architecture['Scaffold']['Layer1']['activation'],
-                                       regularizer="L2", padding='valid', name='conv_combined')
-            self.net = tflearn.layers.conv.avg_pool_2d(self.net, [1, self.architecture['Scaffold']['Layer1']['pool_size']],
+                                       regularizer='l2', padding='valid', name='conv_combined')(self.net)
+            self.net = AveragePooling2D([1, self.architecture['Scaffold']['Layer1']['pool_size']],
                                                        strides=[1, self.architecture['Scaffold']['Layer1']['pool_stride']],
-                                                       padding='valid', name='AvgPool_combined')
-            self.net = tflearn.layers.normalization.batch_normalization(self.net, name='batch_norm_2')
-            self.net = tflearn.flatten(self.net)
-            self.scaffold_representation = tflearn.fully_connected(self.net,
-                                                                   self.architecture['Scaffold']['representation_width'],
-                                                                   activation='linear', name='representation')
+                                                       padding='valid', name='AvgPool_combined')(self.net)
+            self.net = BatchNormalization()(self.net)
+            self.net = Flatten()(self.net)
+            self.scaffold_representation = Dense(self.architecture['Scaffold']['representation_width'],
+                                                 activation='linear', name='representation')(self.net)
+
             self.predictions = {}
             for key in self.architecture['Outputs']:
-                self.net = tflearn.fully_connected(self.scaffold_representation,
-                                                   self.architecture['Modules'][key]['input_height'] *
-                                                   self.architecture['Modules'][key]['input_width'], name='final_FC')
+                self.net = Dense(self.architecture['Modules'][key]['input_height'] *
+                                 self.architecture['Modules'][key]['input_width'],
+                                 activation='linear',
+                                 name='final_FC')(self.scaffold_representation)
+
                 if key == 'DNAseq':
                     self.net = tf.reshape(self.net, [-1, 4, self.architecture['Modules']['DNAseq']['input_width'], 1])
                     self.predictions[key] = multi_softmax(self.net, axis=1, name='multiSoftmax')
@@ -175,38 +210,34 @@ class NNscaffold(object):
 
     def _create_track_module(self, key):
         with tf.variable_scope(key):
+            net = Conv2D(self.architecture['Modules'][key]['Layer1']['number_of_filters'],
+                         [self.architecture['Modules'][key]['Layer1']['filter_height'],
+                         self.architecture['Modules'][key]['Layer1']['filter_width']],
+                         activation=self.architecture['Modules'][key]['Layer1']['activation'],
+                         kernel_regularizer='l2',
+                         padding='valid',
+                         name='conv_1')(self.inputs[key])
+            net = AveragePooling2D((1, self.architecture['Modules'][key]['Layer1']['pool_size']),
+                                    strides=(1, self.architecture['Modules'][key]['Layer1']['pool_stride']))(net)
 
-            # net = tflearn.input_data(shape=[None,
-            #                                 self.architecture['Modules'][key]['input_height'],
-            #                                 self.architecture['Modules'][key]['input_width'],
-            #                                 1], name='input')
-
-            net = tflearn.conv_2d(self.inputs[key], self.architecture['Modules'][key]['Layer1']['number_of_filters'],
-                                  [self.architecture['Modules'][key]['Layer1']['filter_height'],
-                                   self.architecture['Modules'][key]['Layer1']['filter_width']],
-                                  activation=self.architecture['Modules'][key]['Layer1']['activation'],
-                                  regularizer="L2",
-                                  padding='valid',
-                                  name='conv_1')
-            net = tflearn.layers.conv.avg_pool_2d(net, [1, self.architecture['Modules'][key]['Layer1']['pool_size']],
-                                                  strides=[1, self.architecture['Modules'][key]['Layer1']['pool_stride']],
-                                                  padding='valid', name='AvgPool_1')
-            net = tflearn.layers.normalization.batch_normalization(net, name='batch_norm_1')
-            net = tflearn.conv_2d(net, self.architecture['Modules'][key]['Layer2']['number_of_filters'],
+            net = BatchNormalization()(net)
+            net = Conv2D(self.architecture['Modules'][key]['Layer2']['number_of_filters'],
                                   [self.architecture['Modules'][key]['Layer2']['filter_height'],
                                    self.architecture['Modules'][key]['Layer2']['filter_width']],
                                   activation=self.architecture['Modules'][key]['Layer2']['activation'],
-                                  regularizer="L2",
+                                  regularizer='l2',
                                   padding='valid',
-                                  name='conv_2')
-            net = tflearn.layers.conv.avg_pool_2d(net, [1, self.architecture['Modules'][key]['Layer2']['pool_size']],
-                                                  strides=[1, self.architecture['Modules'][key]['Layer2']['pool_stride']],
-                                                  padding='valid',
-                                                  name='AvgPool_2')
-            net = tflearn.layers.normalization.batch_normalization(net, name='batch_norm_2')
-            net = tflearn.fully_connected(net,
-                                          self.architecture['Modules'][key]['representation_width'],
-                                          name='representation')
+                                  name='conv_2')(net)
+
+            net = AveragePooling2D([1, self.architecture['Modules'][key]['Layer2']['pool_size']],
+                                    strides=[1, self.architecture['Modules'][key]['Layer2']['pool_stride']],
+                                    padding='valid',
+                                    name='AvgPool_2')(net)
+            net = BatchNormalization()(net)
+            net = Flatten()(net)
+            net = Dense(self.architecture['Modules'][key]['representation_width'],
+                        name='representation')(net)
+
 
             # seems that _scaffold_width is defaulted to representation width?
         if not hasattr(self, '_scaffold_width'):
@@ -218,7 +249,7 @@ class NNscaffold(object):
         self.cost = 0
         for key in self.architecture['Outputs']:
             if key != 'DNAseq':
-                self.loss = KL_divergence(self.predictions[key], self.output_tensor[key])
+                self.loss = objectives.kl_divergence(self.output_tensor[key], self.predictions[key])
                 width = self.architecture['Modules'][key]["input_width"] * self.architecture['Modules'][key]["input_height"]
                 target = tf.floor((10.*tf.cast(tf.argmax(self.output_tensor[key], dimension=1), tf.float32))/np.float(width))
                 pred = tf.floor((10.*tf.cast(tf.argmax(self.predictions[key], dimension=1), tf.float32))/np.float(width))

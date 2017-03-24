@@ -454,13 +454,10 @@ class MultiThreadRunner(object):
         self.outputs = outputs
         # The actual queue of config.FLAGS.data. The queue contains a vector for input and output data
         try:
-# something fishy going on here... why include outputs in all_shapes when output key already in input keys ??
-#            all_shapes = [[architecture['Modules'][input_track]['input_height'], architecture['Modules'][input_track]['input_width'], 1]
-#                          for input_track in self.inputs.keys()] + \
-#                         [[architecture['Modules'][input_track]['input_height'], architecture['Modules'][input_track]['input_width'], 1]
-#                          for input_track in self.outputs.keys()]
-            all_shapes = [[architecture['Modules'][input_track]['input_height'], architecture['Modules'][input_track]['input_width'], 1]
-                          for input_track in self.inputs.keys()]
+            all_shapes = [[self.train_h5_handle.get(track_name).shape[1:3], 1]
+                          for track_name in self.inputs.keys()]+\
+                        [[self.train_h5_handle.get(track_name).shape[1:3], 1]
+                          for track_name in self.outputs.keys()]
 
         except KeyError:
             print(self.inputs, self.outputs)
@@ -485,11 +482,6 @@ class MultiThreadRunner(object):
         return dequeued_batch[:len(self.inputs)], dequeued_batch[len(self.inputs):]
 
     def _batcher(self, batch_size=128):
-        '''
-        :param shuffled_intervals_iter: pybedtools.BedTool object that provides shuffled intervals
-        :param batch_size: batch size
-        :return : dictionary of input-batch data pairs
-        '''
 
         max_len = self.train_h5_handle.values()[0].shape[0]
         current_idx = 0

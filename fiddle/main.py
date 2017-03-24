@@ -10,19 +10,17 @@ from models import *
 from io_tools import *
 import json
 import six
-from pybedtools import BedTool
 from collections import Counter
 import os
 import copy
 import h5py
-from bx.bbi.bigwig_file import BigWigFile
-from pysam import FastaFile
 
 flags = tf.app.flags
 flags.DEFINE_string('runName', 'experiment', 'Running name.')
 flags.DEFINE_string('chromSizes', '../data/sacCer3.chrom.sizes', 'Chromosome sizes files from UCSC.')
 flags.DEFINE_string('trainRegions', '../data/regions/train_regions.bed', 'Regions to train [bed or gff files]')
 flags.DEFINE_string('validRegions', '../data/regions/validation_regions.bed', 'Regions to validate [bed or gff files]')
+flags.DEFINE_string('dataDir', '../data/hdf5datasets/CN2TS_500bp', 'Regions to train [bed or gff files]')
 flags.DEFINE_string('configuration', 'configuration.json', 'configuration file [json file]')
 flags.DEFINE_boolean('predict', False, 'If true, tests for the data and prints statistics about data for unit testing.')
 flags.DEFINE_boolean('restore', False, 'If true, restores models from the ../results/XXtrained/')
@@ -47,92 +45,15 @@ from tensorflow.python import debug as tf_debug
 ################debugger#####################
 
 def main(_):
-
-    ##################################################
-    # Input data tracks and train regions definition #
-    ##################################################
-
-    # Read in chromosome size file to directory format
-    print('Reading in chromosome sizes file')
-    with open(FLAGS.chromSizes, 'r') as f:
-        chrom_sizes = {line.split(' ')[0]: (1, int(line.split(' ')[-1].split('\n')[0]))
-                       for line in f.readlines() if line.split(' ')[0] != 'chrM'}
-
-
-    # Read in configurations json file to dictionary format
-    print('Inputting configurations file')
-    with open(FLAGS.configuration) as fp:
-        config = byteify(json.load(fp))
-    data_tracks = {}
-    for key, vals in six.iteritems(config['Tracks']):
-        data_tracks[key] = {}
-        data_tracks[key]['path_to_hdf5'] = vals['data_dir']
-        data_tracks[key]['metadata'] = {}
-        filetype = vals['orig_files']['type']
-        if filetype == 'fasta':
-            data_tracks[key]['caller'] = [FastaFile(vals['orig_files']['pos']).fetch]
-            data_tracks[key]['metadata']['input_height'] = 4
-        elif filetype == 'bigwig':
-            if 'neg' in vals['orig_files'].keys():
-                data_tracks[key]['caller'] = [BigWigFile(open(vals['orig_files']['pos'], 'r')).get_as_array,
-                                              BigWigFile(open(vals['orig_files']['neg'], 'r')).get_as_array]
-                data_tracks[key]['metadata']['input_height'] = 2
-            else:
-                data_tracks[key]['caller'] = [BigWigFile(open(vals['orig_files']['pos'], 'r')).get_as_array]
-                data_tracks[key]['metadata']['input_height'] = 1
-        else:
-            raise NotImplementedError
-
-    # Read in configurations json file to dictionary format
-    print('Creating training and validation region objects')
-    train_regions = BedTool(FLAGS.trainRegions).set_chromsizes(chrom_sizes)
-    valid_regions = BedTool(FLAGS.validRegions).set_chromsizes(chrom_sizes)
-
-    print('Preparing training and validation hdf5 data')
-    output_dir = '../data/hdf5datasets/' + FLAGS.runName
-    filename_train = 'train_' + FLAGS.runName
-    if not os.path.isfile(os.path.join(output_dir, filename_train + '.h5')) or FLAGS.overwrite:
-        save_for_fast_training_hdf5(output_dir, data_tracks, train_regions, filename_train)
-    filename_validation = 'validation_' + FLAGS.runName
-    if not os.path.isfile(os.path.join(output_dir, filename_validation + '.h5')) or FLAGS.overwrite:
-        save_for_fast_training_hdf5(output_dir, data_tracks, valid_regions, filename_validation)
-
-    train_h5_handle = h5py.File(os.path.join(output_dir, filename_train + '.h5'), 'r')
-    validation_h5_handle = h5py.File(os.path.join(output_dir, filename_validation + '.h5'), 'r')
-
-    #####################################
-    # Architecture and model definition #
-    #####################################
-
-    # Read in the architecture parameters, defined by the user
-    print('Constructing architecture and model definition')
-    with open('architecture.json') as fp:
-        architecture_template = byteify(json.load(fp))
-    architecture = {'Modules': {}, 'Scaffold': {}}
-    for key in data_tracks.keys():
-        architecture['Modules'][key] = copy.deepcopy(architecture_template['Modules'])
-        architecture['Modules'][key]['input_height'] = data_tracks[key]['metadata']['input_height']
-        architecture['Modules'][key]['Layer1']['filter_height'] = architecture['Modules'][key]['input_height']
-        # Parameters customized for specific tracks are read from architecture.json and updates the arch. dict.
-        if key in architecture_template.keys():
-            for key_key in architecture_template[key].keys():
-                sub_val = architecture_template[key][key_key]
-                if type(sub_val) == dict:
-                    for key_key_key in sub_val:
-                        architecture['Modules'][key][key_key][key_key_key] = sub_val[key_key_key]
-                else:
-                    architecture['Modules'][key][key_key] = sub_val
-    architecture['Scaffold'] = architecture_template['Scaffold']
-    architecture['Inputs'] = config['Options']['Inputs']
-    architecture['Outputs'] = config['Options']['Outputs']
-
+    train_h5_handle  = h5py.File(FLAGS.trainData,'r')
+    validation_h5_handle  = h5py.File(FLAGS.validationData,'r')
     # Initialize results directory
     FLAGS.savePath = FLAGS.resultsDir + '/' + FLAGS.runName
     if not tf.gfile.Exists(FLAGS.savePath):
         tf.gfile.MakeDirs(FLAGS.savePath)
 
+    model = NNscaffold(architecture_path='architecture.json', learning_rate=FLAGS.learningRate)
     json.dump(architecture, open(FLAGS.savePath + "/architecture.json", 'w'))
-    model = NNscaffold(architecture, FLAGS.learningRate)
 
     #####################################
     # Train region and data definition #
@@ -140,8 +61,7 @@ def main(_):
 
     print('Creating multithread runner data object')
     data = MultiThreadRunner(train_h5_handle, model.inputs, model.outputs, architecture)
-    print('Setting batcher')
-    batcher = data._batcher() # batcher = data.batcher(train_regions, batch_size=FLAGS.batchSize)
+
     print('Storing validation data to the memory')
     validation_data = {key: val[:] for key, val in validation_h5_handle.items()}
 
@@ -171,13 +91,14 @@ def main(_):
     print('Pre-train test run:')
     return_dict = model.validate(validation_data, accuracy=True)
     print("Pre-train test loss: " + str(return_dict['cost']))
-    print("Pre-train test accuracy (%): " + str(100. * return_dict['accuracy_' + key] / len(valid_regions)))
+    print("Pre-train test accuracy (%): " + str(100. * return_dict['accuracy_' + key] / validation_h5_handle.shape[0]))
     model.profile() # what does this do?
 
     totIteration = int(len(train_regions) / FLAGS.batchSize) # size of train_regions needs fixing, probably valid size as well
     globalMinLoss = np.inf
     step = 0
 #for it in range(FLAGS.maxEpoch * totIteration): # EDIT: change back
+    data.start_threads()
     for it in range(20):
         print("it = " + str(it))
         ido_ = 0.8 + 0.2 * it / 10. if it <= 10 else 1.
@@ -185,14 +106,12 @@ def main(_):
         t_batcher, t_trainer = 0, 0
         for iterationNo in tq(range(10)):
             with Timer() as t:
-                train_batch = next(batcher)
-            t_batcher += t.secs
+                train_batch = data.get_batch()
+                t_batcher += t.secs
             with Timer() as t:
                 return_dict = Counter(model.train(train_batch, accuracy=True, inp_dropout=ido_))
-            t_trainer += t.secs
-            # print(iterationNo, return_dict)
-            # if np.isnan(return_dict['cost']):
-            # print({key:val[:5,:,:,0].sum(axis=2) for key, val in train_batch.items()})
+                t_trainer += t.secs
+
             return_dict_train += return_dict
             step += 1
         print('Batcher time: ' + str(t_batcher))
