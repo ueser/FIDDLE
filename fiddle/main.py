@@ -14,6 +14,7 @@ import os
 import h5py
 import json
 
+#testing
 
 flags = tf.app.flags
 flags.DEFINE_string('runName', 'experiment', 'Running name.')
@@ -47,9 +48,10 @@ from tensorflow.python import debug as tf_debug
 def main(_):
     train_h5_handle  = h5py.File(os.path.join(FLAGS.dataDir, 'train.h5'),'r')
     validation_h5_handle  = h5py.File(os.path.join(FLAGS.dataDir, 'validation.h5'),'r')
-    # Initialize results directory
+
     FLAGS.savePath = FLAGS.resultsDir + '/' + FLAGS.runName
     if not tf.gfile.Exists(FLAGS.savePath):
+        print('Results will be saved in ' + str(FLAGS.savePath))
         tf.gfile.MakeDirs(FLAGS.savePath)
 
     model = NNscaffold(configuration_path=FLAGS.configuration, architecture_path=FLAGS.architecture, learning_rate=FLAGS.learningRate)
@@ -62,19 +64,21 @@ def main(_):
     print('Creating multithread runner data object')
     data = MultiThreadRunner(train_h5_handle, model.inputs, model.outputs)
 
-    print('Storing validation data to the memory')
+    print('Storing validation data to temporary memory')
     validation_data = {key: val[:] for key, val in validation_h5_handle.items()}
 
     if FLAGS.restore:
         model.load(FLAGS.restorePath)
     else:
         model.initialize()
+
     print('Saving to results directory: ' + str(FLAGS.savePath))
     model.create_monitor_variables(FLAGS.savePath)
 
     ####################
     # Launch the graph #
     ####################
+
     print('Launch the graph')
     header_str = 'Loss'
     for key in architecture['Outputs']:
@@ -161,32 +165,3 @@ if __name__ == '__main__':
     except:
         type, value, tb = sys.exc_info()
         traceback.print_exc()
-
-
-
-#flags.DEFINE_boolean('mmap', False, 'If true, Creates memory mapped objects for streamed training')
-
-#    # 3) Construct data_tracks dictionary along with concurrent memory map or hdf5
-# memory mapping to be tossed
-#    data_tracks = {}
-#    if FLAGS.mmap:
-#        print('3) Extracting memory mapped metadata')
-#        for key, vals in six.iteritems(config['Tracks']):
-#            data_tracks[key] = {}
-#            data_tracks[key]['path_to_mmap'] = vals['data_dir']
-#            data_tracks[key]['metadata'] = {}
-#            filetype = vals['orig_files']['type']
-#            if filetype == 'fasta':
-#                data_tracks[key]['caller'] = extract_fasta_to_file(vals['orig_files']['pos'], vals['data_dir'], FLAGS.overwrite)
-#                data_tracks[key]['metadata']['input_height'] = 4
-#            elif filetype == 'bigwig':
-#                if 'neg' in vals['orig_files'].keys():
-#                    data_tracks[key]['caller'] = extract_bigwig_to_file([vals['orig_files']['pos'], vals['orig_files']['neg']],
-#                                                          vals['data_dir'], chrom_sizes, FLAGS.overwrite)
-#                    data_tracks[key]['metadata']['input_height'] = 2
-#                elif 'pos' in vals['orig_files'].keys():
-#                    data_tracks[key]['caller'] = extract_bigwig_to_file([vals['orig_files']['pos']],
-#                                                              vals['data_dir'], chrom_sizes, FLAGS.overwrite)
-#                    data_tracks[key]['metadata']['input_height'] = 1
-#            else:
-#                raise NotImplementedError
