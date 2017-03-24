@@ -300,7 +300,8 @@ class NNscaffold(object):
         tmpKey = train_data[1].keys()[0]
         train_feed.update({self.dropout: self.architecture['Scaffold']['dropout'],
                            self.keep_prob_input: inp_dropout,
-                           self.inp_size: train_data[1][tmpKey].shape[0]})
+                           self.inp_size: train_data[1][tmpKey].shape[0],
+                           K.learning_phase(): 1})
                            # revisit this...
                            #self.inp_size: train_data.values()[0].shape[0]}) # unsure whether accessing 128 or 500...?
         fetches = {'_': self.optimizer, 'cost': self.cost}
@@ -320,7 +321,8 @@ class NNscaffold(object):
             # this step right here... adds in placeholders :0, _1:0, _2:0 ... culprit?
             self.test_feed.update({self.dropout: 1.,
                                    self.keep_prob_input: 1.,
-                                   self.inp_size: validation_data.values()[0].shape[0]})
+                                   self.inp_size: validation_data.values()[0].shape[0],
+                                   K.learning_phase(): 0})
 #pdb.set_trace()
         fetches = {'cost': self.cost}
 #        #################debugger########################################
@@ -383,7 +385,11 @@ class NNscaffold(object):
     def predict(self, testInp):
         """Return the result of a flow based on mini-batch of input data.
         """
-        self.test_feed = {self.dropout:1, self.keep_prob_input:1.,self.keep_prob_input:1.,self.inp_size:testInp.values()[0].shape[0]}
+        self.test_feed = {self.dropout:1,
+                          self.keep_prob_input:1.,
+                          self.keep_prob_input:1.,
+                          self.inp_size:testInp.values()[0].shape[0],
+                          K.learning_phase():0}
         self.test_feed.update({self.inputs[key]: testInp[key] for key in self.architecture.keys()})
         return self.sess.run( self.net, feed_dict=self.test_feed)
 
@@ -399,7 +405,7 @@ class NNscaffold(object):
         for key, val in self.accuracy.items():
             # tf.scalar_summary(key+'/Accuracy', val) # EDIT
             tf.summary.scalar(key+'/Accuracy', val)
-        self.summary_op = tf.merge_all_summaries()
+        self.summary_op = tf.summary.merge_all()
         # self.summaryWriter = tf.train.SummaryWriter(savePath, self.sess.graph) # supposedly deprecated: # EDIT
         self.summaryWriter = tf.summary.FileWriter(savePath, self.sess.graph)
 
@@ -424,14 +430,14 @@ class NNscaffold(object):
 #pdb.set_trace()
             thing1 = tf.Print(fetches['cost'], [fetches['cost']], "fetches['cost']: ")
             keys, values = fetches.keys(), list(fetches.values())
-#pdb.set_trace()
+            # pdb.set_trace()
             #################debugger########################################
-            from tensorflow.python import debug as tf_debug
-            self.sess = tf_debug.LocalCLIDebugWrapperSession(self.sess)
-            self.sess.add_tensor_filter("has_inf_or_nan", tf_debug.has_inf_or_nan)
+            # from tensorflow.python import debug as tf_debug
+            # self.sess = tf_debug.LocalCLIDebugWrapperSession(self.sess)
+            # self.sess.add_tensor_filter("has_inf_or_nan", tf_debug.has_inf_or_nan)
             #################debugger########################################
-            thing2 = tf.Print(values[0], [values[0]], "this is values[0]")
-            thing3 = tf.Print(values[1], [values[1]], "this is values[1]")
+            # thing2 = tf.Print(values[0], [values[0]], "this is values[0]")
+            # thing3 = tf.Print(values[1], [values[1]], "this is values[1]")
 #pdb.set_trace()
             res = self.sess.run(values, feed_dict)
             print('intermediate')

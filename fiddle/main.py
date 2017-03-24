@@ -41,7 +41,7 @@ flags.DEFINE_string('resultsDir', '../results', 'Directory for results data')
 FLAGS = flags.FLAGS
 
 ################debugger#####################
-from tensorflow.python import debug as tf_debug
+# from tensorflow.python import debug as tf_debug
 ################debugger#####################
 
 def main(_):
@@ -62,8 +62,12 @@ def main(_):
     print('Creating multithread runner data object')
     data = MultiThreadRunner(train_h5_handle, model.inputs, model.outputs)
 
+    all_keys = list(set(model.architecture['Inputs'] + model.architecture['Outputs']))
     print('Storing validation data to the memory')
-    validation_data = {key: val[:] for key, val in validation_h5_handle.items()}
+    validation_data = {key: validation_h5_handle[key][:1000].reshape(1000,
+                                                                     validation_h5_handle[key].shape[1],
+                                                                     validation_h5_handle[key].shape[2],
+                                                                     1) for key in all_keys}
 
     if FLAGS.restore:
         model.load(FLAGS.restorePath)
@@ -77,7 +81,7 @@ def main(_):
     ####################
     print('Launch the graph')
     header_str = 'Loss'
-    for key in architecture['Outputs']:
+    for key in model.architecture['Outputs']:
         header_str += '\t' + key + '_Accuracy'
     header_str += '\n'
 
@@ -91,14 +95,14 @@ def main(_):
     print('Pre-train test run:')
     return_dict = model.validate(validation_data, accuracy=True)
     print("Pre-train test loss: " + str(return_dict['cost']))
-    print("Pre-train test accuracy (%): " + str(100. * return_dict['accuracy_' + key] / validation_h5_handle.shape[0]))
+    print("Pre-train test accuracy (%): " + str(100. * return_dict['accuracy_' + key] / validation_data.values()[0].shape[0]))
     model.profile() # what does this do?
 
-    totIteration = int(len(train_regions) / FLAGS.batchSize) # size of train_regions needs fixing, probably valid size as well
+    # totIteration = int(len(train_regions) / FLAGS.batchSize) # size of train_regions needs fixing, probably valid size as well
     globalMinLoss = np.inf
     step = 0
 #for it in range(FLAGS.maxEpoch * totIteration): # EDIT: change back
-    data.start_threads()
+    data.start_threads(model.sess, n_threads=4)
     for it in range(20):
         print("it = " + str(it))
         ido_ = 0.8 + 0.2 * it / 10. if it <= 10 else 1.
