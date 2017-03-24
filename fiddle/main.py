@@ -14,6 +14,7 @@ import os
 import h5py
 import json
 
+#testing
 
 flags = tf.app.flags
 flags.DEFINE_string('runName', 'experiment', 'Running name.')
@@ -43,9 +44,10 @@ FLAGS = flags.FLAGS
 def main(_):
     train_h5_handle  = h5py.File(os.path.join(FLAGS.dataDir, 'train.h5'),'r')
     validation_h5_handle  = h5py.File(os.path.join(FLAGS.dataDir, 'validation.h5'),'r')
-    # Initialize results directory
+
     FLAGS.savePath = FLAGS.resultsDir + '/' + FLAGS.runName
     if not tf.gfile.Exists(FLAGS.savePath):
+        print('Results will be saved in ' + str(FLAGS.savePath))
         tf.gfile.MakeDirs(FLAGS.savePath)
 
 
@@ -58,7 +60,6 @@ def main(_):
 
     all_keys = list(set(model.architecture['Inputs'] + model.architecture['Outputs']))
 
-
     data = MultiModalData(train_h5_handle, batch_size=FLAGS.batchSize)
     batcher = data.batcher()
     print('Storing validation data to the memory')
@@ -67,12 +68,14 @@ def main(_):
         model.load(FLAGS.restorePath)
     else:
         model.initialize()
+
     print('Saving to results directory: ' + str(FLAGS.savePath))
     model.create_monitor_variables(FLAGS.savePath)
 
     ####################
     # Launch the graph #
     ####################
+
     print('Launch the graph')
     header_str = 'Loss'
     for key in model.architecture['Outputs']:

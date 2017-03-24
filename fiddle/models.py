@@ -145,7 +145,7 @@ class NNscaffold(object):
                             self.architecture['Modules'][key][key_key][key_key_key] = sub_val[key_key_key]
                     else:
                         self.architecture['Modules'][key][key_key] = sub_val
-        
+
 
     def _combine_representations(self, mode):
         """Concatenates tensors in representations list to either a convolution or fully connected representation
@@ -165,13 +165,7 @@ class NNscaffold(object):
         or from scratch
         """
         self.sess = tf.Session() # Launch the session
-#        #################debugger########################################
-#        from tensorflow.python import debug as tf_debug
-#        self.sess = tf_debug.LocalCLIDebugWrapperSession(self.sess)
-#        self.sess.add_tensor_filter("has_inf_or_nan", tf_debug.has_inf_or_nan)
-#        #################debugger########################################
         # Initializing the tensor flow variables
-        # init = tf.initialize_all_variables() # EDIT
         init = tf.global_variables_initializer() # std out recommended this instead
         self.sess.run(init)
         print('Session initialized.')
@@ -288,7 +282,6 @@ class NNscaffold(object):
             self.cost += tf.reduce_mean(self.loss)   # average over batch
 
         self.global_step = tf.Variable(0, name='globalStep', trainable=False)
-#pdb.set_trace()
         # Use ADAM optimizer
         self.optimizer = \
             tf.train.AdamOptimizer(learning_rate=self.learning_rate).minimize(self.cost, global_step=self.global_step)
@@ -308,8 +301,7 @@ class NNscaffold(object):
                            self.keep_prob_input: inp_dropout,
                            self.inp_size: batch_size,
                            K.learning_phase(): 1})
-                           # revisit this...
-                           #self.inp_size: train_data.values()[0].shape[0]}) # unsure whether accessing 128 or 500...?
+
         fetches = {'_': self.optimizer, 'cost': self.cost}
         if accuracy is not None:
             fetches.update({'accuracy_' + key: val for key, val in self.accuracy.items()})
@@ -321,26 +313,16 @@ class NNscaffold(object):
         """
         if not hasattr(self, 'test_feed'):
             self.test_feed = {self.outputs[key]: validation_data[key] for key in self.architecture['Outputs']}
-#pdb.set_trace()
             self.test_feed.update({self.inputs[key]: validation_data[key] for key in self.architecture['Inputs']})
-#pdb.set_trace()
-            # this step right here... adds in placeholders :0, _1:0, _2:0 ... culprit?
             self.test_feed.update({self.dropout: 1.,
                                    self.keep_prob_input: 1.,
                                    self.inp_size: validation_data.values()[0].shape[0],
                                    K.learning_phase(): 0})
-#pdb.set_trace()
+
         fetches = {'cost': self.cost}
-#        #################debugger########################################
-#        from tensorflow.python import debug as tf_debug
-#        self.sess = tf_debug.LocalCLIDebugWrapperSession(self.sess)
-#        self.sess.add_tensor_filter("has_inf_or_nan", tf_debug.has_inf_or_nan)
-#        #################debugger########################################
         if accuracy is not None:
-#pdb.set_trace()
             fetches.update({'accuracy_' + key: val for key, val in self.accuracy.items()})
         return_dict = self._run(fetches, self.test_feed)
-#pdb.set_trace()
         return return_dict
 
     def suffnec(self, trainInp, trainOut):
@@ -405,16 +387,13 @@ class NNscaffold(object):
         self.summaryWriter.flush()
 
     def create_monitor_variables(self, savePath):
-        # for monitoring
-        # tf.scalar_summary('KL divergence', self.cost) # supposedly deprecated: # EDIT
+        """Writes to results directory a summary of graph variables"""
         tf.summary.scalar('KL divergence', self.cost)
         for key, val in self.accuracy.items():
-            # tf.scalar_summary(key+'/Accuracy', val) # EDIT
             tf.summary.scalar(key+'/Accuracy', val)
         self.summary_op = tf.summary.merge_all()
         # self.summaryWriter = tf.train.SummaryWriter(savePath, self.sess.graph) # supposedly deprecated: # EDIT
         self.summaryWriter = tf.summary.FileWriter(savePath, self.sess.graph)
-
 
     def _run(self, fetches, feed_dict):
         """Wrapper for making Session.run() more user friendly.
@@ -433,20 +412,14 @@ class NNscaffold(object):
         feed_dict -- The dict of values to feed to the computation graph.
         """
         if isinstance(fetches, dict):
-#pdb.set_trace()
-            thing1 = tf.Print(fetches['cost'], [fetches['cost']], "fetches['cost']: ")
             keys, values = fetches.keys(), list(fetches.values())
-            # pdb.set_trace()
-            #################debugger########################################
-            # from tensorflow.python import debug as tf_debug
-            # self.sess = tf_debug.LocalCLIDebugWrapperSession(self.sess)
-            # self.sess.add_tensor_filter("has_inf_or_nan", tf_debug.has_inf_or_nan)
-            #################debugger########################################
-            # thing2 = tf.Print(values[0], [values[0]], "this is values[0]")
-            # thing3 = tf.Print(values[1], [values[1]], "this is values[1]")
-#pdb.set_trace()
+
+            ##################debugger########################################
+            #from tensorflow.python import debug as tf_debug
+            #self.sess = tf_debug.LocalCLIDebugWrapperSession(self.sess)
+            #self.sess.add_tensor_filter("has_inf_or_nan", tf_debug.has_inf_or_nan)
+            ##################debugger########################################
             res = self.sess.run(values, feed_dict)
-#pdb.set_trace()
             return {key: value for key, value in zip(keys, res)}
         else:
             print('actually, this one')
@@ -454,11 +427,9 @@ class NNscaffold(object):
 
     def profile(self):
         from tensorflow.python.client import timeline
-
         self.run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
         self.run_metadata = tf.RunMetadata()
         self.sess.run(self.optimizer, options=self.run_options, run_metadata=self.run_metadata, feed_dict=self.test_feed)
-
         # Create the Timeline object, and write it to a json
         tl = timeline.Timeline(self.run_metadata.step_stats)
         ctf = tl.generate_chrome_trace_format()
