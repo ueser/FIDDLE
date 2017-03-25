@@ -31,7 +31,9 @@ def multi_softmax(target, axis=1, name=None):
 def KL_divergence(P_, Q_):
     """Takes Tensorflow tensors and returns the KL divergence for each row i.e. D(P_, Q_)
     """
-    return tf.reduce_sum(tf.mul(P_+1e-16, tf.sub(tf.log(P_+1e-16), tf.log(Q_ + 1e-16))), 1)
+    return tf.reduce_sum(tf.multiply(K.clip(P_, K.epsilon(), 1),
+                                     tf.subtract(tf.log(K.clip(P_, K.epsilon(), 1)),
+                                                 tf.log(K.clip(Q_, K.epsilon(), 1)))), 1)
 
 
 def transform_track(track_data_placeholder, option='pdf'):
@@ -204,7 +206,7 @@ class NNscaffold(object):
             self.net = AveragePooling2D([1, self.architecture['Scaffold']['Layer1']['pool_size']],
                                                        strides=[1, self.architecture['Scaffold']['Layer1']['pool_stride']],
                                                        padding='valid', name='AvgPool_combined')(self.net)
-            self.net = BatchNormalization()(self.net)
+            # self.net = BatchNormalization()(self.net)
             self.net = Flatten()(self.net)
             self.scaffold_representation = Dense(self.architecture['Scaffold']['representation_width'],
                                                  activation='linear', name='representation')(self.net)
@@ -235,7 +237,7 @@ class NNscaffold(object):
             net = AveragePooling2D((1, self.architecture['Modules'][key]['Layer1']['pool_size']),
                                     strides=(1, self.architecture['Modules'][key]['Layer1']['pool_stride']))(net)
 
-            net = BatchNormalization()(net)
+            # net = BatchNormalization()(net)
             net = Conv2D(self.architecture['Modules'][key]['Layer2']['number_of_filters'],
                                   [self.architecture['Modules'][key]['Layer2']['filter_height'],
                                    self.architecture['Modules'][key]['Layer2']['filter_width']],
@@ -248,7 +250,7 @@ class NNscaffold(object):
                                     strides=[1, self.architecture['Modules'][key]['Layer2']['pool_stride']],
                                     padding='valid',
                                     name='AvgPool_2')(net)
-            net = BatchNormalization()(net)
+            # net = BatchNormalization()(net)
             net = Flatten()(net)
             net = Dense(self.architecture['Modules'][key]['representation_width'],
                         name='representation')(net)
@@ -265,6 +267,7 @@ class NNscaffold(object):
         for key in self.architecture['Outputs']:
             if key != 'DNAseq':
                 self.loss = kullback_leibler_divergence(self.output_tensor[key], self.predictions[key])
+                # self.loss = KL_divergence(self.output_tensor[key], self.predictions[key])
                 width = self.architecture['Modules'][key]["input_width"] * self.architecture['Modules'][key]["input_height"]
                 target = tf.floor((10.*tf.cast(tf.argmax(self.output_tensor[key], dimension=1), tf.float32))/np.float(width))
                 pred = tf.floor((10.*tf.cast(tf.argmax(self.predictions[key], dimension=1), tf.float32))/np.float(width))
@@ -325,51 +328,6 @@ class NNscaffold(object):
         return_dict = self._run(fetches, self.test_feed)
         return return_dict
 
-    def suffnec(self, trainInp, trainOut):
-        """Calculates the sufficiency and necessity score of an input dataset by setting the
-        rest of the inputs to their average values and the input of interest to its average value, respectively.
-
-        Returns cost dictionary.
-        """
-
-        print('Calculating sufficiency...')
-        suffDict ={}
-
-        self.train_feed = {self.output:trainOut.values()[0], self.dropout:1, self.keep_prob_input:1.,self.inp_size:trainOut.values()[0].shape[0]}
-        for key in self.architecture.keys():
-            self.train_feed.update({self.inputs[key]: np.tile(trainInp[key].mean(axis=0),(trainInp[key].shape[0],1,1,1))})
-        suffDict['NoneActive'] = self.sess.run(self.loss, feed_dict=self.train_feed)
-
-        for inputName in self.architecture.keys():
-            print('...'+inputName)
-            self.train_feed = {self.output:trainOut.values()[0], self.dropout:1,self.keep_prob_input:1.,self.inp_size:trainOut.values()[0].shape[0]}
-            for key in self.architecture.keys():
-                if key==inputName:
-                    self.train_feed.update({self.inputs[key]: trainInp[key]})
-                else:
-                    self.train_feed.update({self.inputs[key]: np.tile(trainInp[key].mean(axis=0),(trainInp[key].shape[0],1,1,1))})
-
-            suffDict[inputName] = self.sess.run(self.loss, feed_dict=self.train_feed)
-
-        print('Calculating necessity...')
-        necDict = {}
-        for inputName in self.architecture.keys():
-            print('...'+inputName)
-            self.train_feed = {self.output:trainOut.values()[0], self.dropout:1,self.keep_prob_input:1.,self.inp_size:trainOut.values()[0].shape[0]}
-            for key in self.architecture.keys():
-                if key is not inputName:
-                    self.train_feed.update({self.inputs[key]: trainInp[key]})
-                else:
-                    self.train_feed.update({self.inputs[key]: np.tile(trainInp[key].mean(axis=0),(trainInp[key].shape[0],1,1,1))})
-            necDict[inputName] = self.sess.run(self.loss, feed_dict=self.train_feed)
-
-        self.train_feed = {self.output: trainOut.values()[0], self.dropout:1,self.keep_prob_input:1.,self.inp_size:trainOut.values()[0].shape[0]}
-        for key in self.architecture.keys():
-            self.train_feed.update({self.inputs[key]: trainInp[key]})
-        necDict['AllActive'] = self.sess.run(self.loss, feed_dict=self.train_feed)
-
-        return suffDict, necDict
-
     def predict(self, testInp):
         """Return the result of a flow based on mini-batch of input data.
         """
@@ -411,14 +369,15 @@ class NNscaffold(object):
         fetches -- A list or dict of ops to fetch.
         feed_dict -- The dict of values to feed to the computation graph.
         """
+        # pdb.set_trace()
         if isinstance(fetches, dict):
             keys, values = fetches.keys(), list(fetches.values())
 
             ##################debugger########################################
-            #from tensorflow.python import debug as tf_debug
-            #self.sess = tf_debug.LocalCLIDebugWrapperSession(self.sess)
-            #self.sess.add_tensor_filter("has_inf_or_nan", tf_debug.has_inf_or_nan)
-            ##################debugger########################################
+            # from tensorflow.python import debug as tf_debug
+            # self.sess = tf_debug.LocalCLIDebugWrapperSession(self.sess)
+            # self.sess.add_tensor_filter("has_inf_or_nan", tf_debug.has_inf_or_nan)
+            # ##################debugger########################################
             res = self.sess.run(values, feed_dict)
             return {key: value for key, value in zip(keys, res)}
         else:

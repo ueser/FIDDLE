@@ -26,13 +26,7 @@ flags.DEFINE_boolean('restore', False, 'If true, restores models from the ../res
 flags.DEFINE_string('restorePath', '../results/test', 'Regions to validate [bed or gff files]')
 flags.DEFINE_integer('maxEpoch', 1000, 'Number of epochs to run trainer.')
 flags.DEFINE_integer('batchSize', 100, 'Batch size.')
-flags.DEFINE_integer('filterWidth', 10, 'Filter width for convolutional network')
-flags.DEFINE_integer('sampleSize', None, 'Sample size.')
-flags.DEFINE_integer('testSize', None, 'Test size.')
-flags.DEFINE_integer('trainSize', None, 'Train size.')
-flags.DEFINE_integer('chunkSize', 1000, 'Chunk size.')
 flags.DEFINE_float('learningRate', 0.001, 'Initial learning rate.')
-flags.DEFINE_float('trainRatio', 0.8, 'Train data ratio')
 flags.DEFINE_float('dropout', 0.5, 'Keep probability for training dropout.')
 flags.DEFINE_string('resultsDir', '../results', 'Directory for results data')
 FLAGS = flags.FLAGS
@@ -63,7 +57,7 @@ def main(_):
     data = MultiModalData(train_h5_handle, batch_size=FLAGS.batchSize)
     batcher = data.batcher()
     print('Storing validation data to the memory')
-    validation_data = {key: validation_h5_handle[key][:1000] for key in all_keys}
+    validation_data = {key: validation_h5_handle[key][:25] for key in all_keys}
     if FLAGS.restore:
         model.load(FLAGS.restorePath)
     else:
@@ -101,7 +95,8 @@ def main(_):
 #for it in range(FLAGS.maxEpoch * totIteration): # EDIT: change back
     for it in range(20):
         print("it = " + str(it))
-        ido_ = 0.8 + 0.2 * it / 10. if it <= 10 else 1.
+        # ido_ = 0.8 + 0.2 * it / 10. if it <= 10 else 1.
+        ido_=1.
         return_dict_train = Counter({})
         t_batcher, t_trainer = 0, 0
         for iterationNo in tq(range(10)):
