@@ -1,0 +1,44 @@
+{
+  "Modules":{
+        "input_height": 4,
+        "input_width": 500,
+        "representation_width": 500,
+        "Layer1":{
+          "number_of_filters": 80,
+          "filter_width": 5,
+          "filter_height": 4,
+          "pool_size": 2,
+          "pool_stride":2,
+          "activation": "relu"
+        },
+        "Layer2":{
+              "number_of_filters": 80,
+              "filter_width": 5,
+              "filter_height": 1,
+              "pool_size": 2,
+              "pool_stride":2,
+              "activation": "relu"
+            },
+        "dropout":0.5,
+        "input_dropout":0.8
+
+  },
+  "Scaffold":{
+    "representation_width": 500,
+    "Layer1":{
+          "number_of_filters": 80,
+          "filter_width": 5,
+          "filter_height": 4,
+          "pool_size": 2,
+          "pool_stride":2,
+          "activation": "relu"
+        },
+    "dropout":0.5,
+    "input_dropout":0.8
+  },
+  "MNaseseq": {
+    "Layer1":{
+      "filter_width": 15
+    }
+  }
+}

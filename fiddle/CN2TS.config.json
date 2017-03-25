@@ -1,0 +1,21 @@
+{ "Genome": "sacCer3",
+  "Tracks": {
+    "chipnexus": {
+      "id": "cs",
+      "input_height": 2
+    },
+    "dnaseq": {
+      "id": "ds",
+      "input_height": 4
+    },
+    "tssseq": {
+      "id": "ts",
+      "input_height": 2
+    }
+  },
+  "Options": {
+    "Inputs":["chipnexus", "dnaseq"],
+    "Outputs":["tssseq"],
+    "Stranded":"False"
+  }
+}

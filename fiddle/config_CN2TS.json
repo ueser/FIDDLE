@@ -1,0 +1,38 @@
+{ "Genome": "sacCer3",
+  "Tracks": {
+    "DNAseq": {
+      "id": "DS",
+      "data_dir": "../data/mmaped/DNAseq",
+      "orig_files": {
+        "type": "fasta",
+        "pos": "../data/sacCer3.fa"
+      },
+      "input_height": 4
+    },
+    "ChIPnexus": {
+      "id": "CN",
+      "data_dir": "../data/mmaped/ChIPnexus",
+      "orig_files": {
+        "type": "bigwig",
+        "pos": "../data/bigwigs/chipnexus/Dia_Cnt.cn.pos.bw",
+        "neg": "../data/bigwigs/chipnexus/Dia_Cnt.cn.neg.bw"
+      },
+      "input_height": 2
+    },
+    "TSSseq": {
+      "id": "TS",
+      "data_dir": "../data/mmaped/TSSseq",
+      "orig_files": {
+        "type": "bigwig",
+        "pos": "../data/bigwigs/tssseq/Dia_Cnt.ts.pos.bw",
+        "neg": "../data/bigwigs/tssseq/Dia_Cnt.ts.neg.bw"
+      },
+      "input_height": 2
+    }
+  },
+  "Options": {
+    "Inputs":["DNAseq", "ChIPnexus"],
+    "Outputs":["TSSseq"],
+    "Stranded":"True"
+  }
+}
