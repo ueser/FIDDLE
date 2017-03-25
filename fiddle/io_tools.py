@@ -2,7 +2,6 @@ import pdb, traceback, sys # EDIT
 
 import numpy as np
 import six
-import bcolz
 import time
 from tqdm import tqdm as tq
 
