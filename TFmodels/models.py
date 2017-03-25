@@ -4,8 +4,9 @@ from __future__ import division
 
 import tensorflow as tf
 import numpy as np
-import tensorflow.contrib.slim as slim
+#import tensorflow.contrib.slim as slim
 
+import mytf.contrib.slim as slim
 
 class NNscaffold(object):
     """
