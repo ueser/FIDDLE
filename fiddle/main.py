@@ -57,7 +57,7 @@ def main(_):
     data = MultiModalData(train_h5_handle, batch_size=FLAGS.batchSize)
     batcher = data.batcher()
     print('Storing validation data to the memory')
-    validation_data = {key: validation_h5_handle[key][:25] for key in all_keys}
+    validation_data = {key: validation_h5_handle[key][:] for key in all_keys}
     if FLAGS.restore:
         model.load(FLAGS.restorePath)
     else:
@@ -77,24 +77,25 @@ def main(_):
     header_str += '\n'
 
     saver = tf.train.Saver()
-    with open((FLAGS.savePath + "/" + "train.txt"), "w") as trainFile:
-        trainFile.write(header_str)
+    with open((FLAGS.savePath + "/" + "train.txt"), "w") as train_file:
+        train_file.write(header_str)
 
-    with open((FLAGS.savePath + "/" + "test.txt"), "w") as testFile:
-        testFile.write(header_str)
+    with open((FLAGS.savePath + "/" + "validation.txt"), "w") as validation_file:
+        validation_file.write(header_str)
 
-    print('Pre-train test run:')
+    print('Pre-train validation run:')
     return_dict = model.validate(validation_data, accuracy=True)
-    print("Pre-train test loss: " + str(return_dict['cost']))
-    print("Pre-train test accuracy (%): " + str(100. * return_dict['accuracy_' + key] / validation_data.values()[0].shape[0]))
+    print("Pre-train validation loss: " + str(return_dict['cost']))
+    print("Pre-train validation accuracy (%): " + str(100. * return_dict['accuracy_' + key] / validation_data.values()[0].shape[0]))
     model.profile() # what does this do?
 
     # totIteration = int(len(train_regions) / FLAGS.batchSize) # size of train_regions needs fixing, probably valid size as well
     globalMinLoss = np.inf
     step = 0
 #for it in range(FLAGS.maxEpoch * totIteration): # EDIT: change back
-    for it in range(20):
-        print("it = " + str(it))
+    for it in range(200):
+
+        print('Iteration: ' + str(it))
         # ido_ = 0.8 + 0.2 * it / 10. if it <= 10 else 1.
         ido_=1.
         return_dict_train = Counter({})
@@ -115,7 +116,7 @@ def main(_):
             return_dict_train[key] /= iterationNo
         return_dict_valid = model.validate(validation_data, accuracy=True)
 
-        print('Iteration: ' + str(it))
+
         write_to_txt(return_dict_train)
         write_to_txt(return_dict_valid, batch_size=validation_data.values()[0].shape[0], case='validation')
 
@@ -135,7 +136,6 @@ def write_to_txt(return_dict, batch_size=FLAGS.batchSize, case='train', verbose=
     line_to_write = ''
     for key, val in return_dict.items():
         if key == 'cost':
-            print(return_dict['cost'])
             cur_line = str(return_dict['cost'])
             line_to_write += str(return_dict[key])
         elif key == '_':
