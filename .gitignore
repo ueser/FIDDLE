@@ -25,7 +25,6 @@
 *.tar
 *.zip
 
-*/analysis/*
 
 # Logs and databases #
 ######################
@@ -73,6 +72,9 @@ Thumbs.db
 *allRecords.txt
 # Folders to untrack ##
 #
+analysis/*
 data/*
 visualization*
 results/*
+*/data_prep/*
+

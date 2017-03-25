@@ -47,8 +47,8 @@ def transform_track(track_data_placeholder, option='pdf'):
     if option == 'pdf':
         output_tensor = tf.reshape(track_data_placeholder,
                                    [-1, (track_data_placeholder.get_shape()[1] * track_data_placeholder.get_shape()[
-                                       2]).value]) + 1e-16
-        output_tensor = tf.div(output_tensor, tf.reduce_sum(output_tensor, 1, keep_dims=True))
+                                       2]).value]) + K.epsilon()
+        output_tensor = tf.divide(output_tensor, tf.reduce_sum(output_tensor, 1, keep_dims=True))
     # NOT completed yet
     elif option == 'standardize':
         raise NotImplementedError
@@ -104,8 +104,12 @@ class NNscaffold(object):
             self.outputs[key] = tf.placeholder(tf.float32, [None, self.architecture['Modules'][key]["input_height"],
                                                             self.architecture['Modules'][key]["input_width"], 1],
                                                name='output_' + key)
-            # converts output key placeholder to probability distribution function
-            self.output_tensor[key] = transform_track(self.outputs[key], option='pdf')
+            if self.config['Options']['Stranded']:
+                self.positive_strand = tf.slice(self.outputs[key],[0,0,0,0], [-1,1,-1,-1])
+                self.output_tensor[key] = transform_track(self.positive_strand, option='pdf')
+            else:
+                # converts output key placeholder to probability distribution function
+                self.output_tensor[key] = transform_track(self.outputs[key], option='pdf')
 
 
 
@@ -213,10 +217,15 @@ class NNscaffold(object):
 
             self.predictions = {}
             for key in self.architecture['Outputs']:
-                self.net = Dense(self.architecture['Modules'][key]['input_height'] *
-                                 self.architecture['Modules'][key]['input_width'],
+                if self.config['Options']['Stranded']:
+                    self.net = Dense(self.architecture['Modules'][key]['input_width'],
                                  activation='linear',
                                  name='final_FC')(self.scaffold_representation)
+                else:
+                    self.net = Dense(self.architecture['Modules'][key]['input_height'] *
+                                     self.architecture['Modules'][key]['input_width'],
+                                     activation='linear',
+                                     name='final_FC')(self.scaffold_representation)
 
                 if key == 'DNAseq':
                     self.net = tf.reshape(self.net, [-1, 4, self.architecture['Modules']['DNAseq']['input_width'], 1])
@@ -378,6 +387,7 @@ class NNscaffold(object):
             # self.sess = tf_debug.LocalCLIDebugWrapperSession(self.sess)
             # self.sess.add_tensor_filter("has_inf_or_nan", tf_debug.has_inf_or_nan)
             # ##################debugger########################################
+            # pdb.set_trace()
             res = self.sess.run(values, feed_dict)
             return {key: value for key, value in zip(keys, res)}
         else:

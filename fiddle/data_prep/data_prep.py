@@ -2,6 +2,7 @@ import h5py
 import numpy as np
 
 def main():
+
     h5pnt = h5py.File('/Users/umut/Projects/FIDDLE/data/hdf5datasets/CN2TS_DIAandWT_500bp.h5', 'w')
     max_size = 50000
     dnaseq = h5pnt.create_dataset('dnaseq', (max_size, 4, 500, 1))
