@@ -2,6 +2,12 @@ from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import division
 
+###running on a shared cluster ###
+import sys
+sys.path.append('/home/ue4/tfvenv/lib/python2.7/site-packages/')
+##################################
+
+
 import pdb, traceback, sys # EDIT
 import tensorflow as tf
 import numpy as np
