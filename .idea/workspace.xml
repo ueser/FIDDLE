@@ -2,7 +2,12 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="af957dae-1932-4bfe-989e-420dfff878bb" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/fiddle/io_tools.py" afterPath="$PROJECT_DIR$/fiddle/io_tools.py" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/fiddle/config_CN2TS.json" afterPath="" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/fiddle/CN2TS.config.json" afterPath="$PROJECT_DIR$/fiddle/CN2TS.config.json" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/fiddle/main.py" afterPath="$PROJECT_DIR$/fiddle/main.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/fiddle/models.py" afterPath="$PROJECT_DIR$/fiddle/models.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/fiddle/timeline.json" afterPath="$PROJECT_DIR$/fiddle/timeline.json" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -17,16 +22,6 @@
   <component name="ExecutionTargetManager" SELECTED_TARGET="default_target" />
   <component name="FileEditorManager">
     <leaf>
-      <file leaf-file-name="filter_bedgraph.sh" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/../intragenicTranscription/data/TSSseq/filter_bedgraph.sh">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="105">
-              <caret line="7" column="19" lean-forward="false" selection-start-line="7" selection-start-column="4" selection-end-line="7" selection-end-column="19" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
       <file leaf-file-name="extract_regions.sh" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/../intragenicTranscription/data/extract_regions.sh">
           <provider selected="true" editor-type-id="text-editor">
@@ -37,11 +32,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="models.py" pinned="false" current-in-tab="false">
+      <file leaf-file-name="models.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/fiddle/models.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="545">
-              <caret line="405" column="44" lean-forward="false" selection-start-line="405" selection-start-column="44" selection-end-line="405" selection-end-column="44" />
+            <state relative-caret-position="540">
+              <caret line="102" column="66" lean-forward="false" selection-start-line="102" selection-start-column="66" selection-end-line="102" selection-end-column="66" />
               <folding>
                 <element signature="e#0#38#0" expanded="true" />
               </folding>
@@ -52,18 +47,18 @@
       <file leaf-file-name="architecture.json" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/fiddle/architecture.json">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="315">
-              <caret line="21" column="22" lean-forward="true" selection-start-line="21" selection-start-column="22" selection-end-line="21" selection-end-column="22" />
+            <state relative-caret-position="120">
+              <caret line="8" column="28" lean-forward="false" selection-start-line="8" selection-start-column="28" selection-end-line="8" selection-end-column="28" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="config_CN2TS.json" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/fiddle/config_CN2TS.json">
+      <file leaf-file-name="CN2TS.config.json" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/fiddle/CN2TS.config.json">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="525">
-              <caret line="35" column="17" lean-forward="true" selection-start-line="35" selection-start-column="17" selection-end-line="35" selection-end-column="17" />
+            <state relative-caret-position="315">
+              <caret line="21" column="0" lean-forward="true" selection-start-line="21" selection-start-column="0" selection-end-line="21" selection-end-column="0" />
               <folding />
             </state>
           </provider>
@@ -72,20 +67,20 @@
       <file leaf-file-name="main.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/fiddle/main.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="510">
-              <caret line="54" column="18" lean-forward="false" selection-start-line="54" selection-start-column="0" selection-end-line="55" selection-end-column="0" />
+            <state relative-caret-position="210">
+              <caret line="32" column="0" lean-forward="false" selection-start-line="32" selection-start-column="0" selection-end-line="32" selection-end-column="0" />
               <folding>
                 <element signature="e#0#38#0" expanded="true" />
-                <marker date="1490458503000" expanded="true" signature="4389:4456" ph="..." />
-                <marker date="1490458503000" expanded="true" signature="4389:5155" ph="..." />
-                <marker date="1490458503000" expanded="true" signature="4389:5179" ph="..." />
-                <marker date="1490458503000" expanded="true" signature="4960:5155" ph="..." />
-                <marker date="1490458503000" expanded="true" signature="5269:5859" ph="..." />
-                <marker date="1490458503000" expanded="true" signature="5388:5758" ph="..." />
-                <marker date="1490458503000" expanded="true" signature="5414:5513" ph="..." />
-                <marker date="1490458503000" expanded="true" signature="5573:5683" ph="..." />
-                <marker date="1490458503000" expanded="true" signature="5888:6001" ph="..." />
-                <marker date="1490458503000" expanded="true" signature="5930:6001" ph="..." />
+                <marker date="1490475383000" expanded="true" signature="4569:4636" ph="..." />
+                <marker date="1490475383000" expanded="true" signature="4569:5335" ph="..." />
+                <marker date="1490475383000" expanded="true" signature="4569:5359" ph="..." />
+                <marker date="1490475383000" expanded="true" signature="5140:5335" ph="..." />
+                <marker date="1490475383000" expanded="true" signature="5449:6039" ph="..." />
+                <marker date="1490475383000" expanded="true" signature="5568:5938" ph="..." />
+                <marker date="1490475383000" expanded="true" signature="5594:5693" ph="..." />
+                <marker date="1490475383000" expanded="true" signature="5753:5863" ph="..." />
+                <marker date="1490475383000" expanded="true" signature="6068:6181" ph="..." />
+                <marker date="1490475383000" expanded="true" signature="6110:6181" ph="..." />
               </folding>
             </state>
           </provider>
@@ -95,7 +90,7 @@
         <entry file="file://$PROJECT_DIR$/fiddle/data_prep/generate_regions.py">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="375">
-              <caret line="25" column="45" lean-forward="true" selection-start-line="25" selection-start-column="45" selection-end-line="25" selection-end-column="45" />
+              <caret line="25" column="45" lean-forward="false" selection-start-line="25" selection-start-column="45" selection-end-line="25" selection-end-column="45" />
               <folding />
             </state>
           </provider>
@@ -114,14 +109,14 @@
       <file leaf-file-name="create_hdf5.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/fiddle/data_prep/create_hdf5.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="465">
-              <caret line="69" column="0" lean-forward="true" selection-start-line="69" selection-start-column="0" selection-end-line="69" selection-end-column="0" />
+            <state relative-caret-position="335">
+              <caret line="69" column="0" lean-forward="false" selection-start-line="69" selection-start-column="0" selection-end-line="69" selection-end-column="0" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="io_tools.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="io_tools.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/fiddle/io_tools.py">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="60">
@@ -169,6 +164,10 @@
       <find>batchS</find>
       <find>intermedia</find>
       <find>print</find>
+      <find>BatchN</find>
+      <find>BAt</find>
+      <find>BAtchN</find>
+      <find>strande</find>
     </findStrings>
     <replaceStrings>
       <replace>architecture_template</replace>
@@ -182,7 +181,6 @@
     <option name="CHANGED_PATHS">
       <list>
         <option value="$PROJECT_DIR$/fiddle/config_CS2TS.json" />
-        <option value="$PROJECT_DIR$/fiddle/config_CN2TS.json" />
         <option value="$PROJECT_DIR$/../intragenicTranscription/data/extract_regions.sh" />
         <option value="$PROJECT_DIR$/../intragenicTranscription/data/TSSseq/filter_bedgraph.sh" />
         <option value="$PROJECT_DIR$/dev/keras_model.py" />
@@ -190,15 +188,16 @@
         <option value="$PROJECT_DIR$/dev/models.py" />
         <option value="$PROJECT_DIR$/dev/main.py" />
         <option value="$PROJECT_DIR$/fiddle/architecture.json" />
-        <option value="$PROJECT_DIR$/fiddle/CN2TS.config.json" />
         <option value="$PROJECT_DIR$/fiddle/dataClass.py" />
         <option value="$PROJECT_DIR$/fiddle/data_prep.py" />
         <option value="$PROJECT_DIR$/fiddle/data_prep/generate_regions.py" />
         <option value="$PROJECT_DIR$/fiddle/data_prep/extract_regions.sh" />
-        <option value="$PROJECT_DIR$/fiddle/main.py" />
         <option value="$PROJECT_DIR$/fiddle/data_prep/create_hdf5.py" />
-        <option value="$PROJECT_DIR$/fiddle/models.py" />
         <option value="$PROJECT_DIR$/fiddle/io_tools.py" />
+        <option value="$PROJECT_DIR$/fiddle/config_CN2TS.json" />
+        <option value="$PROJECT_DIR$/fiddle/main.py" />
+        <option value="$PROJECT_DIR$/fiddle/CN2TS.config.json" />
+        <option value="$PROJECT_DIR$/fiddle/models.py" />
       </list>
     </option>
   </component>
@@ -599,14 +598,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/fiddle/CN2TS.config.json">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="90">
-          <caret line="6" column="15" lean-forward="true" selection-start-line="6" selection-start-column="15" selection-end-line="6" selection-end-column="15" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/fiddle/dataClass.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="570">
@@ -634,14 +625,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/fiddle/data_prep/extract_regions.sh">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="180">
-          <caret line="12" column="162" lean-forward="false" selection-start-line="12" selection-start-column="135" selection-end-line="12" selection-end-column="162" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/TORCHmodels/dataPrep/data4prediction.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="450">
@@ -650,65 +633,11 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/fiddle/architecture.json">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="315">
-          <caret line="21" column="22" lean-forward="true" selection-start-line="21" selection-start-column="22" selection-end-line="21" selection-end-column="22" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/fiddle/config_CN2TS.json">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="525">
-          <caret line="35" column="17" lean-forward="true" selection-start-line="35" selection-start-column="17" selection-end-line="35" selection-end-column="17" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/fiddle/main.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="510">
-          <caret line="54" column="18" lean-forward="false" selection-start-line="54" selection-start-column="0" selection-end-line="55" selection-end-column="0" />
-          <folding>
-            <element signature="e#0#38#0" expanded="true" />
-            <marker date="1490458503000" expanded="true" signature="4389:4456" ph="..." />
-            <marker date="1490458503000" expanded="true" signature="4389:5155" ph="..." />
-            <marker date="1490458503000" expanded="true" signature="4389:5179" ph="..." />
-            <marker date="1490458503000" expanded="true" signature="4960:5155" ph="..." />
-            <marker date="1490458503000" expanded="true" signature="5269:5859" ph="..." />
-            <marker date="1490458503000" expanded="true" signature="5388:5758" ph="..." />
-            <marker date="1490458503000" expanded="true" signature="5414:5513" ph="..." />
-            <marker date="1490458503000" expanded="true" signature="5573:5683" ph="..." />
-            <marker date="1490458503000" expanded="true" signature="5888:6001" ph="..." />
-            <marker date="1490458503000" expanded="true" signature="5930:6001" ph="..." />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/fiddle/data_prep/generate_regions.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="375">
-          <caret line="25" column="45" lean-forward="true" selection-start-line="25" selection-start-column="45" selection-end-line="25" selection-end-column="45" />
+          <caret line="25" column="45" lean-forward="false" selection-start-line="25" selection-start-column="45" selection-end-line="25" selection-end-column="45" />
           <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/fiddle/data_prep/create_hdf5.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="465">
-          <caret line="69" column="0" lean-forward="true" selection-start-line="69" selection-start-column="0" selection-end-line="69" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/fiddle/models.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="545">
-          <caret line="405" column="44" lean-forward="false" selection-start-line="405" selection-start-column="44" selection-end-line="405" selection-end-column="44" />
-          <folding>
-            <element signature="e#0#38#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -729,6 +658,76 @@
             <marker date="1490474864000" expanded="true" signature="0:105" ph="import ..." />
             <marker date="1490474864000" expanded="true" signature="523:921" ph="..." />
             <marker date="1490474864000" expanded="true" signature="576:666" ph="..." />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/fiddle/data_prep/extract_regions.sh">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="180">
+          <caret line="12" column="162" lean-forward="false" selection-start-line="12" selection-start-column="135" selection-end-line="12" selection-end-column="162" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/fiddle/data_prep/create_hdf5.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="335">
+          <caret line="69" column="0" lean-forward="false" selection-start-line="69" selection-start-column="0" selection-end-line="69" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/fiddle/architecture.json">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="120">
+          <caret line="8" column="28" lean-forward="false" selection-start-line="8" selection-start-column="28" selection-end-line="8" selection-end-column="28" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/fiddle/config_CN2TS.json">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="375">
+          <caret line="25" column="25" lean-forward="true" selection-start-line="25" selection-start-column="25" selection-end-line="25" selection-end-column="25" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/fiddle/CN2TS.config.json">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="315">
+          <caret line="21" column="0" lean-forward="true" selection-start-line="21" selection-start-column="0" selection-end-line="21" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/fiddle/main.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="210">
+          <caret line="32" column="0" lean-forward="false" selection-start-line="32" selection-start-column="0" selection-end-line="32" selection-end-column="0" />
+          <folding>
+            <element signature="e#0#38#0" expanded="true" />
+            <marker date="1490475383000" expanded="true" signature="4569:4636" ph="..." />
+            <marker date="1490475383000" expanded="true" signature="4569:5335" ph="..." />
+            <marker date="1490475383000" expanded="true" signature="4569:5359" ph="..." />
+            <marker date="1490475383000" expanded="true" signature="5140:5335" ph="..." />
+            <marker date="1490475383000" expanded="true" signature="5449:6039" ph="..." />
+            <marker date="1490475383000" expanded="true" signature="5568:5938" ph="..." />
+            <marker date="1490475383000" expanded="true" signature="5594:5693" ph="..." />
+            <marker date="1490475383000" expanded="true" signature="5753:5863" ph="..." />
+            <marker date="1490475383000" expanded="true" signature="6068:6181" ph="..." />
+            <marker date="1490475383000" expanded="true" signature="6110:6181" ph="..." />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/fiddle/models.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="540">
+          <caret line="102" column="66" lean-forward="false" selection-start-line="102" selection-start-column="66" selection-end-line="102" selection-end-column="66" />
+          <folding>
+            <element signature="e#0#38#0" expanded="true" />
           </folding>
         </state>
       </provider>
