@@ -57,6 +57,7 @@ def main(_):
     data = MultiModalData(train_h5_handle, batch_size=FLAGS.batchSize)
     batcher = data.batcher()
     print('Storing validation data to the memory')
+    #pdb.set_trace()
     validation_data = {key: validation_h5_handle[key][:] for key in all_keys}
     if FLAGS.restore:
         model.load(FLAGS.restorePath)
@@ -87,7 +88,7 @@ def main(_):
     return_dict = model.validate(validation_data, accuracy=True)
     print("Pre-train validation loss: " + str(return_dict['cost']))
     print("Pre-train validation accuracy (%): " + str(100. * return_dict['accuracy_' + key] / validation_data.values()[0].shape[0]))
-    model.profile() # what does this do?
+   # model.profile() # what does this do?
 
     # totIteration = int(len(train_regions) / FLAGS.batchSize) # size of train_regions needs fixing, probably valid size as well
     globalMinLoss = np.inf

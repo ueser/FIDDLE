@@ -393,7 +393,7 @@ class NNscaffold(object):
             # self.sess = tf_debug.LocalCLIDebugWrapperSession(self.sess)
             # self.sess.add_tensor_filter("has_inf_or_nan", tf_debug.has_inf_or_nan)
             # ##################debugger########################################
-            # pdb.set_trace()
+            #pdb.set_trace()
             res = self.sess.run(values, feed_dict)
             return {key: value for key, value in zip(keys, res)}
         else:
