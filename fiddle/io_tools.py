@@ -4,6 +4,7 @@ import numpy as np
 import six
 import time
 from tqdm import tqdm as tq
+import itertools
 
 def one_hot_encode_sequence(seq):
     # the order of the letters is not arbitrary.
