@@ -83,7 +83,8 @@ def byteify(json_out):
 class NNscaffold(object):
     """Neural Network object
     """
-    def __init__(self, configuration_path='configurations.json', architecture_path='architecture.json', learning_rate=0.01):
+    def __init__(self, configuration_path='configurations.json', architecture_path='architecture.json',
+                 learning_rate=0.01, batch_norm=False):
         """Initiates a scaffold network with default values
         Args:
             architecture: JSON file outlining neural network scaffold
@@ -91,6 +92,8 @@ class NNscaffold(object):
         """
         with open(configuration_path) as fp:
             self.config = byteify(json.load(fp))
+        print('Stranded:', self.config['Options']['Stranded'])
+        self.batch_norm=False
         self._parse_parameters(architecture_path)
         self.learning_rate = learning_rate
         self.representations = list() # initializes representations list
@@ -216,7 +219,8 @@ class NNscaffold(object):
             self.net = AveragePooling2D([1, self.architecture['Scaffold']['Layer1']['pool_size']],
                                                        strides=[1, self.architecture['Scaffold']['Layer1']['pool_stride']],
                                                        padding='valid', name='AvgPool_combined')(self.net)
-            # self.net = BatchNormalization()(self.net)
+            if self.batch_norm:
+                self.net = BatchNormalization()(self.net)
             self.net = Flatten()(self.net)
             self.scaffold_representation = Dense(self.architecture['Scaffold']['representation_width'],
                                                  activation='linear', name='representation')(self.net)
@@ -251,8 +255,8 @@ class NNscaffold(object):
                          name='conv_1')(self.inputs[key])
             net = AveragePooling2D((1, self.architecture['Modules'][key]['Layer1']['pool_size']),
                                     strides=(1, self.architecture['Modules'][key]['Layer1']['pool_stride']))(net)
-
-            # net = BatchNormalization()(net)
+            if self.batch_norm:
+                net = BatchNormalization()(net)
             net = Conv2D(self.architecture['Modules'][key]['Layer2']['number_of_filters'],
                                   [self.architecture['Modules'][key]['Layer2']['filter_height'],
                                    self.architecture['Modules'][key]['Layer2']['filter_width']],
@@ -265,7 +269,8 @@ class NNscaffold(object):
                                     strides=[1, self.architecture['Modules'][key]['Layer2']['pool_stride']],
                                     padding='valid',
                                     name='AvgPool_2')(net)
-            # net = BatchNormalization()(net)
+            if self.batch_norm:
+                net = BatchNormalization()(net)
             net = Flatten()(net)
             net = Dense(self.architecture['Modules'][key]['representation_width'],
                         name='representation')(net)

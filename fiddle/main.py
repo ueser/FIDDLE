@@ -57,8 +57,12 @@ def main(_):
     data = MultiModalData(train_h5_handle, batch_size=FLAGS.batchSize)
     batcher = data.batcher()
     print('Storing validation data to the memory')
-    #pdb.set_trace()
-    validation_data = {key: validation_h5_handle[key][:] for key in all_keys}
+    try:
+        validation_data = {key: validation_h5_handle[key][:] for key in all_keys}
+    except KeyError:
+        print('Make sure that the configuration file contains the correct track names (keys), '
+              'which should match the hdf5 keys')
+
     if FLAGS.restore:
         model.load(FLAGS.restorePath)
     else:
