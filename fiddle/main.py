@@ -6,15 +6,18 @@ import pdb, traceback, sys #
 import tensorflow as tf
 import numpy as np
 from tqdm import tqdm as tq
-from models import *
-from io_tools import *
 import six
 from collections import Counter
 import os
 import h5py
 import json
 
-#testing
+### FIDDLE specific tools ###
+from models import *
+from io_tools import *
+from visualization import *
+#############################
+
 
 flags = tf.app.flags
 flags.DEFINE_string('runName', 'experiment', 'Running name.')
@@ -96,12 +99,22 @@ def main(_):
     # totIteration = int(len(train_regions) / FLAGS.batchSize) # size of train_regions needs fixing, probably valid size as well
     globalMinLoss = np.inf
     step = 0
+    train_size = train_h5_handle.values()[0].shape[0]
+    tfval = np.ones((validation_data[key].shape[0]), dtype=bool)
+    for key in model.architecture['Outputs']:
+        tfval = tfval & (validation_data[key].reshape(validation_data[key].shape[0],-1).sum(axis=1)>100)
+    idx = np.where(tfval)[0]
+    idx = idx[:min(len(idx),10)]
+    input_for_prediction = {key: validation_data[key][idx] for key in model.architecture['Inputs']}
+    orig_output = {key: validation_data[key][idx] for key in model.architecture['Outputs']}
 #for it in range(FLAGS.maxEpoch * totIteration): # EDIT: change back
     for it in range(200):
 
-        print('Iteration: ' + str(it))
-        # ido_ = 0.8 + 0.2 * it / 10. if it <= 10 else 1.
-        ido_=1.
+        epch = int(it * 10 * FLAGS.batchSize/train_size)
+        print('Epoch: ' + str(epch))
+        print('Number of examples seen: ' + str(it*10*FLAGS.batchSize))
+        ido_ = 0.8 + 0.2 * it / 10. if it <= 10 else 1.
+        # ido_=1.
         return_dict_train = Counter({})
         t_batcher, t_trainer = 0, 0
         for iterationNo in tq(range(10)):
@@ -120,7 +133,14 @@ def main(_):
             return_dict_train[key] /= iterationNo
         return_dict_valid = model.validate(validation_data, accuracy=True)
 
+        # for every 50 iteration,
+        if it%10==0:
 
+            predicted_dict = model.predict(input_for_prediction)
+            plot_prediction(predicted_dict, orig_output,
+                                    name='iteration_{}'.format(it),
+                                    save_dir=os.path.join(FLAGS.resultsDir,FLAGS.runName),
+                                    stranded=model.config['Options']['Stranded'])
         write_to_txt(return_dict_train)
         write_to_txt(return_dict_valid, batch_size=validation_data.values()[0].shape[0], case='validation')
 
@@ -136,7 +156,7 @@ def main(_):
 
 
 def write_to_txt(return_dict, batch_size=FLAGS.batchSize, case='train', verbose=True):
-    save_path = FLAGS.resultsDir + '/' + FLAGS.runName
+    save_path = os.path.join(FLAGS.resultsDir,FLAGS.runName)
     line_to_write = ''
     for key, val in return_dict.items():
         if key == 'cost':

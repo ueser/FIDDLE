@@ -23,7 +23,7 @@ class MultiModalData(object):
         self.batch_size = batch_size
 
     def batcher(self):
-        for batchIdx in itertools.cycle(xrange(0, self.train_h5_handle.values()[0].shape[0], self.batch_size)):
+        for batchIdx in itertools.cycle(xrange(0, self.train_h5_handle.values()[0].shape[0]-self.batch_size, self.batch_size)):
             yield {key: inp[batchIdx:(batchIdx + self.batch_size)] for key, inp in self.train_h5_handle.items()}
 
 

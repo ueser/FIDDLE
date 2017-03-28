@@ -318,7 +318,6 @@ class NNscaffold(object):
         else:
             train_feed = {self.outputs[key]: train_data[key] for key in self.architecture['Outputs']}
             train_feed.update({self.inputs[key]: train_data[key] for key in self.architecture['Inputs']})
-            tmpKey = train_data.keys()[0]
 
         train_feed.update({self.dropout: self.architecture['Scaffold']['dropout'],
                            self.keep_prob_input: inp_dropout,
@@ -348,16 +347,21 @@ class NNscaffold(object):
         return_dict = self._run(fetches, self.test_feed)
         return return_dict
 
-    def predict(self, testInp):
-        """Return the result of a flow based on mini-batch of input data.
+    def predict(self, predict_data):
         """
-        self.test_feed = {self.dropout:1,
-                          self.keep_prob_input:1.,
-                          self.keep_prob_input:1.,
-                          self.inp_size:testInp.values()[0].shape[0],
-                          K.learning_phase():0}
-        self.test_feed.update({self.inputs[key]: testInp[key] for key in self.architecture.keys()})
-        return self.sess.run( self.net, feed_dict=self.test_feed)
+        """
+        pred_feed = {}
+        pred_feed.update({self.inputs[key]: predict_data[key] for key in self.architecture['Inputs']})
+
+        pred_feed.update({self.dropout: 1.,
+                           self.keep_prob_input: 1. ,
+                           self.inp_size: predict_data.values()[0].shape[0],
+                           K.learning_phase(): 0})
+
+        fetches = {}
+        fetches.update({key: val for key, val in self.predictions.items()})
+        return_dict = self._run(fetches, pred_feed)
+        return return_dict
 
     def summarize(self, step):
         summaryStr = self.sess.run(self.summary_op, feed_dict=self.test_feed)

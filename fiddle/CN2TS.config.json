@@ -16,6 +16,6 @@
   "Options": {
     "Inputs":["chipnexus", "dnaseq"],
     "Outputs":["tssseq"],
-    "Stranded":"True"
+    "Stranded":"False"
   }
 }
