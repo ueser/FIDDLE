@@ -21,7 +21,7 @@ from visualization import *
 
 flags = tf.app.flags
 flags.DEFINE_string('runName', 'experiment', 'Running name.')
-flags.DEFINE_string('dataDir', '../data/hdf5datasets/CN2TS_500bp', 'Regions to train [bed or gff files]')
+flags.DEFINE_string('dataDir', '../data/hdf5datasets', 'Default data directory')
 flags.DEFINE_string('configuration', 'configuration.json', 'configuration file [json file]')
 flags.DEFINE_string('architecture', 'architecture.json', 'configuration file [json file]')
 flags.DEFINE_boolean('predict', False, 'If true, tests for the data and prints statistics about data for unit testing.')
@@ -39,8 +39,11 @@ FLAGS = flags.FLAGS
 ################debugger#####################
 
 def main(_):
-    train_h5_handle  = h5py.File(os.path.join(FLAGS.dataDir, 'train.h5'),'r')
-    validation_h5_handle  = h5py.File(os.path.join(FLAGS.dataDir, 'validation.h5'),'r')
+    with open(FLAGS.configuration) as fp:
+        config = byteify(json.load(fp))
+
+    train_h5_handle  = h5py.File(os.path.join(FLAGS.dataDir, config['Options']['DataName'], 'train.h5'),'r')
+    validation_h5_handle  = h5py.File(os.path.join(FLAGS.dataDir, config['Options']['DataName'], 'validation.h5'),'r')
 
     FLAGS.savePath = FLAGS.resultsDir + '/' + FLAGS.runName
     if not tf.gfile.Exists(FLAGS.savePath):
@@ -49,11 +52,11 @@ def main(_):
 
 
 
-    model = NNscaffold(configuration_path=FLAGS.configuration,
+    model = NNscaffold(config=config,
                        architecture_path=FLAGS.architecture,
                        learning_rate=FLAGS.learningRate)
     json.dump(model.architecture, open(FLAGS.savePath + "/architecture.json", 'w'))
-
+    json.dump(model.config, open(FLAGS.savePath + "/configuration.json", 'w'))
 
     all_keys = list(set(model.architecture['Inputs'] + model.architecture['Outputs']))
 
@@ -135,7 +138,6 @@ def main(_):
 
         # for every 50 iteration,
         if it%10==0:
-
             predicted_dict = model.predict(input_for_prediction)
             plot_prediction(predicted_dict, orig_output,
                                     name='iteration_{}'.format(it),

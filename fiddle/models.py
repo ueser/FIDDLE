@@ -83,15 +83,15 @@ def byteify(json_out):
 class NNscaffold(object):
     """Neural Network object
     """
-    def __init__(self, configuration_path='configurations.json', architecture_path='architecture.json',
+    def __init__(self, config, architecture_path='architecture.json',
                  learning_rate=0.01, batch_norm=False):
         """Initiates a scaffold network with default values
         Args:
             architecture: JSON file outlining neural network scaffold
             learning_rate: floating point number established in main.py FLAGS.learningRate
         """
-        with open(configuration_path) as fp:
-            self.config = byteify(json.load(fp))
+
+
         print('Stranded:', self.config['Options']['Stranded'])
         self.batch_norm=False
         self._parse_parameters(architecture_path)
