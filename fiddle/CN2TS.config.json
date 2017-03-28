@@ -16,6 +16,8 @@
   "Options": {
     "Inputs":["chipnexus", "dnaseq"],
     "Outputs":["tssseq"],
+    "Freeze":[],
+    "Reload":[],
     "Stranded":"False",
     "DataName":"CN2TS_WT_500bp_tss"
   }

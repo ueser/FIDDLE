@@ -84,7 +84,7 @@ class NNscaffold(object):
     """Neural Network object
     """
     def __init__(self, config, architecture_path='architecture.json',
-                 learning_rate=0.01, batch_norm=False):
+                 learning_rate=0.01, batch_norm=False, model_path='../results/example'):
         """Initiates a scaffold network with default values
         Args:
             architecture: JSON file outlining neural network scaffold
@@ -93,18 +93,16 @@ class NNscaffold(object):
 
 
         print('Stranded:', self.config['Options']['Stranded'])
-        self.batch_norm=False
+        self.batch_norm = False
+        self.model_path = model_path
         self._parse_parameters(architecture_path)
         self.learning_rate = learning_rate
         self.representations = list() # initializes representations list
         self.inputs = {}  # initializes input dictionary
         for key in self.architecture['Inputs']:
-            # feeds to output key a placeholder with key's input height and with
-            self.inputs[key] = tf.placeholder(tf.float32, [None, self.architecture['Modules'][key]["input_height"],
-                                                           self.architecture['Modules'][key]["input_width"], 1],
-                                              name=key)
+            self.tracks[key] = ConvolutionalContainer(track_name=key)
             # appends deep learning layer framework for each key to representations list
-            self.representations.append(self._create_track_module(key))
+            self.representations.append(self.tracks[key].representation)
 
         self.output_tensor = {}  # initializes output_tensor
         self.outputs = {}  # initializes output dictionary
@@ -121,7 +119,7 @@ class NNscaffold(object):
                 self.output_tensor[key] = transform_track(self.outputs[key], option='pdf')
 
 
-
+        self.freeze(self.config['Options']['Freeze'])
 
         self.dropout = tf.placeholder(tf.float32) # initializing data type input for dropout
         self.keep_prob_input = tf.placeholder(tf.float32) # initializing data type input for keep_prob_input
@@ -169,13 +167,19 @@ class NNscaffold(object):
         """
         if mode == 'convolution':
             self.combined_representation = tf.concat(self.representations, 1)
+            self.scaffold_height = len(self.representations)
+            self.scaffold_width = self.architecture['Modules'].values()[0]['representation_width']
+
         elif mode == 'fully_connected':
             raise NotImplementedError
             self.combined_representation = tf.concat(self.representations, 0)
+            self.scaffold_height = 1
+            self.scaffold_width = len(self.representations)*self.architecture['Modules'].values()[0]['representation_width']
+
         else:
             raise NotImplementedError
 
-    def initialize(self, restore_dirs=None):
+    def initialize(self):
         """Initialize the scaffold model either from saved checkpoints (pre-trained)
         or from scratch
         """
@@ -184,32 +188,43 @@ class NNscaffold(object):
         init = tf.global_variables_initializer() # std out recommended this instead
         self.sess.run(init)
         print('Session initialized.')
-        # if restore_dirs is not None:
-        #     for key in self.architecture.keys():
-        #         saver = tf.train.Saver([v for v in tf.trainable_variables() if key in v.name])
-        #         saver.restore(self.sess,restore_dirs[key]+'model.ckpt')
-        #         print('Session restored for '+key)
+        self._load()
 
-    def load(self, model_path):
+    def _load(self):
         """
         loads the pretrained model from the specified path
         """
         #TODO: add frozen model loading option...
         #TODO: add partially pre-trained module loading option ...
         # Launch the session
-        self.sess = tf.Session()
-        # Initializing the tensor flow variables
-        # init = tf.initialize_all_variables() # EDIT
-        init = tf.global_variables_initializer()
-        self.sess.run(init)
-        print([v.name for v in tf.trainable_variables()])
-        saver = tf.train.Saver(tf.trainable_variables())
-        saver.restore(self.sess, model_path+'/model.ckpt')
+        if not hasattr(self, 'sess'):
+            self.sess = tf.Session()
+
+        if ('all' in self.config['Options']['Reload']) or ('All' in self.config['Options']['Reload']):
+            load_list = self.architecture['Inputs']+['scaffold']
+        else:
+            load_list = self.config['Options']['Reload']
+
+        for track_name in load_list:
+            try:
+                loader[track_name] = tf.train.import_meta_graph(os.path.join(model_path, track_name+'_model.ckpt'))
+                print(track_name + ' model is loaded from pre-trained network')
+            except IOError:
+                print('Check the loading list.')
+                raise
+            loader[track_name].restore(self.sess, tf.train.latest_checkpoint(model_path))
+
         print('Model loaded with the pre-trained parameters')
+
+    def freeze(self, freeze_list=[]):
+        self.trainables = []
+        for key in self.architecture['Inputs']+['scaffold']:
+            if key is not in freeze_list:
+                self.trainables.append(tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=key))
 
     def _encapsulate_models(self):
         with tf.variable_scope('scaffold'):
-            self.net = tf.reshape(self.combined_representation, shape=[-1, len(self.representations), self._scaffold_width, 1])
+            self.net = tf.reshape(self.combined_representation, shape=[-1, self.scaffold_height, self.scaffold_width, 1])
             # Modality-wise dropout
             self.net = tf.nn.dropout(tf.identity(self.net), self.keep_prob_input, noise_shape=[self.inp_size, len(self.representations), 1, 1])
             self.net = Conv2D(self.architecture['Scaffold']['Layer1']['number_of_filters'],
@@ -244,43 +259,6 @@ class NNscaffold(object):
                 else:
                     self.predictions[key] = tf.nn.softmax(self.net, name='softmax')
 
-    def _create_track_module(self, key):
-        with tf.variable_scope(key):
-            net = Conv2D(self.architecture['Modules'][key]['Layer1']['number_of_filters'],
-                         [self.architecture['Modules'][key]['Layer1']['filter_height'],
-                         self.architecture['Modules'][key]['Layer1']['filter_width']],
-                         activation=self.architecture['Modules'][key]['Layer1']['activation'],
-                         kernel_regularizer='l2',
-                         padding='valid',
-                         name='conv_1')(self.inputs[key])
-            net = AveragePooling2D((1, self.architecture['Modules'][key]['Layer1']['pool_size']),
-                                    strides=(1, self.architecture['Modules'][key]['Layer1']['pool_stride']))(net)
-            if self.batch_norm:
-                net = BatchNormalization()(net)
-            net = Conv2D(self.architecture['Modules'][key]['Layer2']['number_of_filters'],
-                                  [self.architecture['Modules'][key]['Layer2']['filter_height'],
-                                   self.architecture['Modules'][key]['Layer2']['filter_width']],
-                                  activation=self.architecture['Modules'][key]['Layer2']['activation'],
-                                  kernel_regularizer='l2',
-                                  padding='valid',
-                                  name='conv_2')(net)
-
-            net = AveragePooling2D([1, self.architecture['Modules'][key]['Layer2']['pool_size']],
-                                    strides=[1, self.architecture['Modules'][key]['Layer2']['pool_stride']],
-                                    padding='valid',
-                                    name='AvgPool_2')(net)
-            if self.batch_norm:
-                net = BatchNormalization()(net)
-            net = Flatten()(net)
-            net = Dense(self.architecture['Modules'][key]['representation_width'],
-                        name='representation')(net)
-
-
-            # seems that _scaffold_width is defaulted to representation width?
-        if not hasattr(self, '_scaffold_width'):
-            self._scaffold_width = self.architecture['Modules'][key]['representation_width']
-        return net
-
     def _create_loss_optimizer(self):
         self.accuracy = {}
         self.cost = 0
@@ -307,7 +285,9 @@ class NNscaffold(object):
         self.global_step = tf.Variable(0, name='globalStep', trainable=False)
         # Use ADAM optimizer
         self.optimizer = \
-            tf.train.AdamOptimizer(learning_rate=self.learning_rate).minimize(self.cost, global_step=self.global_step)
+            tf.train.AdamOptimizer(learning_rate=self.learning_rate).minimize(self.cost,
+                                                                              global_step=self.global_step,
+                                                                              var_list=self.trainables)
 
     def train(self, train_data, accuracy=None, inp_dropout=0.9, batch_size=128):
         """Trains model based on mini-batch of input data. Returns cost of mini-batch.
@@ -368,14 +348,13 @@ class NNscaffold(object):
         self.summaryWriter.add_summary(summaryStr, step)
         self.summaryWriter.flush()
 
-    def create_monitor_variables(self, savePath):
+    def create_monitor_variables(self):
         """Writes to results directory a summary of graph variables"""
         tf.summary.scalar('KL divergence', self.cost)
         for key, val in self.accuracy.items():
             tf.summary.scalar(key+'/Accuracy', val)
         self.summary_op = tf.summary.merge_all()
-        # self.summaryWriter = tf.train.SummaryWriter(savePath, self.sess.graph) # supposedly deprecated: # EDIT
-        self.summaryWriter = tf.summary.FileWriter(savePath, self.sess.graph)
+        self.summaryWriter = tf.summary.FileWriter(self.model_path, self.sess.graph)
 
     def _run(self, fetches, feed_dict):
         """Wrapper for making Session.run() more user friendly.
@@ -419,3 +398,80 @@ class NNscaffold(object):
         ctf = tl.generate_chrome_trace_format()
         with open('timeline.json', 'w') as f:
             f.write(ctf)
+
+    def saver(self):
+        self.savers_dict = {}
+        for key in self.architecture['Inputs']:
+            self.savers_dict[key] = tf.train.Saver(tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=key))
+        self.savers_dict['scaffold'] = tf.train.Saver(tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='scaffold'))
+
+
+
+class BaseTrackContainer(object):
+    def __init__(self, track_name, sess=None):
+
+        self.sess=sess
+
+    def initialize(self):
+        """Initialize the model
+        """
+        if self.sess is None:
+            self.sess = tf.Session()  # Launch the session
+        # Initializing the tensorflow variables
+        init = tf.global_variables_initializer()  # std out recommended this instead
+        self.sess.run(init)
+        print('Session initialized.')
+
+    def load(self):
+        pass
+
+    def forward(self):
+        pass
+
+    def freeze(self):
+        pass
+
+    def save(self):
+        pass
+
+class ConvolutionalContainer(BaseTrackContainer):
+    def __init__(self, architecture):
+        BaseTrackContainer.__init__(self, track_name, sess)
+        self.track_name = track_name
+        self.architecture = architecture
+
+        self.input = tf.placeholder(tf.float32, [None, self.architecture['Modules'][self.track_name]["input_height"],
+                                                       self.architecture['Modules'][self.track_name]["input_width"], 1],
+                                          name=self.track_name+'_input')
+        self._build()
+        
+    def _build(self):
+        with tf.variable_scope(self.track_name):
+            net = Conv2D(self.architecture['Modules'][self.track_name]['Layer1']['number_of_filters'],
+                         [self.architecture['Modules'][self.track_name]['Layer1']['filter_height'],
+                         self.architecture['Modules'][self.track_name]['Layer1']['filter_width']],
+                         activation=self.architecture['Modules'][self.track_name]['Layer1']['activation'],
+                         kernel_regularizer='l2',
+                         padding='valid',
+                         name='conv_1')(self.input)
+            net = AveragePooling2D((1, self.architecture['Modules'][self.track_name]['Layer1']['pool_size']),
+                                    strides=(1, self.architecture['Modules'][self.track_name]['Layer1']['pool_stride']))(net)
+            if self.batch_norm:
+                net = BatchNormalization()(net)
+            net = Conv2D(self.architecture['Modules'][self.track_name]['Layer2']['number_of_filters'],
+                                  [self.architecture['Modules'][self.track_name]['Layer2']['filter_height'],
+                                   self.architecture['Modules'][self.track_name]['Layer2']['filter_width']],
+                                  activation=self.architecture['Modules'][self.track_name]['Layer2']['activation'],
+                                  kernel_regularizer='l2',
+                                  padding='valid',
+                                  name='conv_2')(net)
+
+            net = AveragePooling2D([1, self.architecture['Modules'][self.track_name]['Layer2']['pool_size']],
+                                    strides=[1, self.architecture['Modules'][self.track_name]['Layer2']['pool_stride']],
+                                    padding='valid',
+                                    name='AvgPool_2')(net)
+            if self.batch_norm:
+                net = BatchNormalization()(net)
+            net = Flatten()(net)
+            self.representation = Dense(self.architecture['Modules'][self.track_name]['representation_width'],
+                        name='representation')(net)

@@ -24,8 +24,6 @@ flags.DEFINE_string('runName', 'experiment', 'Running name.')
 flags.DEFINE_string('dataDir', '../data/hdf5datasets', 'Default data directory')
 flags.DEFINE_string('configuration', 'configuration.json', 'configuration file [json file]')
 flags.DEFINE_string('architecture', 'architecture.json', 'configuration file [json file]')
-flags.DEFINE_boolean('predict', False, 'If true, tests for the data and prints statistics about data for unit testing.')
-flags.DEFINE_boolean('restore', False, 'If true, restores models from the ../results/XXtrained/')
 flags.DEFINE_string('restorePath', '../results/test', 'Regions to validate [bed or gff files]')
 flags.DEFINE_integer('maxEpoch', 1000, 'Number of epochs to run trainer.')
 flags.DEFINE_integer('batchSize', 100, 'Batch size.')
@@ -47,14 +45,16 @@ def main(_):
 
     FLAGS.savePath = FLAGS.resultsDir + '/' + FLAGS.runName
     if not tf.gfile.Exists(FLAGS.savePath):
-        print('Results will be saved in ' + str(FLAGS.savePath))
         tf.gfile.MakeDirs(FLAGS.savePath)
 
+    print('Results will be saved in ' + str(FLAGS.savePath))
 
 
     model = NNscaffold(config=config,
                        architecture_path=FLAGS.architecture,
-                       learning_rate=FLAGS.learningRate)
+                       learning_rate=FLAGS.learningRate,
+                       model_path=FLAGS.savePath)
+
     json.dump(model.architecture, open(FLAGS.savePath + "/architecture.json", 'w'))
     json.dump(model.config, open(FLAGS.savePath + "/configuration.json", 'w'))
 
@@ -68,25 +68,20 @@ def main(_):
     except KeyError:
         print('Make sure that the configuration file contains the correct track names (keys), '
               'which should match the hdf5 keys')
-    if FLAGS.restore:
-        model.load(FLAGS.restorePath)
-    else:
-        model.initialize()
 
-    print('Saving to results directory: ' + str(FLAGS.savePath))
-    model.create_monitor_variables(FLAGS.savePath)
 
     ####################
     # Launch the graph #
     ####################
+    model.initialize()
+    model.create_monitor_variables()
 
-    print('Launch the graph')
     header_str = 'Loss'
     for key in model.architecture['Outputs']:
         header_str += '\t' + key + '_Accuracy'
     header_str += '\n'
 
-    saver = tf.train.Saver()
+    model.saver()
     with open((FLAGS.savePath + "/" + "train.txt"), "w") as train_file:
         train_file.write(header_str)
 
@@ -99,10 +94,12 @@ def main(_):
     print("Pre-train validation accuracy (%): " + str(100. * return_dict['accuracy_' + key] / validation_data.values()[0].shape[0]))
     # model.profile() # what does this do?
 
-    # totIteration = int(len(train_regions) / FLAGS.batchSize) # size of train_regions needs fixing, probably valid size as well
+
     globalMinLoss = np.inf
     step = 0
     train_size = train_h5_handle.values()[0].shape[0]
+
+    ## select some (10) good quality signals for prediction overlay during training
     tfval = np.ones((validation_data[key].shape[0]), dtype=bool)
     for key in model.architecture['Outputs']:
         tfval = tfval & (validation_data[key].reshape(validation_data[key].shape[0],-1).sum(axis=1)>100)
@@ -110,12 +107,13 @@ def main(_):
     idx = idx[:min(len(idx),10)]
     input_for_prediction = {key: validation_data[key][idx] for key in model.architecture['Inputs']}
     orig_output = {key: validation_data[key][idx] for key in model.architecture['Outputs']}
-#for it in range(FLAGS.maxEpoch * totIteration): # EDIT: change back
-    for it in range(200):
+
+    for it in range(1000):
 
         epch = int(it * 10 * FLAGS.batchSize/train_size)
         print('Epoch: ' + str(epch))
         print('Number of examples seen: ' + str(it*10*FLAGS.batchSize))
+
         ido_ = 0.8 + 0.2 * it / 10. if it <= 10 else 1.
         # ido_=1.
         return_dict_train = Counter({})
@@ -130,14 +128,14 @@ def main(_):
 
             return_dict_train += return_dict
             step += 1
-        print('Batcher time: ' + str(t_batcher))
-        print('Trainer time: ' + str(t_trainer))
+        # print('Batcher time: ' + str(t_batcher))
+        # print('Trainer time: ' + str(t_trainer))
         for key in return_dict_train.keys():
             return_dict_train[key] /= iterationNo
         return_dict_valid = model.validate(validation_data, accuracy=True)
 
         # for every 50 iteration,
-        if it%10==0:
+        if it%50==0:
             predicted_dict = model.predict(input_for_prediction)
             plot_prediction(predicted_dict, orig_output,
                                     name='iteration_{}'.format(it),
@@ -150,8 +148,9 @@ def main(_):
 
         if return_dict_valid['cost'] < globalMinLoss:
             globalMinLoss = return_dict_valid['cost']
-            save_path = saver.save(model.sess, FLAGS.savePath + "/model.ckpt")
-            print("Model saved in file: %s" % FLAGS.savePath)
+            for track_name, saver in model.savers_dict.items()
+                save_path = saver.save(model.sess, os.path.join(FLAGS.savePath, track_name+'_model.ckpt'))
+            print('Model saved in file: %s' % FLAGS.savePath)
 
     model.sess.close()
 
