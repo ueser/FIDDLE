@@ -16,7 +16,7 @@ from keras.models import Model
 from keras import backend as K
 from keras.objectives import kullback_leibler_divergence
 import json, six, copy, os
-
+from visualization import put_kernels_on_grid, plot_prediction
 
 
 #######################
@@ -217,11 +217,11 @@ class NNscaffold(object):
             load_list = self.architecture['Inputs']+['scaffold']
         else:
             load_list = self.config['Options']['Reload']
-
+            # pdb.set_trace()
         for track_name in load_list:
             loader = tf.train.Saver(tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=track_name))
             # loader = tf.train.import_meta_graph(os.path.join(self.model_path, track_name + '_model.ckpt.meta'))
-            loader.restore(self.sess, tf.train.latest_checkpoint(self.model_path))
+            loader.restore(self.sess, os.path.join(self.model_path, track_name+'_model.ckpt'))
             print(track_name + ' model is loaded from pre-trained network')
 
     def freeze(self, freeze_list=[]):
@@ -315,7 +315,7 @@ class NNscaffold(object):
                            self.inp_size: batch_size,
                            K.learning_phase(): 1})
 
-        fetches = {'_': self.optimizer, 'cost': self.cost}
+        fetches = {'_': self.optimizer, 'cost': self.cost, 'summary': self.summary_op}
         if accuracy is not None:
             fetches.update({'accuracy_' + key: val for key, val in self.accuracy.items()})
         return_dict = self._run(fetches, train_feed)
@@ -332,13 +332,14 @@ class NNscaffold(object):
                                    self.inp_size: validation_data.values()[0].shape[0],
                                    K.learning_phase(): 0})
 
-        fetches = {'cost': self.cost}
+        fetches = {'cost': self.cost, 'summary': self.summary_op}
         if accuracy is not None:
             fetches.update({'accuracy_' + key: val for key, val in self.accuracy.items()})
+
         return_dict = self._run(fetches, self.test_feed)
         return return_dict
 
-    def predict(self, predict_data):
+    def predict(self, predict_data, orig_output):
         """
         """
         pred_feed = {}
@@ -352,7 +353,20 @@ class NNscaffold(object):
         fetches = {}
         fetches.update({key: val for key, val in self.predictions.items()})
         return_dict = self._run(fetches, pred_feed)
-        return return_dict
+        #
+        #
+        # buf_plots = plot_prediction(return_dict, orig_output,
+        #                             name='Prediction pdf',
+        #                             save_dir=self.model_path,
+        #                             strand=self.config['Options']['Strand'])
+        # # Convert PNG buffer to TF image
+        # image = tf.image.decode_png(buf_plots.getvalue(), channels=4)
+        #
+        # # Add the batch dimension
+        # self.image = tf.expand_dims(image, 0)
+
+
+        # return return_dict
 
     def get_representations(self, predict_data):
 
@@ -370,16 +384,27 @@ class NNscaffold(object):
         return_dict = self._run(fetches, pred_feed)
         return return_dict
 
-    def summarize(self, step):
-        summaryStr = self.sess.run(self.summary_op, feed_dict=self.test_feed)
-        self.summaryWriter.add_summary(summaryStr, step)
+    def summarize(self,train_summary, validation_summary, step):
+
+        self.summaryWriter.add_summary(train_summary, step)
+        self.summaryWriter.add_summary(validation_summary, step)
         self.summaryWriter.flush()
 
     def create_monitor_variables(self):
         """Writes to results directory a summary of graph variables"""
+
+
+        for track_name in self.inputs.keys():
+            weights = [v for v in tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=track_name) if
+                      'conv_1/kernel:' in v.name]
+            grid = put_kernels_on_grid(weights[0])
+            tf.summary.image(track_name+'/conv1/features', grid)
+
         tf.summary.scalar('KL divergence', self.cost)
+
         for key, val in self.accuracy.items():
             tf.summary.scalar(key+'/Accuracy', val)
+
         self.summary_op = tf.summary.merge_all()
         self.summaryWriter = tf.summary.FileWriter(self.model_path, self.sess.graph)
 
