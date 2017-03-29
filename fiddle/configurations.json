@@ -1,57 +1,24 @@
 { "Genome": "sacCer3",
   "Tracks": {
-    "NETseq": {
-      "id": "NS",
-      "data_dir": "../data/mmaped/NETseq",
-      "orig_files": {
-        "type": "bigwig",
-        "pos": "../data/bigwigs/netseq_pos.bw",
-        "neg": "../data/bigwigs/netseq_neg.bw"
-      },
+    "chipnexus": {
+      "id": "cs",
       "input_height": 2
     },
-    "MNaseseq": {
-      "id": "MS",
-      "data_dir": "../data/mmaped/MNaseseq",
-      "orig_files": {
-        "type": "bigwig",
-        "pos": "../data/bigwigs/mnaseseq_pos.bw",
-        "neg": "../data/bigwigs/mnaseseq_neg.bw"
-      },
-      "input_height": 2
-    },
-    "DNAseq": {
-      "id": "DS",
-      "data_dir": "../data/mmaped/DNAseq",
-      "orig_files": {
-        "type": "fasta",
-        "pos": "../data/sacCer3.fa"
-      },
+    "dnaseq": {
+      "id": "ds",
       "input_height": 4
     },
-    "RNAseq": {
-      "id": "RS",
-      "data_dir": "../data/mmaped/RNAseq",
-      "orig_files": {
-        "type": "bigwig",
-        "pos": "../data/bigwigs/rnaseq.bw"
-      },
-      "input_height": 1
-    },
-    "TSSseq": {
-      "id": "TS",
-      "data_dir": "../data/mmaped/TSSseq",
-      "orig_files": {
-        "type": "bigwig",
-        "pos": "../data/bigwigs/tssseq_2_pos.bw",
-        "neg": "../data/bigwigs/tssseq_2_neg.bw"
-      },
+    "tssseq": {
+      "id": "ts",
       "input_height": 2
     }
   },
   "Options": {
-    "Inputs":["NETseq", "MNaseseq", "DNAseq", "RNAseq", "TSSseq"],
-    "Outputs":["TSSseq"],
-    "Stranded":"False"
+    "Inputs":["chipnexus", "dnaseq"],
+    "Outputs":["tssseq"],
+    "Freeze":[],
+    "Reload":[],
+    "Stranded":"False",
+    "DataName":"CN2TS_WT_500bp_tss"
   }
 }
