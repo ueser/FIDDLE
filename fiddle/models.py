@@ -15,7 +15,7 @@ from keras.layers import Input, Dense, Lambda, Conv2D, concatenate, Reshape, Ave
 from keras.models import Model
 from keras import backend as K
 from keras.objectives import kullback_leibler_divergence
-import json, six, copy
+import json, six, copy, os
 
 
 
@@ -100,11 +100,12 @@ class NNscaffold(object):
         self.representations = list() # initializes representations list
         self.tracks = {}  # initializes input dictionary
         self.inputs = {}
-        for key in self.architecture['Inputs']:
-            self.tracks[key] = ConvolutionalContainer(track_name=key, architecture=self.architecture)
+        for track_name in self.architecture['Inputs']:
+            self.tracks[track_name] = ConvolutionalContainer(track_name=track_name, architecture=self.architecture)
+            self.inputs[track_name] = self.tracks[track_name].input
             # appends deep learning layer framework for each key to representations list
-            self.representations.append(self.tracks[key].representation)
-            self.inputs[key] = self.tracks[key].input
+            self.representations.append(self.tracks[track_name].representation)
+
         self.output_tensor = {}  # initializes output_tensor
         self.outputs = {}  # initializes output dictionary
         for key in self.architecture['Outputs']:
@@ -207,21 +208,16 @@ class NNscaffold(object):
             load_list = self.config['Options']['Reload']
 
         for track_name in load_list:
-            try:
-                loader[track_name] = tf.train.import_meta_graph(os.path.join(model_path, track_name+'_model.ckpt'))
-                print(track_name + ' model is loaded from pre-trained network')
-            except IOError:
-                print('Check the loading list.')
-                raise
-            loader[track_name].restore(self.sess, tf.train.latest_checkpoint(model_path))
-
-        print('Model loaded with the pre-trained parameters')
+            loader = tf.train.Saver(tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=track_name))
+            # loader = tf.train.import_meta_graph(os.path.join(self.model_path, track_name + '_model.ckpt.meta'))
+            loader.restore(self.sess, tf.train.latest_checkpoint(self.model_path))
+            print(track_name + ' model is loaded from pre-trained network')
 
     def freeze(self, freeze_list=[]):
         self.trainables = []
         for key in self.architecture['Inputs']+['scaffold']:
             if key not in freeze_list:
-                self.trainables += tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope=key)
+                self.trainables += tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=key)
 
     def _encapsulate_models(self):
         with tf.variable_scope('scaffold'):
@@ -403,6 +399,7 @@ class NNscaffold(object):
     def saver(self):
         self.savers_dict = {}
         for key in self.architecture['Inputs']:
+            # pdb.set_trace()
             self.savers_dict[key] = tf.train.Saver(tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=key))
         self.savers_dict['scaffold'] = tf.train.Saver(tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='scaffold'))
 

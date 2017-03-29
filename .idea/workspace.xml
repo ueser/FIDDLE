@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="af957dae-1932-4bfe-989e-420dfff878bb" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/fiddle/main.py" afterPath="$PROJECT_DIR$/fiddle/main.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/fiddle/configurations.json" afterPath="$PROJECT_DIR$/fiddle/configurations.json" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/fiddle/models.py" afterPath="$PROJECT_DIR$/fiddle/models.py" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -21,17 +21,18 @@
       <file leaf-file-name="models.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/fiddle/models.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="537">
-              <caret line="223" column="97" lean-forward="false" selection-start-line="223" selection-start-column="97" selection-end-line="223" selection-end-column="97" />
+            <state relative-caret-position="567">
+              <caret line="211" column="31" lean-forward="true" selection-start-line="211" selection-start-column="0" selection-end-line="212" selection-end-column="0" />
               <folding>
                 <element signature="e#0#38#0" expanded="true" />
-                <marker date="1490747186000" expanded="true" signature="2892:19954" ph="..." />
-                <marker date="1490747186000" expanded="true" signature="3793:4057" ph="..." />
-                <marker date="1490747186000" expanded="true" signature="8134:8250" ph="..." />
-                <marker date="1490747186000" expanded="true" signature="8492:8875" ph="..." />
-                <marker date="1490747186000" expanded="true" signature="20325:20839" ph="..." />
-                <marker date="1490747186000" expanded="true" signature="20374:20375" ph="..." />
-                <marker date="1490747186000" expanded="true" signature="20753:20762" ph="..." />
+                <marker date="1490751681000" expanded="true" signature="2896:19910" ph="..." />
+                <marker date="1490751681000" expanded="true" signature="3805:4157" ph="..." />
+                <marker date="1490751681000" expanded="true" signature="8181:8297" ph="..." />
+                <marker date="1490751681000" expanded="true" signature="8539:8922" ph="..." />
+                <marker date="1490751681000" expanded="true" signature="8956:9916" ph="..." />
+                <marker date="1490751681000" expanded="true" signature="20311:20825" ph="..." />
+                <marker date="1490751681000" expanded="true" signature="20360:20361" ph="..." />
+                <marker date="1490751681000" expanded="true" signature="20739:20748" ph="..." />
               </folding>
             </state>
           </provider>
@@ -75,8 +76,8 @@
       <file leaf-file-name="main.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/fiddle/main.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="450">
-              <caret line="52" column="21" lean-forward="false" selection-start-line="52" selection-start-column="21" selection-end-line="52" selection-end-column="21" />
+            <state relative-caret-position="720">
+              <caret line="118" column="34" lean-forward="true" selection-start-line="118" selection-start-column="34" selection-end-line="118" selection-end-column="34" />
               <folding>
                 <element signature="e#0#38#0" expanded="true" />
                 <marker date="1490745988000" expanded="true" signature="5001:5068" ph="..." />
@@ -125,9 +126,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>json</find>
-      <find>config</find>
-      <find>archi</find>
       <find>architec</find>
       <find>self.sess =</find>
       <find>tf_debug</find>
@@ -155,6 +153,9 @@
       <find>if not has</find>
       <find>self.architecture</find>
       <find>self.inputs</find>
+      <find>pre-trained p</find>
+      <find>model_path</find>
+      <find>pdb</find>
     </findStrings>
     <replaceStrings>
       <replace>architecture_template</replace>
@@ -633,13 +634,14 @@
           <caret line="189" column="37" lean-forward="false" selection-start-line="189" selection-start-column="37" selection-end-line="189" selection-end-column="37" />
           <folding>
             <element signature="e#0#38#0" expanded="true" />
-            <marker date="1490747186000" expanded="true" signature="2892:19954" ph="..." />
-            <marker date="1490747186000" expanded="true" signature="3793:4057" ph="..." />
-            <marker date="1490747186000" expanded="true" signature="8134:8250" ph="..." />
-            <marker date="1490747186000" expanded="true" signature="8492:8875" ph="..." />
-            <marker date="1490747186000" expanded="true" signature="20325:20839" ph="..." />
-            <marker date="1490747186000" expanded="true" signature="20374:20375" ph="..." />
-            <marker date="1490747186000" expanded="true" signature="20753:20762" ph="..." />
+            <marker date="1490751681000" expanded="true" signature="2896:19910" ph="..." />
+            <marker date="1490751681000" expanded="true" signature="3805:4157" ph="..." />
+            <marker date="1490751681000" expanded="true" signature="8181:8297" ph="..." />
+            <marker date="1490751681000" expanded="true" signature="8539:8922" ph="..." />
+            <marker date="1490751681000" expanded="true" signature="8956:9916" ph="..." />
+            <marker date="1490751681000" expanded="true" signature="20311:20825" ph="..." />
+            <marker date="1490751681000" expanded="true" signature="20360:20361" ph="..." />
+            <marker date="1490751681000" expanded="true" signature="20739:20748" ph="..." />
           </folding>
         </state>
       </provider>
@@ -821,10 +823,21 @@
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/fiddle/CN2TS.config.json" />
+    <entry file="file://$PROJECT_DIR$/fiddle/analysis.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="240">
+          <caret line="16" column="0" lean-forward="false" selection-start-line="16" selection-start-column="0" selection-end-line="16" selection-end-column="0" />
+          <folding>
+            <element signature="e#0#38#0" expanded="true" />
+            <marker date="1490743242000" expanded="true" signature="714:1380" ph="..." />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/fiddle/main.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="450">
-          <caret line="52" column="21" lean-forward="false" selection-start-line="52" selection-start-column="21" selection-end-line="52" selection-end-column="21" />
+        <state relative-caret-position="720">
+          <caret line="118" column="34" lean-forward="true" selection-start-line="118" selection-start-column="34" selection-end-line="118" selection-end-column="34" />
           <folding>
             <element signature="e#0#38#0" expanded="true" />
             <marker date="1490745988000" expanded="true" signature="5001:5068" ph="..." />
@@ -841,30 +854,20 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/fiddle/analysis.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="240">
-          <caret line="16" column="0" lean-forward="false" selection-start-line="16" selection-start-column="0" selection-end-line="16" selection-end-column="0" />
-          <folding>
-            <element signature="e#0#38#0" expanded="true" />
-            <marker date="1490743242000" expanded="true" signature="714:1380" ph="..." />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/fiddle/models.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="537">
-          <caret line="223" column="97" lean-forward="false" selection-start-line="223" selection-start-column="97" selection-end-line="223" selection-end-column="97" />
+        <state relative-caret-position="567">
+          <caret line="211" column="31" lean-forward="true" selection-start-line="211" selection-start-column="0" selection-end-line="212" selection-end-column="0" />
           <folding>
             <element signature="e#0#38#0" expanded="true" />
-            <marker date="1490747186000" expanded="true" signature="2892:19954" ph="..." />
-            <marker date="1490747186000" expanded="true" signature="3793:4057" ph="..." />
-            <marker date="1490747186000" expanded="true" signature="8134:8250" ph="..." />
-            <marker date="1490747186000" expanded="true" signature="8492:8875" ph="..." />
-            <marker date="1490747186000" expanded="true" signature="20325:20839" ph="..." />
-            <marker date="1490747186000" expanded="true" signature="20374:20375" ph="..." />
-            <marker date="1490747186000" expanded="true" signature="20753:20762" ph="..." />
+            <marker date="1490751681000" expanded="true" signature="2896:19910" ph="..." />
+            <marker date="1490751681000" expanded="true" signature="3805:4157" ph="..." />
+            <marker date="1490751681000" expanded="true" signature="8181:8297" ph="..." />
+            <marker date="1490751681000" expanded="true" signature="8539:8922" ph="..." />
+            <marker date="1490751681000" expanded="true" signature="8956:9916" ph="..." />
+            <marker date="1490751681000" expanded="true" signature="20311:20825" ph="..." />
+            <marker date="1490751681000" expanded="true" signature="20360:20361" ph="..." />
+            <marker date="1490751681000" expanded="true" signature="20739:20748" ph="..." />
           </folding>
         </state>
       </provider>
