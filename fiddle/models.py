@@ -201,7 +201,7 @@ class NNscaffold(object):
         init = tf.global_variables_initializer() # std out recommended this instead
         self.sess.run(init)
         print('Session initialized.')
-        self._load()
+#self._load() # why load if initialize?
 
     def _load(self):
         """
@@ -300,7 +300,7 @@ class NNscaffold(object):
                                                                               global_step=self.global_step,
                                                                               var_list=self.trainables)
 
-    def train(self, train_data, accuracy=None, inp_dropout=0.9, batch_size=128):
+    def train(self, train_data, accuracy=None, inp_dropout=0.1, batch_size=128):
         """Trains model based on mini-batch of input data. Returns cost of mini-batch.
         """
 
@@ -311,7 +311,7 @@ class NNscaffold(object):
             train_feed.update({self.inputs[key]: train_data[key] for key in self.architecture['Inputs']})
 
         train_feed.update({self.dropout: self.architecture['Scaffold']['dropout'],
-                           self.keep_prob_input: inp_dropout,
+                           self.keep_prob_input: (1 - inp_dropout),
                            self.inp_size: batch_size,
                            K.learning_phase(): 1})
 
@@ -424,7 +424,6 @@ class NNscaffold(object):
         fetches -- A list or dict of ops to fetch.
         feed_dict -- The dict of values to feed to the computation graph.
         """
-        # pdb.set_trace()
         if isinstance(fetches, dict):
             keys, values = fetches.keys(), list(fetches.values())
 
@@ -433,11 +432,9 @@ class NNscaffold(object):
             # self.sess = tf_debug.LocalCLIDebugWrapperSession(self.sess)
             # self.sess.add_tensor_filter("has_inf_or_nan", tf_debug.has_inf_or_nan)
             # ##################debugger########################################
-            # pdb.set_trace()
             res = self.sess.run(values, feed_dict)
             return {key: value for key, value in zip(keys, res)}
         else:
-            print('actually, this one')
             return self.sess.run(fetches, feed_dict)
 
     def profile(self):
@@ -454,7 +451,6 @@ class NNscaffold(object):
     def saver(self):
         self.savers_dict = {}
         for key in self.architecture['Inputs']:
-            # pdb.set_trace()
             self.savers_dict[key] = tf.train.Saver(tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=key))
         self.savers_dict['scaffold'] = tf.train.Saver(tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='scaffold'))
 
@@ -497,7 +493,7 @@ class ConvolutionalContainer(BaseTrackContainer):
                                                        self.architecture['Modules'][self.track_name]["input_width"], 1],
                                           name=self.track_name+'_input')
         self._build()
-        
+
     def _build(self):
         with tf.variable_scope(self.track_name):
             net = Conv2D(self.architecture['Modules'][self.track_name]['Layer1']['number_of_filters'],
