@@ -91,19 +91,20 @@ class NNscaffold(object):
             learning_rate: floating point number established in main.py FLAGS.learningRate
         """
 
-
+        self.config = config
         print('Stranded:', self.config['Options']['Stranded'])
         self.batch_norm = False
         self.model_path = model_path
         self._parse_parameters(architecture_path)
         self.learning_rate = learning_rate
         self.representations = list() # initializes representations list
-        self.inputs = {}  # initializes input dictionary
+        self.tracks = {}  # initializes input dictionary
+        self.inputs = {}
         for key in self.architecture['Inputs']:
-            self.tracks[key] = ConvolutionalContainer(track_name=key)
+            self.tracks[key] = ConvolutionalContainer(track_name=key, architecture=self.architecture)
             # appends deep learning layer framework for each key to representations list
             self.representations.append(self.tracks[key].representation)
-
+            self.inputs[key] = self.tracks[key].input
         self.output_tensor = {}  # initializes output_tensor
         self.outputs = {}  # initializes output dictionary
         for key in self.architecture['Outputs']:
@@ -219,8 +220,8 @@ class NNscaffold(object):
     def freeze(self, freeze_list=[]):
         self.trainables = []
         for key in self.architecture['Inputs']+['scaffold']:
-            if key is not in freeze_list:
-                self.trainables.append(tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=key))
+            if key not in freeze_list:
+                self.trainables += tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope=key)
 
     def _encapsulate_models(self):
         with tf.variable_scope('scaffold'):
@@ -408,10 +409,8 @@ class NNscaffold(object):
 
 
 class BaseTrackContainer(object):
-    def __init__(self, track_name, sess=None):
-
-        self.sess=sess
-
+    def __init__(self, track_name):
+        pass
     def initialize(self):
         """Initialize the model
         """
@@ -435,10 +434,12 @@ class BaseTrackContainer(object):
         pass
 
 class ConvolutionalContainer(BaseTrackContainer):
-    def __init__(self, architecture):
-        BaseTrackContainer.__init__(self, track_name, sess)
+
+    def __init__(self, track_name, architecture, batch_norm=False):
+        BaseTrackContainer.__init__(self, track_name)
         self.track_name = track_name
         self.architecture = architecture
+        self.batch_norm=batch_norm
 
         self.input = tf.placeholder(tf.float32, [None, self.architecture['Modules'][self.track_name]["input_height"],
                                                        self.architecture['Modules'][self.track_name]["input_width"], 1],

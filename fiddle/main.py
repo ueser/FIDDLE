@@ -22,7 +22,7 @@ from visualization import *
 flags = tf.app.flags
 flags.DEFINE_string('runName', 'experiment', 'Running name.')
 flags.DEFINE_string('dataDir', '../data/hdf5datasets', 'Default data directory')
-flags.DEFINE_string('configuration', 'configuration.json', 'configuration file [json file]')
+flags.DEFINE_string('configuration', 'configurations.json', 'configuration file [json file]')
 flags.DEFINE_string('architecture', 'architecture.json', 'configuration file [json file]')
 flags.DEFINE_string('restorePath', '../results/test', 'Regions to validate [bed or gff files]')
 flags.DEFINE_integer('maxEpoch', 1000, 'Number of epochs to run trainer.')
@@ -148,7 +148,7 @@ def main(_):
 
         if return_dict_valid['cost'] < globalMinLoss:
             globalMinLoss = return_dict_valid['cost']
-            for track_name, saver in model.savers_dict.items()
+            for track_name, saver in model.savers_dict.items():
                 save_path = saver.save(model.sess, os.path.join(FLAGS.savePath, track_name+'_model.ckpt'))
             print('Model saved in file: %s' % FLAGS.savePath)
 
