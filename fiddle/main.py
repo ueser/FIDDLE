@@ -92,7 +92,7 @@ def main(_):
     for key in model.architecture['Outputs']:
         tfval = tfval & (validation_data[key].reshape(validation_data[key].shape[0],-1).sum(axis=1)>100)
     idx = np.where(tfval)[0]
-    idx = idx[:min(len(idx),1)]
+    idx = idx[:min(len(idx),5)]
     input_for_prediction = {key: validation_data[key][idx] for key in model.architecture['Inputs']}
     orig_output = {key: validation_data[key][idx] for key in model.architecture['Outputs']}
 
@@ -144,11 +144,11 @@ def main(_):
         return_dict_valid = model.validate(validation_data, accuracy=True)
 
         # for every 50 iteration,
-        if it % 50 ==0:
+        if it % 5 ==0:
             predicted_dict = model.predict(input_for_prediction)
             plot_prediction(predicted_dict, orig_output,
                                     name='iteration_{}'.format(it),
-                                    save_dir=os.path.join(FLAGS.resultsDir,FLAGS.runName),
+                                    save_dir=os.path.join(FLAGS.resultsDir, FLAGS.runName),
                                     strand=model.config['Options']['Strand'])
 
         write_to_txt(return_dict_train)

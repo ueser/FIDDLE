@@ -339,7 +339,7 @@ class NNscaffold(object):
         return_dict = self._run(fetches, self.test_feed)
         return return_dict
 
-    def predict(self, predict_data, orig_output):
+    def predict(self, predict_data):
         """
         """
         pred_feed = {}

@@ -1,7 +1,6 @@
 from matplotlib import pylab as pl
 import numpy as np
 import h5py
-from matplotlib.backends.backend_pdf import PdfPages
 import os, io
 import pdb
 from math import sqrt
@@ -9,41 +8,38 @@ import tensorflow as tf
 
 def plot_prediction(pred_vec, orig_vec=None, save_dir='../results/', name='profile_prediction', strand='Single'):
     pl.ioff()
-    # pp = PdfPages(os.path.join(save_dir,name+'.pdf'))
-    buf = io.BytesIO()
-
+    fig, axarr = pl.subplots(pred_vec.values()[0].shape[0],len(pred_vec))
     if strand=='Double':
         to_size = pred_vec.values()[0].shape[1]/2
         for ix in range(pred_vec.values()[0].shape[0]):
-            for key in pred_vec.keys():
-                fig = pl.figure()
+            for jx, key in enumerate(pred_vec.keys()):
                 if orig_vec is not None:
                     # pdb.set_trace()
-                    pl.plot(orig_vec[key][ix, 0, :]/np.sum(orig_vec[key][ix,:,:]+ 1e-7), label=key+'_Original')
-                    pl.plot(-orig_vec[key][ix, 1, :]/np.sum(orig_vec[key][ix,:,:]+ 1e-7))
-                pl.plot(pred_vec[key][ix, :to_size], label=key+'_Prediction')
-                pl.plot(-pred_vec[key][ix, to_size:])
-                pl.legend()
-                pl.title(key+'_'+str(ix))
-                # pl.savefig(buf, format='png')
-                pp.savefig()
-                pl.close(fig)
+                    axarr[ix, jx].plot(orig_vec[key][ix, 0, :]/np.sum(orig_vec[key][ix,:,:]+ 1e-7), label=key+'_Original', color='g')
+                    axarr[ix, jx].plot(-orig_vec[key][ix, 1, :]/np.sum(orig_vec[key][ix,:,:]+ 1e-7), color='g')
+                axarr[ix, jx].plot(pred_vec[key][ix, :to_size], label=key+'_Prediction', color='r')
+                axarr[ix, jx].plot(-pred_vec[key][ix, to_size:], color='r')
+                axarr[ix, jx].axis('off')
+        axarr[0, 0].set_title(pred_vec.keys()[0])
+        axarr[0, 1].set_title(pred_vec.keys()[1])
+
+
     else:
         for ix in range(pred_vec.values()[0].shape[0]):
-            for key in pred_vec.keys():
-                fig = pl.figure()
+            for jx, key in enumerate(pred_vec.keys()):
                 if orig_vec is not None:
-                    pl.plot(orig_vec[key][ix, 0, :]/np.sum(orig_vec[key][ix,0,:]+ 1e-7), label=key+'_Original')
-                pl.plot(pred_vec[key][ix, :], label=key+'_Prediction')
-                pl.legend()
-                pl.title(key+'_'+str(ix))
-                pl.savefig(buf, format='png')
-                # pp.savefig()
-                pl.close(fig)
-    # pp.close()
+                    # pdb.set_trace()
+                    axarr[ix, jx].plot(orig_vec[key][ix, 0, :] / np.sum(orig_vec[key][ix, 0, :] + 1e-7),
+                                       label=key + '_Original', color='g')
+                axarr[ix, jx].plot(pred_vec[key][ix, :], label=key + '_Prediction', color='r')
+                axarr[ix, jx].axis('off')
 
-    buf.seek(0)
-    return buf
+        axarr[0, 0].set_title(pred_vec.keys()[0])
+        axarr[0, 1].set_title(pred_vec.keys()[1])
+
+    pl.savefig(os.path.join(save_dir,name+'.png'),format='png')
+    pl.close(fig)
+
 
 
 def put_kernels_on_grid(kernel, pad = 1):
