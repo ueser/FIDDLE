@@ -107,16 +107,20 @@ def main(_):
     print("Pre-train validation loss: " + str(return_dict['cost']))
     print("Pre-train validation accuracy (%): " + str(
         100. * return_dict['accuracy_' + key] / validation_data.values()[0].shape[0]))
-    # model.profile() # what does this do?
 
-    for it in range(1000):
+    totalIterations = 1000
+    for it in range(totalIterations):
 
-        epch = int(it * 10 * FLAGS.batchSize/train_size)
-        print('Epoch: ' + str(epch))
-        print('Number of examples seen: ' + str(it*10*FLAGS.batchSize))
+        # Multimodal Dropout Regularizer:
+        # linearly decreasing dropout probability from 20% (@ 1st iteration) to 0% (@ 1% of total iterations)
+        inputDropout = 0.2 - 0.2 * it / 10. if it <= (totalIterations // 100) else 0.
+        epoch = int(it * 10 * FLAGS.batchSize/train_size)
+
+        print('Epoch: ' + str(epoch) + ', Iterations: ' + str(it))
+        print('Number of examples seen: ' + str(it * 10 * FLAGS.batchSize))
+        print('Input dropout probability: ' + str(inputDropout))
 
         ido_ = 0.8 + 0.2 * it / 10. if it <= 10 else 1.
-        # ido_=1.
         return_dict_train = Counter({})
         t_batcher, t_trainer = 0, 0
         for iterationNo in tq(range(10)):
@@ -124,19 +128,19 @@ def main(_):
                 train_batch = batcher.next()
             t_batcher += t.secs
             with Timer() as t:
-                return_dict = Counter(model.train(train_batch, accuracy=True, inp_dropout=ido_, batch_size=FLAGS.batchSize))
+                return_dict = Counter(model.train(train_batch, accuracy=True, inp_dropout=inputDropout, batch_size=FLAGS.batchSize))
             t_trainer += t.secs
 
             return_dict_train += return_dict
             step += 1
-        # print('Batcher time: ' + str(t_batcher))
-        # print('Trainer time: ' + str(t_trainer))
+        print('Batcher time: ' + "%.3f" % t_batcher)
+        print('Trainer time: ' + "%.3f" % t_trainer)
         for key in return_dict_train.keys():
             return_dict_train[key] /= iterationNo
         return_dict_valid = model.validate(validation_data, accuracy=True)
 
         # for every 50 iteration,
-        if it%50==0:
+        if it % 50 ==0:
             predicted_dict = model.predict(input_for_prediction)
             plot_prediction(predicted_dict, orig_output,
                                     name='iteration_{}'.format(it),
