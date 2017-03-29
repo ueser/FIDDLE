@@ -92,7 +92,7 @@ def main(_):
     for key in model.architecture['Outputs']:
         tfval = tfval & (validation_data[key].reshape(validation_data[key].shape[0],-1).sum(axis=1)>100)
     idx = np.where(tfval)[0]
-    idx = idx[:min(len(idx),10)]
+    idx = idx[:min(len(idx),1)]
     input_for_prediction = {key: validation_data[key][idx] for key in model.architecture['Inputs']}
     orig_output = {key: validation_data[key][idx] for key in model.architecture['Outputs']}
 
@@ -123,12 +123,15 @@ def main(_):
         ido_ = 0.8 + 0.2 * it / 10. if it <= 10 else 1.
         return_dict_train = Counter({})
         t_batcher, t_trainer = 0, 0
-        for iterationNo in tq(range(10)):
+        for iterationNo in tq(range(2)):
             with Timer() as t:
                 train_batch = batcher.next()
             t_batcher += t.secs
             with Timer() as t:
-                return_dict = Counter(model.train(train_batch, accuracy=True, inp_dropout=inputDropout, batch_size=FLAGS.batchSize))
+                tmp = model.train(train_batch, accuracy=True, inp_dropout=inputDropout, batch_size=FLAGS.batchSize)
+                train_summary = tmp['summary']
+                return_dict = Counter(tmp)
+
             t_trainer += t.secs
 
             return_dict_train += return_dict
@@ -136,7 +139,8 @@ def main(_):
         print('Batcher time: ' + "%.3f" % t_batcher)
         print('Trainer time: ' + "%.3f" % t_trainer)
         for key in return_dict_train.keys():
-            return_dict_train[key] /= iterationNo
+            if type(key) is not str:
+                return_dict_train[key] /= iterationNo
         return_dict_valid = model.validate(validation_data, accuracy=True)
 
         # for every 50 iteration,
@@ -146,10 +150,13 @@ def main(_):
                                     name='iteration_{}'.format(it),
                                     save_dir=os.path.join(FLAGS.resultsDir,FLAGS.runName),
                                     strand=model.config['Options']['Strand'])
+
         write_to_txt(return_dict_train)
         write_to_txt(return_dict_valid, batch_size=validation_data.values()[0].shape[0], case='validation')
 
-        model.summarize(step)
+        model.summarize( train_summary = train_summary,
+                         validation_summary=return_dict_valid['summary'],
+                         step=step)
 
         if return_dict_valid['cost'] < globalMinLoss:
             globalMinLoss = return_dict_valid['cost']
@@ -168,7 +175,7 @@ def write_to_txt(return_dict, batch_size=FLAGS.batchSize, case='train', verbose=
         if key == 'cost':
             cur_line = str(return_dict['cost'])
             line_to_write += str(return_dict[key])
-        elif key == '_':
+        elif (key == '_') or (key == 'summary'):
             continue
         else:
             cur_line = str(100. * return_dict[key] / batch_size)
