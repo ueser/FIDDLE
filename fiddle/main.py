@@ -119,7 +119,7 @@ def main(_):
         # ido_=1.
         return_dict_train = Counter({})
         t_batcher, t_trainer = 0, 0
-        for iterationNo in tq(range(2)):
+        for iterationNo in tq(range(10)):
             with Timer() as t:
                 train_batch = batcher.next()
             t_batcher += t.secs

@@ -73,11 +73,7 @@ def main(_):
         pred_h5_handle.close()
 
     ### filter visualization
-    with tf.variable_scope('dnaseq/conv_1'):
-        tf.get_variable_scope().reuse_variables()
-        weights = tf.get_variable('weights')
-        grid = put_kernels_on_grid(weights)
-        tf.image_summary('conv1/features', grid, max_images=1)
+
 
 
 

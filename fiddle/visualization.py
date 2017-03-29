@@ -25,8 +25,8 @@ def plot_prediction(pred_vec, orig_vec=None, save_dir='../results/', name='profi
                 pl.plot(-pred_vec[key][ix, to_size:])
                 pl.legend()
                 pl.title(key+'_'+str(ix))
-                pl.savefig(buf, format='png')
-                # pp.savefig()
+                # pl.savefig(buf, format='png')
+                pp.savefig()
                 pl.close(fig)
     else:
         for ix in range(pred_vec.values()[0].shape[0]):

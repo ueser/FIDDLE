@@ -366,7 +366,7 @@ class NNscaffold(object):
         # self.image = tf.expand_dims(image, 0)
 
 
-        # return return_dict
+        return return_dict
 
     def get_representations(self, predict_data):
 
