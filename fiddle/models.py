@@ -76,6 +76,12 @@ def byteify(json_out):
     else:
         return json_out
 
+class ArchitectureParsingError(Exception):
+    pass
+
+class ConfigurationParsingError(Exception):
+    pass
+
 #################
 # Model Classes #
 #################
@@ -92,19 +98,20 @@ class NNscaffold(object):
         """
 
         self.config = config
-        print('Stranded:', self.config['Options']['Stranded'])
+        print('Strand:', self.config['Options']['Strand'])
         self.batch_norm = False
         self.model_path = model_path
         self._parse_parameters(architecture_path)
+
         self.learning_rate = learning_rate
-        self.representations = list() # initializes representations list
+        self.representations = {} # initializes representations dictionary
         self.tracks = {}  # initializes input dictionary
         self.inputs = {}
         for track_name in self.architecture['Inputs']:
             self.tracks[track_name] = ConvolutionalContainer(track_name=track_name, architecture=self.architecture)
             self.inputs[track_name] = self.tracks[track_name].input
             # appends deep learning layer framework for each key to representations list
-            self.representations.append(self.tracks[track_name].representation)
+            self.representations[track_name] = self.tracks[track_name].representation
 
         self.output_tensor = {}  # initializes output_tensor
         self.outputs = {}  # initializes output dictionary
@@ -113,7 +120,7 @@ class NNscaffold(object):
             self.outputs[key] = tf.placeholder(tf.float32, [None, self.architecture['Modules'][key]["input_height"],
                                                             self.architecture['Modules'][key]["input_width"], 1],
                                                name='output_' + key)
-            if self.config['Options']['Stranded']:
+            if self.config['Options']['Strand']=='Single':
                 self.positive_strand = tf.slice(self.outputs[key],[0,0,0,0], [-1,1,-1,-1])
                 self.output_tensor[key] = transform_track(self.positive_strand, option='pdf')
             else:
@@ -142,24 +149,28 @@ class NNscaffold(object):
         with open(architecture_path) as fp:
             architecture_template = byteify(json.load(fp))
 
-        self.architecture = {'Modules': {}, 'Scaffold': {}}
-        self.architecture['Scaffold'] = architecture_template['Scaffold']
-        self.architecture['Inputs'] = self.config['Options']['Inputs']
-        self.architecture['Outputs'] = self.config['Options']['Outputs']
+        # if the architecture.json is read from pre-trained project directory, then just copy and continue with that
+        if 'Inputs' in architecture_template.keys():
+            self.architecture = architecture_template
+        else:
+            self.architecture = {'Modules': {}, 'Scaffold': {}}
+            self.architecture['Scaffold'] = architecture_template['Scaffold']
+            self.architecture['Inputs'] = self.config['Options']['Inputs']
+            self.architecture['Outputs'] = self.config['Options']['Outputs']
 
-        for key in self.architecture['Inputs']+self.architecture['Outputs']:
-            self.architecture['Modules'][key] = copy.deepcopy(architecture_template['Modules'])
-            self.architecture['Modules'][key]['input_height'] = self.config['Tracks'][key]['input_height']
-            self.architecture['Modules'][key]['Layer1']['filter_height'] = self.config['Tracks'][key]['input_height']
-            # Parameters customized for specific tracks are read from self.architecture.json and updates the arch. dict.
-            if key in architecture_template.keys():
-                for key_key in architecture_template[key].keys():
-                    sub_val = architecture_template[key][key_key]
-                    if type(sub_val) == dict:
-                        for key_key_key in sub_val:
-                            self.architecture['Modules'][key][key_key][key_key_key] = sub_val[key_key_key]
-                    else:
-                        self.architecture['Modules'][key][key_key] = sub_val
+            for key in self.architecture['Inputs']+self.architecture['Outputs']:
+                self.architecture['Modules'][key] = copy.deepcopy(architecture_template['Modules'])
+                self.architecture['Modules'][key]['input_height'] = self.config['Tracks'][key]['input_height']
+                self.architecture['Modules'][key]['Layer1']['filter_height'] = self.config['Tracks'][key]['input_height']
+                # Parameters customized for specific tracks are read from self.architecture.json and updates the arch. dict.
+                if key in architecture_template.keys():
+                    for key_key in architecture_template[key].keys():
+                        sub_val = architecture_template[key][key_key]
+                        if type(sub_val) == dict:
+                            for key_key_key in sub_val:
+                                self.architecture['Modules'][key][key_key][key_key_key] = sub_val[key_key_key]
+                        else:
+                            self.architecture['Modules'][key][key_key] = sub_val
 
 
     def _combine_representations(self, mode):
@@ -168,13 +179,13 @@ class NNscaffold(object):
             mode: convolution or fully_connected
         """
         if mode == 'convolution':
-            self.combined_representation = tf.concat(self.representations, 1)
+            self.combined_representation = tf.concat(self.representations.values(), 1)
             self.scaffold_height = len(self.representations)
             self.scaffold_width = self.architecture['Modules'].values()[0]['representation_width']
 
         elif mode == 'fully_connected':
             raise NotImplementedError
-            self.combined_representation = tf.concat(self.representations, 0)
+            self.combined_representation = tf.concat(self.representations.values(), 0)
             self.scaffold_height = 1
             self.scaffold_width = len(self.representations)*self.architecture['Modules'].values()[0]['representation_width']
 
@@ -239,18 +250,21 @@ class NNscaffold(object):
 
             self.predictions = {}
             for key in self.architecture['Outputs']:
-                if self.config['Options']['Stranded']:
+                if self.config['Options']['Strand']=='Single':
                     self.net = Dense(self.architecture['Modules'][key]['input_width'],
                                  activation='linear',
                                  name='final_FC')(self.scaffold_representation)
-                else:
+                elif self.config['Options']['Strand']=='Double':
                     self.net = Dense(self.architecture['Modules'][key]['input_height'] *
                                      self.architecture['Modules'][key]['input_width'],
                                      activation='linear',
                                      name='final_FC')(self.scaffold_representation)
+                else:
+                    raise ConfigurationParsingError('Configuration file should have Strand field as either Single or Double')
 
-                if key == 'DNAseq':
-                    self.net = tf.reshape(self.net, [-1, 4, self.architecture['Modules']['DNAseq']['input_width'], 1])
+
+                if key == 'dnaseq':
+                    self.net = tf.reshape(self.net, [-1, 4, self.architecture['Modules']['dnaseq']['input_width'], 1])
                     self.predictions[key] = multi_softmax(self.net, axis=1, name='multiSoftmax')
 
                 else:
@@ -337,6 +351,22 @@ class NNscaffold(object):
 
         fetches = {}
         fetches.update({key: val for key, val in self.predictions.items()})
+        return_dict = self._run(fetches, pred_feed)
+        return return_dict
+
+    def get_representations(self, predict_data):
+
+        pred_feed = {}
+        pred_feed.update({self.inputs[key]: predict_data[key] for key in self.architecture['Inputs']})
+        pred_feed.update({self.dropout: 1.,
+                          self.keep_prob_input: 1.,
+                          self.inp_size: predict_data.values()[0].shape[0],
+                          K.learning_phase(): 0})
+
+        fetches = {}
+        fetches.update({key: val for key, val in self.representations.items()})
+        pred_feed.update({'scaffold': self.scaffold_representation})
+
         return_dict = self._run(fetches, pred_feed)
         return return_dict
 

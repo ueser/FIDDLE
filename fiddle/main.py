@@ -75,29 +75,17 @@ def main(_):
     ####################
     model.initialize()
     model.create_monitor_variables()
+    model.saver()
 
     header_str = 'Loss'
     for key in model.architecture['Outputs']:
         header_str += '\t' + key + '_Accuracy'
     header_str += '\n'
-
-    model.saver()
     with open((FLAGS.savePath + "/" + "train.txt"), "w") as train_file:
         train_file.write(header_str)
-
     with open((FLAGS.savePath + "/" + "validation.txt"), "w") as validation_file:
         validation_file.write(header_str)
 
-    print('Pre-train validation run:')
-    return_dict = model.validate(validation_data, accuracy=True)
-    print("Pre-train validation loss: " + str(return_dict['cost']))
-    print("Pre-train validation accuracy (%): " + str(100. * return_dict['accuracy_' + key] / validation_data.values()[0].shape[0]))
-    # model.profile() # what does this do?
-
-
-    globalMinLoss = np.inf
-    step = 0
-    train_size = train_h5_handle.values()[0].shape[0]
 
     ## select some (10) good quality signals for prediction overlay during training
     tfval = np.ones((validation_data[key].shape[0]), dtype=bool)
@@ -107,6 +95,19 @@ def main(_):
     idx = idx[:min(len(idx),10)]
     input_for_prediction = {key: validation_data[key][idx] for key in model.architecture['Inputs']}
     orig_output = {key: validation_data[key][idx] for key in model.architecture['Outputs']}
+
+
+    ######## TRAIN #########
+    globalMinLoss = np.inf
+    step = 0
+    train_size = train_h5_handle.values()[0].shape[0]
+
+    print('Pre-train validation run:')
+    return_dict = model.validate(validation_data, accuracy=True)
+    print("Pre-train validation loss: " + str(return_dict['cost']))
+    print("Pre-train validation accuracy (%): " + str(
+        100. * return_dict['accuracy_' + key] / validation_data.values()[0].shape[0]))
+    # model.profile() # what does this do?
 
     for it in range(1000):
 
@@ -140,7 +141,7 @@ def main(_):
             plot_prediction(predicted_dict, orig_output,
                                     name='iteration_{}'.format(it),
                                     save_dir=os.path.join(FLAGS.resultsDir,FLAGS.runName),
-                                    stranded=model.config['Options']['Stranded'])
+                                    strand=model.config['Options']['Strand'])
         write_to_txt(return_dict_train)
         write_to_txt(return_dict_valid, batch_size=validation_data.values()[0].shape[0], case='validation')
 
