@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 f_name='tss_ups500bp_dws500bp_win500bp_stride50bp'
-python generate_regions.py ${f_name}
+python generate_regions.py chr_size ${f_name} annotation
 echo Sorting
 bedtools sort -i ${f_name}.pos.bed> ${f_name}-sorted.pos.bed
 bedtools sort -i ${f_name}.neg.bed > ${f_name}-sorted.neg.bed

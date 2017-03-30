@@ -264,6 +264,7 @@ class NNscaffold(object):
 
 
                 if key == 'dnaseq':
+                    pdb.set_trace()
                     self.net = tf.reshape(self.net, [-1, 4, self.architecture['Modules']['dnaseq']['input_width'], 1])
                     self.predictions[key] = multi_softmax(self.net, axis=1, name='multiSoftmax')
 
@@ -274,7 +275,7 @@ class NNscaffold(object):
         self.accuracy = {}
         self.cost = 0
         for key in self.architecture['Outputs']:
-            if key != 'DNAseq':
+            if key != 'dnaseq':
                 self.loss = kullback_leibler_divergence(self.output_tensor[key], self.predictions[key])
                 # self.loss = KL_divergence(self.output_tensor[key], self.predictions[key])
                 width = self.architecture['Modules'][key]["input_width"] * self.architecture['Modules'][key]["input_height"]
@@ -284,12 +285,13 @@ class NNscaffold(object):
 
             else:
                 #TODO implement for DNA seq # but is necessary??
-                self.loss = tf.reduce_sum(tf.mul(self.output_tensor[key]+1e-10,
-                                                 tf.sub(tf.log(self.output_tensor[key]+1e-10),
+                self.loss = tf.reduce_sum(tf.multiply(self.output_tensor[key]+1e-10,
+                                                 tf.subtract(tf.log(self.output_tensor[key]+1e-10),
                                                         tf.log(self.predictions[key]+1e-10))), [1, 2])
                 target = tf.argmax(self.output_tensor[key], dimension=1)
                 pred = tf.argmax(self.predictions[key], dimension=1)
-                self.accuracy[key] = tf.reduce_sum(tf.cast(tf.equal(pred, target), tf.float32))/target.get_shape()[1].value
+                pdb.set_trace()
+                self.accuracy[key] = tf.reduce_sum(tf.cast(tf.equal(pred, target), tf.float32))/tf.shape(target)[1]
 
             self.cost += tf.reduce_mean(self.loss)   # average over batch
 
@@ -379,7 +381,7 @@ class NNscaffold(object):
 
         fetches = {}
         fetches.update({key: val for key, val in self.representations.items()})
-        pred_feed.update({'scaffold': self.scaffold_representation})
+        fetches.update({'scaffold': self.scaffold_representation})
 
         return_dict = self._run(fetches, pred_feed)
         return return_dict
