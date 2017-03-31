@@ -15,14 +15,14 @@ sys.path.append('../dev/')
 from viz_sequence import *
 #############################
 
-flags = tf.app.flags
-flags.DEFINE_string('runName', 'experiment', 'Running name.')
-flags.DEFINE_string('resultsDir', '../results', 'Directory for results data')
-flags.DEFINE_boolean('makeGif', True, 'Make gif from png files')
-flags.DEFINE_boolean('makePng', True, 'Make png from saved prediction pickles')
-flags.DEFINE_string('vizType', 'dnaseq', 'data type to be vizualized')
+vizflags = tf.app.flags
+vizflags.DEFINE_string('runName', 'experiment', 'Running name.')
+vizflags.DEFINE_string('resultsDir', '../results', 'Directory for results data')
+vizflags.DEFINE_boolean('makeGif', True, 'Make gif from png files')
+vizflags.DEFINE_boolean('makePng', True, 'Make png from saved prediction pickles')
+vizflags.DEFINE_string('vizType', 'dnaseq', 'data type to be vizualized')
 
-FLAGS = flags.FLAGS
+vizFLAGS = vizflags.FLAGS
 
 ################################################################################
 # Main
@@ -50,7 +50,7 @@ def main():
                           name='iteration_{}'.format(iter_no),
                           save_dir=save_dir, verbose=False)
 
-        elif FLAGS.vizType == 'tssseq':
+        elif vizFLAGS.vizType == 'tssseq':
             qq = 0
             orig_output = pickle.load(open(os.path.join(save_dir, orig_file), 'r'))
             strand = 'Single'
@@ -70,7 +70,7 @@ def main():
         else:
             raise NotImplementedError
 
-    if FLAGS.makeGif:
+    if vizFLAGS.makeGif:
         print('Making gif animation ... ')
         import imageio
         images = []
