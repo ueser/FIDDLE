@@ -157,10 +157,11 @@ def main():
         parser.error('Must provide the project results directory')
     else:
         save_dir = args[0]
+    pckl_files = [fname for fname in os.listdir(save_dir) if 'pred_viz' in fname]
+    orig_file = [fname for fname in os.listdir(save_dir) if 'originals.pck' in fname]
+    pred_dict = pickle.load(open(os.path.join(save_dir, pckl_files[0]), 'r'))
 
-    if options.viz_type == 'dnaseq':
-        pckl_files = [fname for fname in os.listdir(save_dir) if 'pred_viz' in fname]
-        orig_file = [fname for fname in os.listdir(save_dir) if 'originals.pck' in fname]
+    if ('dna_before_softmax' in pred_dict.keys()):
 
         qq=0
         for f_ in tq(pckl_files):
@@ -174,6 +175,25 @@ def main():
                       name='iteration_{}'.format(iter_no),
                       save_dir=save_dir)
 
+    elif options.viz_type == 'tssseq':
+        qq = 0
+        orig_output = pickle.load(open(os.path.join(save_dir, orig_file), 'r'))
+        strand = 'Single'
+        for f_ in tq(pckl_files):
+            pred_dict = pickle.load(open(os.path.join(save_dir, f_), 'r'))
+            iter_no = int(f_.split('.')[0].split('_')[-1])
+            qq += 1
+            print('plotting {} of {}'.format(qq, len(pckl_files)))
+
+            if (qq==1) and (pred_dict.values()[0].shape[1]==2):
+                strand = 'Double'
+            plot_prediction(predicted_dict, orig_output,
+                        name='iteration_{}'.format(iter_no),
+                        save_dir=save_dir,
+                        strand=strand)
+
+    else:
+        raise NotImplementedError
 
 if __name__=='__main__':
     main()
