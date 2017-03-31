@@ -1,7 +1,9 @@
 from matplotlib import pylab as pl
 import numpy as np
 import h5py
-import os, io
+import os, io, sys
+sys.path.append('../dev/')
+from viz_sequence import *
 import pdb
 from math import sqrt
 import tensorflow as tf
@@ -29,12 +31,12 @@ def plot_prediction(pred_vec, orig_vec=None, save_dir='../results/', name='profi
             for jx, key in enumerate(pred_vec.keys()):
                 if orig_vec is not None:
                     # pdb.set_trace()
-                    axarr[ix, jx].plot(orig_vec[key][ix, 0, :] / np.sum(orig_vec[key][ix, 0, :] + 1e-7),
+                    axarr[ix, jx].plot(orig_vec[key][ix,0, :] / np.max(orig_vec[key][ix,0, :] + 1e-7),
                                        label=key + '_Original', color='g')
-                axarr[ix, jx].plot(pred_vec[key][ix, :], label=key + '_Prediction', color='r')
+                axarr[ix, jx].plot(pred_vec[key][ix, :]/np.max(pred_vec[key][ix, :]), label=key + '_Prediction', color='r')
                 axarr[ix, jx].axis('off')
 
-        axarr[0, 0].set_title(pred_vec.keys()[0])
+        axarr[0, 1].set_title(pred_vec.keys()[0])
         axarr[0, 1].set_title(pred_vec.keys()[1])
 
     pl.savefig(os.path.join(save_dir,name+'.png'),format='png')
@@ -102,6 +104,43 @@ def put_kernels_on_grid(kernel, pad = 1):
 def visualize_filters():
 
     raise NotImplementedError
+
+def plot_weights(array,
+                 height_padding_factor=0.2,
+                 length_padding=1.0,
+                 subticks_frequency=1.0,
+                 colors=default_colors,
+                 plot_funcs=default_plot_funcs,
+                 highlight={},
+                 ax=[]):
+    # fig = plt.figure(figsize=(20,2))
+    # ax = fig.add_subplot(111)
+    plot_weights_given_ax(ax=ax, array=array,
+        height_padding_factor=height_padding_factor,
+        length_padding=length_padding,
+        subticks_frequency=subticks_frequency,
+        colors=colors,
+        plot_funcs=plot_funcs,
+        highlight=highlight)
+
+def visualize_dna(weigths, pred_vec, save_dir='../results/', name='dna_prediction'):
+    pl.ioff()
+    fig = pl.figure(figsize=(20,20))
+    for ix in range(pred_vec.shape[0]):
+        ax = fig.add_subplot(pred_vec.shape[0], 1, ix+1)
+        H = abs((.25 * np.log2(.25 + 1e-7) - pred_vec[ix, :, :, 0] * np.log2(pred_vec[ix, :,:,0] + 1e-7)).sum(axis=0))
+        H = np.tile(H, 4).reshape(4, pred_vec.shape[2], 1)
+        plot_weights(weigths[ix] * H,
+                     height_padding_factor=0.2,
+                     length_padding=1.0,
+                     colors=default_colors,
+                     subticks_frequency=pred_vec.shape[2]/2,
+                     plot_funcs=default_plot_funcs,
+                     highlight={},
+                     ax=ax)
+    pl.savefig(os.path.join(save_dir, name + '.png'), format='png')
+    pl.close(fig)
+
 
 def main():
     raise NotImplementedError

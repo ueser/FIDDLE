@@ -120,13 +120,15 @@ class NNscaffold(object):
             self.outputs[key] = tf.placeholder(tf.float32, [None, self.architecture['Modules'][key]["input_height"],
                                                             self.architecture['Modules'][key]["input_width"], 1],
                                                name='output_' + key)
-            if self.config['Options']['Strand']=='Single':
-                self.positive_strand = tf.slice(self.outputs[key],[0,0,0,0], [-1,1,-1,-1])
-                self.output_tensor[key] = transform_track(self.positive_strand, option='pdf')
+            if key != 'dnaseq':
+                if self.config['Options']['Strand']=='Single':
+                    self.positive_strand = tf.slice(self.outputs[key],[0,0,0,0], [-1,1,-1,-1])
+                    self.output_tensor[key] = transform_track(self.positive_strand, option='pdf')
+                else:
+                    # converts output key placeholder to probability distribution function
+                    self.output_tensor[key] = transform_track(self.outputs[key], option='pdf')
             else:
-                # converts output key placeholder to probability distribution function
-                self.output_tensor[key] = transform_track(self.outputs[key], option='pdf')
-
+                self.output_tensor[key] = self.outputs[key]
 
         self.freeze(self.config['Options']['Freeze'])
 
@@ -250,11 +252,11 @@ class NNscaffold(object):
 
             self.predictions = {}
             for key in self.architecture['Outputs']:
-                if self.config['Options']['Strand']=='Single':
+                if (self.config['Options']['Strand']=='Single') and (key!='dnaseq'):
                     self.net = Dense(self.architecture['Modules'][key]['input_width'],
                                  activation='linear',
                                  name='final_FC')(self.scaffold_representation)
-                elif self.config['Options']['Strand']=='Double':
+                elif (self.config['Options']['Strand']=='Double') or (key=='dnaseq'):
                     self.net = Dense(self.architecture['Modules'][key]['input_height'] *
                                      self.architecture['Modules'][key]['input_width'],
                                      activation='linear',
@@ -264,9 +266,9 @@ class NNscaffold(object):
 
 
                 if key == 'dnaseq':
-                    pdb.set_trace()
-                    self.net = tf.reshape(self.net, [-1, 4, self.architecture['Modules']['dnaseq']['input_width'], 1])
-                    self.predictions[key] = multi_softmax(self.net, axis=1, name='multiSoftmax')
+                    # pdb.set_trace()
+                    self.dna_before_softmax = tf.reshape(self.net, [-1, 4, self.architecture['Modules']['dnaseq']['input_width'], 1])
+                    self.predictions[key] = multi_softmax(self.dna_before_softmax, axis=1, name='multiSoftmax')
 
                 else:
                     self.predictions[key] = tf.nn.softmax(self.net, name='softmax')
@@ -290,9 +292,9 @@ class NNscaffold(object):
                                                         tf.log(self.predictions[key]+1e-10))), [1, 2])
                 target = tf.argmax(self.output_tensor[key], dimension=1)
                 pred = tf.argmax(self.predictions[key], dimension=1)
-                pdb.set_trace()
-                self.accuracy[key] = tf.reduce_sum(tf.cast(tf.equal(pred, target), tf.float32))/tf.shape(target)[1]
-
+                # pdb.set_trace()
+                self.accuracy[key] = tf.reduce_sum(tf.cast(tf.equal(pred, target), tf.float32))#/tf.cast(tf.shape(target)[1], tf.float32)
+            #
             self.cost += tf.reduce_mean(self.loss)   # average over batch
 
         self.global_step = tf.Variable(0, name='globalStep', trainable=False)

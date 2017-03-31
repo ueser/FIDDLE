@@ -145,11 +145,24 @@ def main(_):
 
         # for every 50 iteration,
         if it % 5 ==0:
-            predicted_dict = model.predict(input_for_prediction)
-            plot_prediction(predicted_dict, orig_output,
-                                    name='iteration_{}'.format(it),
-                                    save_dir=os.path.join(FLAGS.resultsDir, FLAGS.runName),
-                                    strand=model.config['Options']['Strand'])
+
+            if 'dnaseq' not in model.outputs.keys():
+                predicted_dict = model.predict(input_for_prediction)
+                plot_prediction(predicted_dict, orig_output,
+                                        name='iteration_{}'.format(it),
+                                        save_dir=os.path.join(FLAGS.resultsDir, FLAGS.runName),
+                                        strand=model.config['Options']['Strand'])
+            else:
+                feed_d = {val: input_for_prediction[key] for key, val in model.inputs.items()}
+                feed_d.update({val: orig_output[key] for key, val in model.outputs.items()})
+                feed_d.update({model.dropout: 1.,
+                               model.keep_prob_input: 1.,
+                               model.inp_size: input_for_prediction.values()[0].shape[0],
+                               K.learning_phase(): 0})
+                weights, pred_vec = model.sess.run([model.dna_before_softmax, model.predictions['dnaseq']], feed_d)
+                visualize_dna(weights, pred_vec,
+                              name='iteration_{}'.format(it),
+                              save_dir=os.path.join(FLAGS.resultsDir, FLAGS.runName) )
 
         write_to_txt(return_dict_train)
         write_to_txt(return_dict_valid, batch_size=validation_data.values()[0].shape[0], case='validation')
