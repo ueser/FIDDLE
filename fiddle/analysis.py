@@ -25,7 +25,7 @@ flags.DEFINE_string('configuration', 'configurations.json', 'configuration file 
 FLAGS = flags.FLAGS
 
 ################debugger#####################
-from tensorflow.python import debug as tf_debug
+# from tensorflow.python import debug as tf_debug
 ################debugger#####################
 
 def main(_):

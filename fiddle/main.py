@@ -34,6 +34,10 @@ flags.DEFINE_float('dropout', 0.5, 'Keep probability for training dropout.')
 flags.DEFINE_string('resultsDir', '../results', 'Directory for results data')
 FLAGS = flags.FLAGS
 
+################################################################################
+# main
+################################################################################
+
 def main(_):
 
     # read in configurations
@@ -106,24 +110,28 @@ def main(_):
     train_size = train_h5_handle.values()[0].shape[0]
 
     print('Pre-train validation run:')
-    return_dict = model.validate(validation_data, accuracy=True)
-    print("Pre-train validation loss: " + str(return_dict['cost']))
-    print("Pre-train validation accuracy (%): " + str(
-        100. * return_dict['accuracy_' + key] / validation_data.values()[0].shape[0]))
-
+    # return_dict = model.validate(validation_data, accuracy=True)
+    # print("Pre-train validation loss: " + str(return_dict['cost']))
+    # print("Pre-train validation accuracy (%): " + str(
+    #     100. * return_dict['accuracy_' + key] / validation_data.values()[0].shape[0]))
+    case=True
+    prev = np.Inf
     totalIterations = 1000
     for it in range(totalIterations):
 
         # Multimodal Dropout Regularizer:
         # linearly decreasing dropout probability from 20% (@ 1st iteration) to 0% (@ 1% of total iterations)
         inputDropout = 0.2 - 0.2 * it / 10. if it <= (totalIterations // 100) else 0.
+        # inputDropout = 0.
+
         epoch = int(it * 10 * FLAGS.batchSize/train_size)
 
         print('Epoch: ' + str(epoch) + ', Iterations: ' + str(it))
         print('Number of examples seen: ' + str(it * 10 * FLAGS.batchSize))
         print('Input dropout probability: ' + str(inputDropout))
 
-        ido_ = 0.8 + 0.2 * it / 10. if it <= 10 else 1.
+        # ido_ = 0.8 + 0.2 * it / 10. if it <= 10 else 1.
+
         return_dict_train = Counter({})
         t_batcher, t_trainer = 0, 0
         for iterationNo in tq(range(10)):
@@ -131,13 +139,21 @@ def main(_):
                 train_batch = batcher.next()
             t_batcher += t.secs
             with Timer() as t:
-                tmp = model.train(train_batch, accuracy=True, inp_dropout=inputDropout, batch_size=FLAGS.batchSize)
+                if True:
+                    tmp = model.train(train_batch, accuracy=True, inp_dropout=inputDropout, batch_size=FLAGS.batchSize)
+                else:
+                    tmp, ret2 = model.train_discriminator(train_batch, inp_dropout=inputDropout, batch_size=FLAGS.batchSize, case=case, prev=prev)
+                    # if ret2['G_cost']>(1.5*tmp['D_cost']):
+                    #     case=False
+                    #     prev = tmp['D_cost']
+
                 train_summary = tmp['summary']
                 return_dict = Counter(tmp)
 
             t_trainer += t.secs
 
             return_dict_train += return_dict
+            # return_dict_train += Counter(ret2)
             step += 1
         print('Batcher time: ' + "%.3f" % t_batcher)
         print('Trainer time: ' + "%.3f" % t_trainer)
@@ -174,7 +190,7 @@ def main(_):
                     visualize_dna(weights, pred_vec,
                                   name='iteration_{}'.format(it),
                                   save_dir=os.path.join(FLAGS.resultsDir, FLAGS.runName) )
-
+        #
         write_to_txt(return_dict_train)
         write_to_txt(return_dict_valid, batch_size=validation_data.values()[0].shape[0], case='validation')
 

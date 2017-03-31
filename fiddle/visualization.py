@@ -2,11 +2,92 @@ from matplotlib import pylab as pl
 import numpy as np
 import h5py
 import os, io, sys
-sys.path.append('../dev/')
-from viz_sequence import *
 import pdb
 from math import sqrt
 import tensorflow as tf
+from tqdm import tqdm as tq
+import cPickle as pickle
+import tensorflow as tf
+
+
+### FIDDLE specific tools ###
+sys.path.append('../dev/')
+from viz_sequence import *
+#############################
+
+flags = tf.app.flags
+flags.DEFINE_string('runName', 'experiment', 'Running name.')
+flags.DEFINE_string('resultsDir', '../results', 'Directory for results data')
+flags.DEFINE_boolean('makeGif', True, 'Make gif from png files')
+flags.DEFINE_boolean('makePng', True, 'Make png from saved prediction pickles')
+flags.DEFINE_string('vizType', 'dnaseq', 'data type to be vizualized')
+
+FLAGS = flags.FLAGS
+
+################################################################################
+# Main
+################################################################################
+def main():
+
+    save_dir = os.path.join(FLAGS.resultsDir,FLAGS.runName)
+
+    if FLAGS.makePng:
+        pckl_files = [fname for fname in os.listdir(save_dir) if 'pred_viz' in fname]
+        orig_file = [fname for fname in os.listdir(save_dir) if 'originals.pck' in fname]
+        pred_dict = pickle.load(open(os.path.join(save_dir, pckl_files[0]), 'r'))
+
+        if ('dna_before_softmax' in pred_dict.keys()):
+
+            qq=0
+            for f_ in tq(pckl_files):
+                pred_dict = pickle.load(open(os.path.join(save_dir, f_),'r'))
+                iter_no  = int(f_.split('.')[0].split('_')[-1])
+                qq+=1
+                print('\nplotting {} of {}'.format(qq, len(pckl_files)))
+                weights = pred_dict['dna_before_softmax']
+                pred_vec = pred_dict['prediction']
+                visualize_dna(weights, pred_vec,
+                          name='iteration_{}'.format(iter_no),
+                          save_dir=save_dir, verbose=False)
+
+        elif FLAGS.vizType == 'tssseq':
+            qq = 0
+            orig_output = pickle.load(open(os.path.join(save_dir, orig_file), 'r'))
+            strand = 'Single'
+            for f_ in tq(pckl_files):
+                pred_dict = pickle.load(open(os.path.join(save_dir, f_), 'r'))
+                iter_no = int(f_.split('.')[0].split('_')[-1])
+                qq += 1
+                print('\nplotting {} of {}'.format(qq, len(pckl_files)))
+
+                if (qq==1) and (pred_dict.values()[0].shape[1]==2):
+                    strand = 'Double'
+                plot_prediction(predicted_dict, orig_output,
+                            name='iteration_{}'.format(iter_no),
+                            save_dir=save_dir,
+                            strand=strand)
+
+        else:
+            raise NotImplementedError
+
+    if FLAGS.makeGif:
+        print('Making gif animation ... ')
+        import imageio
+        images = []
+        png_files = [fname for fname in os.listdir(save_dir) if '.png' in fname]
+        sorted_idx = np.argsort([int(f_.split('.')[0].split('_')[-1]) for f_ in png_files])
+
+        for ix in tq(sorted_idx):
+            filename = os.path.join(save_dir,png_files[ix])
+            images.append(imageio.imread(filename))
+        imageio.mimsave(os.path.join(save_dir,'prediction_viz.gif'), images)
+
+
+
+
+################################################################################
+# Auxilary Functions
+################################################################################
 
 def plot_prediction(pred_vec, orig_vec=None, save_dir='../results/', name='profile_prediction', strand='Single'):
     pl.ioff()
@@ -123,10 +204,12 @@ def plot_weights(array,
         plot_funcs=plot_funcs,
         highlight=highlight)
 
-def visualize_dna(weigths, pred_vec, save_dir='../results/', name='dna_prediction'):
+def visualize_dna(weigths, pred_vec, save_dir='../results/', name='dna_prediction', verbose=True):
     pl.ioff()
     fig = pl.figure(figsize=(20,20))
-    for ix in range(pred_vec.shape[0]):
+    for ix in tq(range(pred_vec.shape[0])):
+        if verbose:
+            print('\nsubplotting {} of {}'.format(ix, pred_vec.shape[0]))
         ax = fig.add_subplot(pred_vec.shape[0], 1, ix+1)
         H = abs((.25 * np.log2(.25 + 1e-7) - pred_vec[ix, :, :, 0] * np.log2(pred_vec[ix, :,:,0] + 1e-7)).sum(axis=0))
         H = np.tile(H, 4).reshape(4, pred_vec.shape[2], 1)
@@ -141,9 +224,6 @@ def visualize_dna(weigths, pred_vec, save_dir='../results/', name='dna_predictio
     pl.savefig(os.path.join(save_dir, name + '.png'), format='png')
     pl.close(fig)
 
-
-def main():
-    raise NotImplementedError
 
 
 if __name__=='__main__':
