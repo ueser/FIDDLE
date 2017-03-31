@@ -2,137 +2,75 @@ from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import division
 
+import pdb, traceback, sys #
 import tensorflow as tf
-import threading
 import numpy as np
-import h5py # alternatively, tables module can be used
+import h5py
 from tqdm import tqdm as tq
 import cPickle as pickle
-from dataClass import *
-from models import *
-from auxilary import *
+#from auxilary import * # not sure what for?
 import pandas as pd
-# from matplotlib import pylab as pl
+import os
 
-
+### FIDDLE specific tools ###
+from models import *
+#############################
 
 flags = tf.app.flags
 flags.DEFINE_string('runName', 'experiment', 'Running name.')
-flags.DEFINE_string('filename', '../data/hdf5datasets/NSMSDSRSCSTSRI.hdf5', 'Data path.')
-flags.DEFINE_string('inputs', 'NS_MS_DS_RS_CS', 'Input symbols [NS: NETseq, MS:MNaseseq, RS:RNAseq, DS:DNAseq, CS:ChIPseq, e.g. NS_RS_MS]')
-flags.DEFINE_string('outputs', 'TS', 'Output symbols [TS: TSSseq, e.g. TS]')
-flags.DEFINE_boolean('restore', False, 'If true, restores models from the ../results/XXtrained/')
-flags.DEFINE_boolean('full_data', True, 'If true, uses full data')
-flags.DEFINE_boolean('suffnec', False, 'If true, calculates sufficiency and necessity costs')
-flags.DEFINE_boolean('predict', False, 'If true, predicts the output')
-flags.DEFINE_string('suffix', '', 'Suffix to save')
-flags.DEFINE_string('dataDir', '../data', 'Directory for input data')
 flags.DEFINE_string('resultsDir', '../results', 'Directory for results data')
-flags.DEFINE_integer('trainSize', None, 'Train size.')
-flags.DEFINE_integer('testSize', None, 'Test size.')
-
+flags.DEFINE_string('dataDir', '../data/hdf5datasets', 'Default data directory')
+flags.DEFINE_boolean('saveDataForLater', True, 'Save results as hdf5 format to use later')
+flags.DEFINE_string('configuration', 'configurations.json', 'configuration file [json file]')
 FLAGS = flags.FLAGS
-config.FLAGS=FLAGS
 
-
-
+################debugger#####################
+from tensorflow.python import debug as tf_debug
+################debugger#####################
 
 def main(_):
     '''
     This code imports NNscaffold class from models.py module for training, testing etc.
-
     Usage with defaults:
     python analysis.py (options)
-
-    Train by initializing from pre-trained models:
-    python analysis.py --restore True (options)
-    This option restores models from the ../results/XXtrained/ where XX is the input abbreviations.
-
-    Currently, input names are abbreviated [NS: NETseq, MS:MNaseseq, RS:RNAseq, DS:DNAseq, CS:ChIPseq, e.g. NS_RS_MS]
-    To use different inputs and outputs, change the dictionary in the function get_network_architecture().
-
     '''
-    FLAGS.savePath = FLAGS.resultsDir+'/'+FLAGS.runName
-    if not tf.gfile.Exists(FLAGS.savePath):
-        tf.gfile.MakeDirs(FLAGS.savePath)
 
-    network_architecture, outputList = get_network_architecture()
+    project_directory = os.path.join(FLAGS.resultsDir, FLAGS.runName)
+    with open(os.path.join(project_directory, 'configuration.json')) as fp:
+        config = byteify(json.load(fp))
+    test_h5_handle = h5py.File(os.path.join(FLAGS.dataDir, config['Options']['DataName'], 'test.h5'), 'r')
+    model = NNscaffold(config=config,
+                       architecture_path=os.path.join(project_directory, 'architecture.json'))
+    model.config['Options']['Reload'] = 'all'
+    test_data = {key: test_h5_handle[key][:] for key in model.inputs}
+    model.initialize()
 
+    ### get representations for each tracks and scaffolds.
+    repr_dict = model.get_representations(test_data)
+    if FLAGS.saveDataForLater:
+        repr_h5_handle = h5py.File(os.path.join(project_directory, 'representations.h5'),'w')
+        for key, val in repr_dict.items():
+            f_ = repr_h5_handle.create_dataset(key, (repr_dict[key].shape))
+            f_[:] = repr_dict[key][:]
+        repr_h5_handle.close()
 
+        #2.dimensionality reduction and visualization (t-SNE, PCA etc.)
 
-    model = NNscaffold(network_architecture,outputMode=FLAGS.outputs)
-    model.load(FLAGS.savePath)
-    # return 0
-    #
-    # print([v.name for v in tf.trainable_variables()])
-    # for v in tf.trainable_variables():
-    #     if v.name =='DNAseq/conv1/weights:0':
-    #         Wtest=v.copy()
-    #         break
-    # refs = model.get_reference(refInput)
+    ### get predictions
+    pred_dict = model.predict(test_data)
+    if FLAGS.saveDataForLater:
+        pred_h5_handle = h5py.File(os.path.join(project_directory, 'predictions.h5'), 'w')
+        for key, val in pred_dict.items():
+            f_ = pred_h5_handle.create_dataset(key, (pred_dict[key].shape))
+            f_[:] = pred_dict[key][:]
+        pred_h5_handle.close()
 
-    print('Getting HDF5 pointer...')
-    hdf5Pointer = h5py.File(FLAGS.filename,'r')
-    if FLAGS.suffnec:
-
-        FLAGS.data = multiModalData(hdf5Pointer,network_architecture.keys(),outputList)
-        print('Done')
-
-        # FLAGS.testSize = FLAGS.data.sampleSize
-        FLAGS.data.splitTest()
-
-        print('Setting batcher...')
-        with tf.device("/cpu:0"):
-            batcher = FLAGS.data.dataBatcher(chunkSize=FLAGS.data.sampleSize)
-            print('Getting test data...')
-            testInput, testOutput = FLAGS.data.getTestData()
-        print('Done')
-
-        print('Calculating the scores')
-        suffDict,necDict = model.suffnec(testInput, testOutput)
-        print('Saving...')
-        pd.DataFrame(suffDict).to_csv(FLAGS.savePath+"/"+"SufficiencyCosts.csv")
-        pd.DataFrame(necDict).to_csv(FLAGS.savePath+"/"+"NecessityCosts.csv")
-        print('Done...')
-
-    if FLAGS.predict:
-
-        FLAGS.data = multiModalData(hdf5Pointer,network_architecture.keys(),[])
-        print('Done')
-
-        if FLAGS.full_data:
-            print('Getting all data...')
-            with tf.device("/cpu:0"):
-                testInput,testOutput = FLAGS.data.getAllData()
-                infodata = hdf5Pointer.get('info')[:]
-        else:
-            # FLAGS.testSize = FLAGS.data.sampleSize
-            FLAGS.data.splitTest()
-
-            print('Setting batcher...')
-            with tf.device("/cpu:0"):
-                batcher = FLAGS.data.dataBatcher(chunkSize=FLAGS.data.sampleSize)
-                print('Getting test data...')
-                testInput, testOutput = FLAGS.data.getTestData()
-                infodata = hdf5Pointer.get('info')[FLAGS.data.testIdx]
-        print('Done')
-        predictions = model.predict({ky:testInput[ky][:2] for ky in testInput.keys()})
-        print((testInput.values()[0].shape[0],)+predictions.shape[1:])
-        f = h5py.File(FLAGS.savePath+"/"+"predictions_"+FLAGS.suffix+".hdf5",'w')
-        pred = f.create_dataset('predictions',(testInput.values()[0].shape[0],)+predictions.shape[1:])
-        info  = f.create_dataset('info',infodata.shape)
-
-        for batchIdx in tq(range(0,testInput.values()[0].shape[0],5000)):
-            if (batchIdx+5000)<testInput.values()[0].shape[0]:
-                prd = model.predict({key:testInput[key][batchIdx:(batchIdx+5000)] for key in testInput.keys()})
-                pred[batchIdx:(batchIdx+5000),:] = prd
-            else:
-                predictions = model.predict({key:testInput[key][batchIdx:testInput.values()[0].shape[0]] for key in testInput.keys()})
-                pred[batchIdx:testInput.values()[0].shape[0],:] = predictions
-
-        info[:] = infodata
-        f.close()
-        print('Done...')
+    ### filter visualization
 
 if __name__ == '__main__':
-    tf.app.run()
+    try:
+        tf.app.run()
+    except:
+        type, value, tb = sys.exc_info()
+        traceback.print_exc()
+
