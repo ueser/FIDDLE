@@ -34,6 +34,10 @@ flags.DEFINE_float('dropout', 0.5, 'Keep probability for training dropout.')
 flags.DEFINE_string('resultsDir', '../results', 'Directory for results data')
 FLAGS = flags.FLAGS
 
+################################################################################
+# main
+################################################################################
+
 def main(_):
 
     # read in configurations
