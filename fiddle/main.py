@@ -32,38 +32,38 @@ flags.DEFINE_float('dropout', 0.5, 'Keep probability for training dropout.')
 flags.DEFINE_string('resultsDir', '../results', 'Directory for results data')
 FLAGS = flags.FLAGS
 
-################debugger#####################
-# from tensorflow.python import debug as tf_debug
-################debugger#####################
-
 def main(_):
+
+    # read in configurations
     with open(FLAGS.configuration) as fp:
         config = byteify(json.load(fp))
 
-    train_h5_handle  = h5py.File(os.path.join(FLAGS.dataDir, config['Options']['DataName'], 'train.h5'),'r')
-    validation_h5_handle  = h5py.File(os.path.join(FLAGS.dataDir, config['Options']['DataName'], 'validation.h5'),'r')
-
+    # create or recognize results directory
     FLAGS.savePath = FLAGS.resultsDir + '/' + FLAGS.runName
+    print('Results will be saved in ' + str(FLAGS.savePath))
     if not tf.gfile.Exists(FLAGS.savePath):
         tf.gfile.MakeDirs(FLAGS.savePath)
 
-    print('Results will be saved in ' + str(FLAGS.savePath))
-
-
+    # define neural network
     model = NNscaffold(config=config,
                        architecture_path=FLAGS.architecture,
                        learning_rate=FLAGS.learningRate,
                        model_path=FLAGS.savePath)
 
+    # save resulting modified architecture and configuration
     json.dump(model.architecture, open(FLAGS.savePath + "/architecture.json", 'w'))
     json.dump(model.config, open(FLAGS.savePath + "/configuration.json", 'w'))
 
-    all_keys = list(set(model.architecture['Inputs'] + model.architecture['Outputs']))
+    # input training and validation data
+    train_h5_handle  = h5py.File(os.path.join(FLAGS.dataDir, config['Options']['DataName'], 'train.h5'),'r')
+    validation_h5_handle  = h5py.File(os.path.join(FLAGS.dataDir, config['Options']['DataName'], 'validation.h5'),'r')
 
+    # create iterator over training data
     data = MultiModalData(train_h5_handle, batch_size=FLAGS.batchSize)
     batcher = data.batcher()
     print('Storing validation data to the memory')
     try:
+        all_keys = list(set(model.architecture['Inputs'] + model.architecture['Outputs']))
         validation_data = {key: validation_h5_handle[key][:] for key in all_keys}
     except KeyError:
         print('Make sure that the configuration file contains the correct track names (keys), '

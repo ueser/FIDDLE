@@ -7,7 +7,7 @@ from tqdm import tqdm as tq
 
 
 def main():
-    usage = 'usage: %prog [options] <chr_sizes> <annotation_file_path> <out_file_name>'
+    usage = 'usage: %prog [options] <chr_size> <out_file_name> <annotation_file_path> '
     parser = OptionParser(usage)
     parser.add_option('-t', dest='loci_of_interest', default='CDS', type='str', help='Loci of interest e.g. TSS, SNP, CDS etc. [Default: %default]')
     parser.add_option('-e', dest='width', type='int', default=500, help='Extend all sequences to this length [Default: %default]')
@@ -23,13 +23,13 @@ def main():
         os.makedirs(directory)
     with open(args[0], 'r') as f:
         chr_sizes = {line.split('\t')[0]: (1, int(line.split('\t')[-1].split('\n')[0])) for line in f.readlines()}
-    save_path = os.path.join(directory, args[2])
+    save_path = os.path.join(directory, args[1])
     xran_pos = np.arange(-options.upstream, options.downstream, options.stride)
     xran_neg = np.arange(-options.downstream, options.upstream, options.stride)
 
     # Read in gff3 annotation file
     with open(save_path, 'w') as fw:
-        for record in tq(parseGFF3(args[1])):
+        for record in tq(parseGFF3(args[2])):
             if (record['type'] != options.loci_of_interest) or \
                     (record['source'] != 'ensembl') or \
                     (record['seqid'] == 'Mito') or \
@@ -41,19 +41,19 @@ def main():
                              for st in starts]
             fw.write('\n'.join(list_to_write)+'\n')
 
-    # Construct train, test, and validation regions
-    with open(save_path, 'r') as fr:
-        _ = fr.readline() # discard first line, no information
-        all_lines = fr.readlines()
-    np.random.shuffle(all_lines)
-    with open(os.path.join(directory, 'train_regions.bed'), 'w') as fw:
-        fw.write(''.join(all_lines[4000:]))
-    if options.split > 0:
-        with open(os.path.join(directory, 'test_regions.bed'), 'w') as fw:
-            fw.write(''.join(all_lines[2000:4000]))
-    if options.split > 1:
-        with open(os.path.join(directory, 'validation_regions.bed'), 'w') as fw:
-            fw.write(''.join(all_lines[:2000]))
+    # # Construct train, test, and validation regions
+    # with open(save_path, 'r') as fr:
+    #     _ = fr.readline() # discard first line, no information
+    #     all_lines = fr.readlines()
+    # np.random.shuffle(all_lines)
+    # with open(os.path.join(directory, 'train_regions.bed'), 'w') as fw:
+    #     fw.write(''.join(all_lines[4000:]))
+    # if options.split > 0:
+    #     with open(os.path.join(directory, 'test_regions.bed'), 'w') as fw:
+    #         fw.write(''.join(all_lines[2000:4000]))
+    # if options.split > 1:
+    #     with open(os.path.join(directory, 'validation_regions.bed'), 'w') as fw:
+    #         fw.write(''.join(all_lines[:2000]))
 
 if __name__ == '__main__':
     main()
