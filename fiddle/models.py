@@ -456,15 +456,15 @@ class NNscaffold(object):
         self.summaryWriter.add_summary(validation_summary, step)
         self.summaryWriter.flush()
 
-    def create_monitor_variables(self):
+    def create_monitor_variables(self, show_filters=False):
         """Writes to results directory a summary of graph variables"""
 
-
-        for track_name in self.inputs.keys():
-            weights = [v for v in tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=track_name) if
-                      'conv_1/kernel:' in v.name]
-            grid = put_kernels_on_grid(weights[0])
-            tf.summary.image(track_name+'/conv1/features', grid)
+        if show_filters:
+            for track_name in self.inputs.keys():
+                weights = [v for v in tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=track_name) if
+                          'conv_1/kernel:' in v.name]
+                grid = put_kernels_on_grid(weights[0])
+                tf.summary.image(track_name+'/conv1/features', grid)
 
         tf.summary.scalar('KL divergence', self.cost)
 
