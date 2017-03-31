@@ -80,7 +80,7 @@ def main(_):
     # Launch the graph #
     ####################
     model.initialize()
-    model.create_monitor_variables()
+    model.create_monitor_variables(show_filters=False)
     model.saver()
 
     header_str = 'Loss'
