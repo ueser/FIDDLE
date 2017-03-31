@@ -15,19 +15,19 @@ sys.path.append('../dev/')
 from viz_sequence import *
 #############################
 
-vizflags = tf.app.flags
-vizflags.DEFINE_string('runName', 'experiment', 'Running name.')
-vizflags.DEFINE_string('resultsDir', '../results', 'Directory for results data')
-vizflags.DEFINE_boolean('makeGif', True, 'Make gif from png files')
-vizflags.DEFINE_boolean('makePng', True, 'Make png from saved prediction pickles')
-vizflags.DEFINE_string('vizType', 'dnaseq', 'data type to be vizualized')
-
-vizFLAGS = vizflags.FLAGS
 
 ################################################################################
 # Main
 ################################################################################
 def main():
+    vizflags = tf.app.flags
+    vizflags.DEFINE_string('runName', 'experiment', 'Running name.')
+    vizflags.DEFINE_string('resultsDir', '../results', 'Directory for results data')
+    vizflags.DEFINE_boolean('makeGif', True, 'Make gif from png files')
+    vizflags.DEFINE_boolean('makePng', True, 'Make png from saved prediction pickles')
+    vizflags.DEFINE_string('vizType', 'dnaseq', 'data type to be vizualized')
+
+    vizFLAGS = vizflags.FLAGS
 
     save_dir = os.path.join(FLAGS.resultsDir,FLAGS.runName)
 
