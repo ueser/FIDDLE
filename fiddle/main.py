@@ -16,7 +16,7 @@ import cPickle as pickle
 ### FIDDLE specific tools ###
 from models import *
 from io_tools import *
-from visualization import *
+import visualization as viz
 #############################
 
 
@@ -165,13 +165,12 @@ def main(_):
         # for every 50 iteration,
         if it % 5 ==0:
 
-
-
             if 'dnaseq' not in model.outputs.keys():
                 predicted_dict = model.predict(input_for_prediction)
                 pickle.dump(predicted_dict, open(os.path.join(FLAGS.resultsDir, FLAGS.runName, 'pred_viz_{}.pck'.format(it)), "wb"))
                 if FLAGS.visualizePrediction == 'online':
-                    plot_prediction(predicted_dict, orig_output,
+
+                    viz.plot_prediction(predicted_dict, orig_output,
                                             name='iteration_{}'.format(it),
                                             save_dir=os.path.join(FLAGS.resultsDir, FLAGS.runName),
                                             strand=model.config['Options']['Strand'])
@@ -187,7 +186,7 @@ def main(_):
                                 'prediction': pred_vec}
                 pickle.dump(predicted_dict, open(os.path.join(FLAGS.resultsDir, FLAGS.runName, 'pred_viz_{}.pck'.format(it)), "wb"))
                 if FLAGS.visualizePrediction == 'online':
-                    visualize_dna(weights, pred_vec,
+                    viz.visualize_dna(weights, pred_vec,
                                   name='iteration_{}'.format(it),
                                   save_dir=os.path.join(FLAGS.resultsDir, FLAGS.runName) )
         #
