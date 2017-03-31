@@ -7,6 +7,9 @@ from viz_sequence import *
 import pdb
 from math import sqrt
 import tensorflow as tf
+from optparse import OptionParser
+from tqdm import tqdm as tq
+import cPickle as pickle
 
 def plot_prediction(pred_vec, orig_vec=None, save_dir='../results/', name='profile_prediction', strand='Single'):
     pl.ioff()
@@ -126,7 +129,8 @@ def plot_weights(array,
 def visualize_dna(weigths, pred_vec, save_dir='../results/', name='dna_prediction'):
     pl.ioff()
     fig = pl.figure(figsize=(20,20))
-    for ix in range(pred_vec.shape[0]):
+    for ix in tq(range(pred_vec.shape[0])):
+        print('subplotting {} of {}'.format(ix, pred_vec.shape[0]))
         ax = fig.add_subplot(pred_vec.shape[0], 1, ix+1)
         H = abs((.25 * np.log2(.25 + 1e-7) - pred_vec[ix, :, :, 0] * np.log2(pred_vec[ix, :,:,0] + 1e-7)).sum(axis=0))
         H = np.tile(H, 4).reshape(4, pred_vec.shape[2], 1)
@@ -143,7 +147,32 @@ def visualize_dna(weigths, pred_vec, save_dir='../results/', name='dna_predictio
 
 
 def main():
-    raise NotImplementedError
+    usage = 'usage: %prog [options] <results_dir>'
+    parser = OptionParser(usage)
+    parser.add_option('-t', dest='viz_type', default='dnaseq',
+                      help='Visuzalization type, e.g. dnaseq, chipnexus etc. [Default: %default]')
+    (options, args) = parser.parse_args()
+
+    if len(args) != 1:
+        parser.error('Must provide the project results directory')
+    else:
+        save_dir = args[0]
+
+    if options.viz_type == 'dnaseq':
+        pckl_files = [fname for fname in os.listdir(save_dir) if 'pred_viz' in fname]
+        orig_file = [fname for fname in os.listdir(save_dir) if 'originals.pck' in fname]
+
+        qq=0
+        for f_ in tq(pckl_files):
+            pred_dict = pickle.load(open(os.path.join(save_dir, f_),'r'))
+            iter_no  = int(f_.split('.')[0].split('_')[-1])
+            qq+=1
+            print('plotting {} of {}'.format(qq, len(pckl_files)))
+            weights = pred_dict['dna_before_softmax']
+            pred_vec = pred_dict['prediction']
+            visualize_dna(weights, pred_vec,
+                      name='iteration_{}'.format(iter_no),
+                      save_dir=save_dir)
 
 
 if __name__=='__main__':

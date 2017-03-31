@@ -11,7 +11,7 @@ sys.path.append('/home/ue4/tfvenv/lib/python2.7/site-packages/')
 import pdb, traceback, sys # EDIT
 import tensorflow as tf
 import numpy as np
-from keras.layers import Input, Dense, Lambda, Conv2D, concatenate, Reshape, AveragePooling2D, Flatten, BatchNormalization
+from keras.layers import Input, Dense, Lambda, Conv2D, concatenate, Reshape, AveragePooling2D, Flatten, BatchNormalization, MaxPooling2D
 from keras.models import Model
 from keras import backend as K
 from keras.objectives import kullback_leibler_divergence
@@ -273,7 +273,46 @@ class NNscaffold(object):
                 else:
                     self.predictions[key] = tf.nn.softmax(self.net, name='softmax')
 
+    # def _adversarial_loss(self):
+    #     D_real, D_logit_real = discriminator(self.outputs['dnaseq'])
+    #     D_fake, D_logit_fake = discriminator(self.predictions['dnaseq'])
+    #
+    #     self.D_loss = -tf.reduce_mean(tf.log(D_real) + tf.log(1. - D_fake))
+    #     self.G_loss = -tf.reduce_mean(tf.log(D_fake))
+    #
+    #     # Only update D(X)'s parameters, so var_list = theta_D
+    #     self.D_solver = tf.train.AdamOptimizer().minimize(D_loss,
+    #                                                       var_list=tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES,
+    #                                                                                  scope='Discriminator'))
+    #     # Only update G(X)'s parameters, so var_list = theta_G
+    #     self.G_solver = tf.train.AdamOptimizer().minimize(G_loss,
+    #                                                       var_list=self.trainables)
+
+    def train_discriminator(self, train_data, inp_dropout=0.1, batch_size=128, case=True, prev=np.Inf):
+
+        if train_data==[]:
+            train_feed = {}
+        else:
+            train_feed = {self.outputs[key]: train_data[key] for key in self.architecture['Outputs']}
+            train_feed.update({self.inputs[key]: train_data[key] for key in self.architecture['Inputs']})
+
+        train_feed.update({self.dropout: self.architecture['Scaffold']['dropout'],
+                           self.keep_prob_input: (1 - inp_dropout),
+                           self.inp_size: batch_size,
+                           K.learning_phase(): 1})
+        return_dict1 = {'_': 0, 'D_cost': prev, 'summary': 'train'}
+        if case:
+            fetches1 = {'_': self.D_solver, 'D_cost': self.D_loss, 'summary': self.summary_op}
+            return_dict1 = self._run(fetches1, train_feed)
+        fetches2 = {'_': self.G_solver, 'G_cost': self.G_loss, 'summary': self.summary_op}
+        return_dict2 = self._run(fetches2, train_feed)
+
+        return return_dict1, return_dict2
+
+
+
     def _create_loss_optimizer(self):
+        self.global_step = tf.Variable(0, name='globalStep', trainable=False)
         self.accuracy = {}
         self.cost = 0
         for key in self.architecture['Outputs']:
@@ -284,7 +323,7 @@ class NNscaffold(object):
                 target = tf.floor((10.*tf.cast(tf.argmax(self.output_tensor[key], dimension=1), tf.float32))/np.float(width))
                 pred = tf.floor((10.*tf.cast(tf.argmax(self.predictions[key], dimension=1), tf.float32))/np.float(width))
                 self.accuracy[key] = tf.reduce_sum(tf.cast(tf.equal(pred, target), tf.int32))
-
+                self.cost += tf.reduce_mean(self.loss)
             else:
                 #TODO implement for DNA seq # but is necessary??
                 self.loss = tf.reduce_sum(tf.multiply(self.output_tensor[key]+1e-10,
@@ -294,10 +333,33 @@ class NNscaffold(object):
                 pred = tf.argmax(self.predictions[key], dimension=1)
                 # pdb.set_trace()
                 self.accuracy[key] = tf.reduce_sum(tf.cast(tf.equal(pred, target), tf.float32))#/tf.cast(tf.shape(target)[1], tf.float32)
-            #
-            self.cost += tf.reduce_mean(self.loss)   # average over batch
+                self.cost += tf.reduce_mean(self.loss)   # average over batch
 
-        self.global_step = tf.Variable(0, name='globalStep', trainable=False)
+
+                # D_real, D_logit_real = discriminator(self.outputs['dnaseq'])
+                # D_fake, D_logit_fake = discriminator(self.predictions['dnaseq'])
+                #
+                # self.D_loss = tf.reduce_mean(D_real) - tf.reduce_mean(D_fake)
+                # self.G_loss = -tf.reduce_mean(D_fake)
+                #
+                # # self.D_loss = -tf.reduce_mean(tf.log(D_real) + tf.log(1. - D_fake))
+                # # self.G_loss = -tf.reduce_mean(tf.log(D_fake))
+                # # pdb.set_trace()
+                # # Only update D(X)'s parameters, so var_list = theta_D
+                #
+                # self.D_solver = tf.train.AdamOptimizer(learning_rate=1e-4).minimize(self.D_loss,
+                #                                                   global_step=self.global_step,
+                #                                                   var_list=tf.get_collection(
+                #                                                       tf.GraphKeys.GLOBAL_VARIABLES,
+                #                                                       scope='Discriminator'))
+                # # Only update G(X)'s parameters, so var_list = theta_G
+                # self.G_solver = tf.train.AdamOptimizer(learning_rate=1e-3).minimize(self.G_loss,
+                #                                                   global_step=self.global_step,
+                #                                                   var_list=self.trainables)
+
+
+
+
         # Use ADAM optimizer
         self.optimizer = \
             tf.train.AdamOptimizer(learning_rate=self.learning_rate).minimize(self.cost,
@@ -529,3 +591,32 @@ class ConvolutionalContainer(BaseTrackContainer):
             net = Flatten()(net)
             self.representation = Dense(self.architecture['Modules'][self.track_name]['representation_width'],
                         name='representation')(net)
+
+
+### Experimental ###
+def discriminator(x):
+    with tf.variable_scope('Discriminator'):
+        net = Conv2D(32,
+                     [4, 10],
+                     activation='relu',
+                     kernel_regularizer='l2',
+                     padding='valid',
+                     name='conv_1')(x)
+        net = MaxPooling2D((1, 5), strides=(1, 5))(net)
+
+        net = Conv2D(10,
+                     [1,10],
+                     activation='relu',
+                     kernel_regularizer='l2',
+                     padding='valid',
+                     name='conv_2')(net)
+
+        net = MaxPooling2D((1, 5), strides=(1, 5))(net)
+
+        net = Flatten()(net)
+        D_logit = Dense(1, name='representation')(net)
+        D_prob = tf.nn.sigmoid(D_logit)
+
+    return D_prob, D_logit
+
+
