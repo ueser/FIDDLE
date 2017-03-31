@@ -379,8 +379,8 @@ class NNscaffold(object):
 
         fetches = {}
         fetches.update({key: val for key, val in self.representations.items()})
-        pred_feed.update({'scaffold': self.scaffold_representation})
-
+        fetches.update({'scaffold': self.scaffold_representation})
+#pdb.set_trace()
         return_dict = self._run(fetches, pred_feed)
         return return_dict
 
@@ -427,11 +427,12 @@ class NNscaffold(object):
         if isinstance(fetches, dict):
             keys, values = fetches.keys(), list(fetches.values())
 
-            ##################debugger########################################
-            # from tensorflow.python import debug as tf_debug
-            # self.sess = tf_debug.LocalCLIDebugWrapperSession(self.sess)
-            # self.sess.add_tensor_filter("has_inf_or_nan", tf_debug.has_inf_or_nan)
-            # ##################debugger########################################
+#            #################debugger########################################
+#            from tensorflow.python import debug as tf_debug
+#            self.sess = tf_debug.LocalCLIDebugWrapperSession(self.sess)
+#            self.sess.add_tensor_filter("has_inf_or_nan", tf_debug.has_inf_or_nan)
+#            ##################debugger########################################
+#pdb.set_trace()
             res = self.sess.run(values, feed_dict)
             return {key: value for key, value in zip(keys, res)}
         else:
