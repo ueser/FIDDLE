@@ -11,6 +11,7 @@ from collections import Counter
 import os
 import h5py
 import json
+import cPickle as pickle
 
 ### FIDDLE specific tools ###
 from models import *
@@ -25,6 +26,7 @@ flags.DEFINE_string('dataDir', '../data/hdf5datasets', 'Default data directory')
 flags.DEFINE_string('configuration', 'configurations.json', 'configuration file [json file]')
 flags.DEFINE_string('architecture', 'architecture.json', 'configuration file [json file]')
 flags.DEFINE_string('restorePath', '../results/test', 'Regions to validate [bed or gff files]')
+flags.DEFINE_string('visualizePrediction', 'offline', 'Prediction profiles to be plotted [online or offline] ')
 flags.DEFINE_integer('maxEpoch', 1000, 'Number of epochs to run trainer.')
 flags.DEFINE_integer('batchSize', 100, 'Batch size.')
 flags.DEFINE_float('learningRate', 0.001, 'Initial learning rate.')
@@ -96,6 +98,7 @@ def main(_):
     input_for_prediction = {key: validation_data[key][idx] for key in model.architecture['Inputs']}
     orig_output = {key: validation_data[key][idx] for key in model.architecture['Outputs']}
 
+    pickle.dump(orig_output, open(os.path.join(FLAGS.resultsDir, FLAGS.runName, 'originals.pck'), "wb"))
 
     ######## TRAIN #########
     globalMinLoss = np.inf
@@ -146,12 +149,16 @@ def main(_):
         # for every 50 iteration,
         if it % 5 ==0:
 
+
+
             if 'dnaseq' not in model.outputs.keys():
                 predicted_dict = model.predict(input_for_prediction)
-                plot_prediction(predicted_dict, orig_output,
-                                        name='iteration_{}'.format(it),
-                                        save_dir=os.path.join(FLAGS.resultsDir, FLAGS.runName),
-                                        strand=model.config['Options']['Strand'])
+                pickle.dump(predicted_dict, open(os.path.join(FLAGS.resultsDir, FLAGS.runName, 'pred_viz_{}.pck'.format(it)), "wb"))
+                if FLAGS.visualizePrediction == 'online':
+                    plot_prediction(predicted_dict, orig_output,
+                                            name='iteration_{}'.format(it),
+                                            save_dir=os.path.join(FLAGS.resultsDir, FLAGS.runName),
+                                            strand=model.config['Options']['Strand'])
             else:
                 feed_d = {val: input_for_prediction[key] for key, val in model.inputs.items()}
                 feed_d.update({val: orig_output[key] for key, val in model.outputs.items()})
@@ -160,9 +167,13 @@ def main(_):
                                model.inp_size: input_for_prediction.values()[0].shape[0],
                                K.learning_phase(): 0})
                 weights, pred_vec = model.sess.run([model.dna_before_softmax, model.predictions['dnaseq']], feed_d)
-                visualize_dna(weights, pred_vec,
-                              name='iteration_{}'.format(it),
-                              save_dir=os.path.join(FLAGS.resultsDir, FLAGS.runName) )
+                predicted_dict={'dna_before_softmax':weights,
+                                'prediction': pred_vec}
+                pickle.dump(predicted_dict, open(os.path.join(FLAGS.resultsDir, FLAGS.runName, 'pred_viz_{}.pck'.format(it)), "wb"))
+                if FLAGS.visualizePrediction == 'online':
+                    visualize_dna(weights, pred_vec,
+                                  name='iteration_{}'.format(it),
+                                  save_dir=os.path.join(FLAGS.resultsDir, FLAGS.runName) )
 
         write_to_txt(return_dict_train)
         write_to_txt(return_dict_valid, batch_size=validation_data.values()[0].shape[0], case='validation')
