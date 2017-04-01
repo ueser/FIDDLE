@@ -14,8 +14,8 @@
     }
   },
   "Options": {
-    "Inputs":["chipnexus","tssseq","dnaseq"],
-    "Outputs":["dnaseq"],
+    "Inputs":["chipnexus","dnaseq"],
+    "Outputs":["tssseq"],
     "Freeze":[],
     "Reload":[],
     "Strand":"Single",
