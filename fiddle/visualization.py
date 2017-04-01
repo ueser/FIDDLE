@@ -20,14 +20,14 @@ from viz_sequence import *
 # Main
 ################################################################################
 def main():
-    vizflags = tf.app.flags
-    vizflags.DEFINE_string('runName', 'experiment', 'Running name.')
-    vizflags.DEFINE_string('resultsDir', '../results', 'Directory for results data')
-    vizflags.DEFINE_boolean('makeGif', True, 'Make gif from png files')
-    vizflags.DEFINE_boolean('makePng', True, 'Make png from saved prediction pickles')
-    vizflags.DEFINE_string('vizType', 'dnaseq', 'data type to be vizualized')
+    flags = tf.app.flags
+    flags.DEFINE_string('runName', 'experiment', 'Running name.')
+    flags.DEFINE_string('resultsDir', '../results', 'Directory for results data')
+    flags.DEFINE_boolean('makeGif', True, 'Make gif from png files')
+    flags.DEFINE_boolean('makePng', True, 'Make png from saved prediction pickles')
+    flags.DEFINE_string('vizType', 'dnaseq', 'data type to be vizualized')
 
-    vizFLAGS = vizflags.FLAGS
+    FLAGS = flags.FLAGS
 
     save_dir = os.path.join(FLAGS.resultsDir,FLAGS.runName)
 
@@ -43,34 +43,36 @@ def main():
                 pred_dict = pickle.load(open(os.path.join(save_dir, f_),'r'))
                 iter_no  = int(f_.split('.')[0].split('_')[-1])
                 qq+=1
-                print('\nplotting {} of {}'.format(qq, len(pckl_files)))
+                # print('\nplotting {} of {}'.format(qq, len(pckl_files)))
                 weights = pred_dict['dna_before_softmax']
                 pred_vec = pred_dict['prediction']
                 visualize_dna(weights, pred_vec,
                           name='iteration_{}'.format(iter_no),
                           save_dir=save_dir, verbose=False)
 
-        elif vizFLAGS.vizType == 'tssseq':
+        elif FLAGS.vizType == 'tssseq':
             qq = 0
-            orig_output = pickle.load(open(os.path.join(save_dir, orig_file), 'r'))
+            orig_output = pickle.load(open(os.path.join(save_dir, orig_file[0]), 'r'))
             strand = 'Single'
             for f_ in tq(pckl_files):
                 pred_dict = pickle.load(open(os.path.join(save_dir, f_), 'r'))
                 iter_no = int(f_.split('.')[0].split('_')[-1])
                 qq += 1
-                print('\nplotting {} of {}'.format(qq, len(pckl_files)))
+                # print('\nplotting {} of {}'.format(qq, len(pckl_files)))
 
-                if (qq==1) and (pred_dict.values()[0].shape[1]==2):
+                if (qq==1) and (pred_dict.values()[0].shape[1]==2*orig_output.values()[0].shape[2]):
                     strand = 'Double'
-                plot_prediction(predicted_dict, orig_output,
+                # pdb.set_trace()
+                plot_prediction(pred_dict, orig_output,
                             name='iteration_{}'.format(iter_no),
                             save_dir=save_dir,
-                            strand=strand)
+                            strand=strand,
+                            title=iter_no)
 
         else:
             raise NotImplementedError
 
-    if vizFLAGS.makeGif:
+    if FLAGS.makeGif:
         print('Making gif animation ... ')
         import imageio
         images = []
@@ -89,36 +91,66 @@ def main():
 # Auxilary Functions
 ################################################################################
 
-def plot_prediction(pred_vec, orig_vec=None, save_dir='../results/', name='profile_prediction', strand='Single'):
+def plot_prediction(pred_vec, orig_vec=None, save_dir='../results/', name='profile_prediction', strand='Single',title='profile'):
     pl.ioff()
-    fig, axarr = pl.subplots(pred_vec.values()[0].shape[0],len(pred_vec))
-    if strand=='Double':
-        to_size = pred_vec.values()[0].shape[1]/2
-        for ix in range(pred_vec.values()[0].shape[0]):
-            for jx, key in enumerate(pred_vec.keys()):
-                if orig_vec is not None:
-                    # pdb.set_trace()
-                    axarr[ix, jx].plot(orig_vec[key][ix, 0, :]/np.sum(orig_vec[key][ix,:,:]+ 1e-7), label=key+'_Original', color='g')
-                    axarr[ix, jx].plot(-orig_vec[key][ix, 1, :]/np.sum(orig_vec[key][ix,:,:]+ 1e-7), color='g')
-                axarr[ix, jx].plot(pred_vec[key][ix, :to_size], label=key+'_Prediction', color='r')
-                axarr[ix, jx].plot(-pred_vec[key][ix, to_size:], color='r')
-                axarr[ix, jx].axis('off')
-        axarr[0, 0].set_title(pred_vec.keys()[0])
-        axarr[0, 1].set_title(pred_vec.keys()[1])
+    if len(pred_vec)==1:
+        # pdb.set_trace()
+        fig, axarr = pl.subplots(pred_vec.values()[0].shape[0])
+        if strand == 'Double':
+            to_size = pred_vec.values()[0].shape[1] / 2
+            for ix in range(pred_vec.values()[0].shape[0]):
+                for jx, key in enumerate(pred_vec.keys()):
+                    if orig_vec is not None:
+                        # pdb.set_trace()
+                        axarr[ix].plot(orig_vec[key][ix, 0, :] / np.max(orig_vec[key][ix, :, :] + 1e-7),
+                                           label=key + '_Original', color='g')
+                        axarr[ix].plot(-orig_vec[key][ix, 1, :] / np.max(orig_vec[key][ix, :, :] + 1e-7), color='g')
+                    axarr[ix].plot(pred_vec[key][ix, :to_size]/np.max(pred_vec[key][ix, :]), label=key + '_Prediction', color='r')
+                    axarr[ix].plot(-pred_vec[key][ix, to_size:]/np.max(pred_vec[key][ix, :]), color='r')
+                    axarr[ix].axis('off')
+            axarr[0].set_title(pred_vec.keys()[0]+'_'+str(title))
+        else:
+            for ix in range(pred_vec.values()[0].shape[0]):
+                for jx, key in enumerate(pred_vec.keys()):
+                    if orig_vec is not None:
+                        # pdb.set_trace()
+                        axarr[ix].plot(orig_vec[key][ix, 0, :] / np.max(orig_vec[key][ix, 0, :] + 1e-7),
+                                           label=key + '_Original', color='g')
+                    axarr[ix].plot(pred_vec[key][ix, :] / np.max(pred_vec[key][ix, :]), label=key + '_Prediction',
+                                       color='r')
+                    axarr[ix].axis('off')
 
-
+                    axarr[0].set_title(pred_vec.keys()[0] + '_' + str(title))
     else:
-        for ix in range(pred_vec.values()[0].shape[0]):
-            for jx, key in enumerate(pred_vec.keys()):
-                if orig_vec is not None:
-                    # pdb.set_trace()
-                    axarr[ix, jx].plot(orig_vec[key][ix,0, :] / np.max(orig_vec[key][ix,0, :] + 1e-7),
-                                       label=key + '_Original', color='g')
-                axarr[ix, jx].plot(pred_vec[key][ix, :]/np.max(pred_vec[key][ix, :]), label=key + '_Prediction', color='r')
-                axarr[ix, jx].axis('off')
 
-        axarr[0, 1].set_title(pred_vec.keys()[0])
-        axarr[0, 1].set_title(pred_vec.keys()[1])
+        fig, axarr = pl.subplots(pred_vec.values()[0].shape[0],len(pred_vec))
+        if strand=='Double':
+            to_size = pred_vec.values()[0].shape[1]/2
+            for ix in range(pred_vec.values()[0].shape[0]):
+                for jx, key in enumerate(pred_vec.keys()):
+                    if orig_vec is not None:
+                        # pdb.set_trace()
+                        axarr[ix, jx].plot(orig_vec[key][ix, 0, :]/np.sum(orig_vec[key][ix,:,:]+ 1e-7), label=key+'_Original', color='g')
+                        axarr[ix, jx].plot(-orig_vec[key][ix, 1, :]/np.sum(orig_vec[key][ix,:,:]+ 1e-7), color='g')
+                    axarr[ix, jx].plot(pred_vec[key][ix, :to_size], label=key+'_Prediction', color='r')
+                    axarr[ix, jx].plot(-pred_vec[key][ix, to_size:], color='r')
+                    axarr[ix, jx].axis('off')
+            axarr[0, 0].set_title(pred_vec.keys()[0])
+            axarr[0, 1].set_title(pred_vec.keys()[1])
+
+
+        else:
+            for ix in range(pred_vec.values()[0].shape[0]):
+                for jx, key in enumerate(pred_vec.keys()):
+                    if orig_vec is not None:
+                        # pdb.set_trace()
+                        axarr[ix, jx].plot(orig_vec[key][ix,0, :] / np.max(orig_vec[key][ix,0, :] + 1e-7),
+                                           label=key + '_Original', color='g')
+                    axarr[ix, jx].plot(pred_vec[key][ix, :]/np.max(pred_vec[key][ix, :]), label=key + '_Prediction', color='r')
+                    axarr[ix, jx].axis('off')
+
+            axarr[0, 1].set_title(pred_vec.keys()[0])
+            axarr[0, 1].set_title(pred_vec.keys()[1])
 
     pl.savefig(os.path.join(save_dir,name+'.png'),format='png')
     pl.close(fig)

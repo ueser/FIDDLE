@@ -96,9 +96,10 @@ def main(_):
     ## select some (10) good quality signals for prediction overlay during training
     tfval = np.ones((validation_data[key].shape[0]), dtype=bool)
     for key in model.architecture['Outputs']:
-        tfval = tfval & (validation_data[key].reshape(validation_data[key].shape[0],-1).sum(axis=1)>100)
-    idx = np.where(tfval)[0]
-    idx = idx[:min(len(idx),5)]
+        idx = np.argsort(validation_data[key].reshape(validation_data[key].shape[0],-1).sum(axis=1))
+
+
+    idx = idx[-5:]
     input_for_prediction = {key: validation_data[key][idx] for key in model.architecture['Inputs']}
     orig_output = {key: validation_data[key][idx] for key in model.architecture['Outputs']}
 
@@ -121,8 +122,8 @@ def main(_):
 
         # Multimodal Dropout Regularizer:
         # linearly decreasing dropout probability from 20% (@ 1st iteration) to 0% (@ 1% of total iterations)
-        inputDropout = 0.2 - 0.2 * it / 10. if it <= (totalIterations // 100) else 0.
-        # inputDropout = 0.
+        # inputDropout = 0.2 - 0.2 * it / 10. if it <= (totalIterations // 100) else 0.
+        inputDropout = 0.
 
         epoch = int(it * 10 * FLAGS.batchSize/train_size)
 
