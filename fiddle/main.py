@@ -130,7 +130,7 @@ def main(_):
         epoch = int(it * 10 * FLAGS.batchSize/train_size)
 
         print('Epoch: ' + str(epoch) + ', Iterations: ' + str(it))
-        print('Number minibatches of input seen: ' + str(it * 10 * FLAGS.batchSize))
+        print('Number of examples seen: ' + str(it * 10 * FLAGS.batchSize))
         print('Input dropout probability: ' + str(inputDropout))
 
         # ido_ = 0.8 + 0.2 * it / 10. if it <= 10 else 1.
