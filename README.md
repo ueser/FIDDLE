@@ -33,6 +33,12 @@ mkdir data/
 cd data/
 mkdir hdf5datasets/
 ```
+Note: Keras comes with default Theano backend. Change keras backend configuration to Tensorflow:  
+```markdown
+vim ~/.keras/keras.json
+```
+Then change "backend":"theano" --> "backend":"tensorflow"
+
 
 2) download training, validation and test hdf5 datasets and place into 'data/hdf5datasets/':
 
