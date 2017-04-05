@@ -16,15 +16,22 @@ Docker image to be made in the near future. For now ...
 
 1) copy & paste the below:
 
-_note: requires python 2.7!_
+_note: requires python 2.7 and pip:_
+
+```markdown 
+sudo easy_install pip 
+sudo pip install virtualenv
+```
 
 ```markdown
 git clone https://github.com/ueser/FIDDLE.git 
-pip install virtualenv
 virtualenv ../venv/
 source ../venv/bin/activate
+cd FIDDLE/
 pip install -r requirements.txt
-mkdir data/hdf5datasets/
+mkdir data/
+cd data/
+mkdir hdf5datasets/
 ```
 
 2) download training, validation and test hdf5 datasets and place into 'data/hdf5datasets/':
@@ -40,10 +47,17 @@ _warning: several gb of data_
 Change directories to FIDDLE/fiddle/
 
 ```markdown
-python main.py --visualizePrediction online
+python main.py
 ```
 
-4) Check out predictions:
+_note: solution to matplotlib RuntimeError: http://stackoverflow.com/questions/21784641/installation-issue-with-matplotlib-python_
 
-Change directories to FIDDLE/results/experiment/
+4) Create visualization of training:
 
+```markdown
+python visualization.py --vizType tssseq
+```
+
+5) Check out training trajectory:
+
+Change directories to FIDDLE/results/experiment/, open up the gif in a browser.
