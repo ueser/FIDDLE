@@ -14,7 +14,7 @@ Thanks to [Dylan Marshall](https://github.com/DylanM-Marshall) for documentation
 
 Docker image to be made in the near future. For now ... 
 
-1) copy & paste the below:
+### 1) copy & paste the below:
 
 _note: requires python 2.7 and pip:_
 
@@ -33,13 +33,13 @@ mkdir data/
 cd data/
 mkdir hdf5datasets/
 ```
-Note: Keras comes with default Theano backend. Change keras backend configuration to Tensorflow:  
+_note: Keras comes with default Theano backend. Change keras backend configuration to Tensorflow:_  
 ```markdown
 vim ~/.keras/keras.json
 ```
 Then change "backend":"theano" --> "backend":"tensorflow"
 
-2) download training, validation and test hdf5 datasets and place into 'data/hdf5datasets/':
+### 2) download training, validation and test hdf5 datasets and place into 'data/hdf5datasets/':
 
 _warning: several gb of data_
 
@@ -49,7 +49,7 @@ _warning: several gb of data_
 
 [test.h5](https://drive.google.com/file/d/0B9aDFb1Ds4IzT05wTTZVQmFvcG8/view?usp=sharing)
 
-3) Run it:
+### 3) Run it:
 
 Change directories to FIDDLE/fiddle/
 
@@ -59,12 +59,12 @@ python main.py
 
 _note: solution to matplotlib RuntimeError: http://stackoverflow.com/questions/21784641/installation-issue-with-matplotlib-python_
 
-4) Create visualization of training:
+### 4) Create visualization of training:
 
 ```markdown
 python visualization.py --vizType tssseq
 ```
 
-5) Check out training trajectory:
+### 5) Check out training trajectory:
 
 Change directories to FIDDLE/results/experiment/, open up the gif in a browser.
