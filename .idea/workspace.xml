@@ -2,16 +2,17 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="af957dae-1932-4bfe-989e-420dfff878bb" name="Default" comment="">
+      <change type="DELETED" beforePath="$PROJECT_DIR$/_config.yml" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/setup.py" afterPath="" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../CyclicLossEstimator/src/main.py" afterPath="$PROJECT_DIR$/../CyclicLossEstimator/src/main.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../CyclicLossEstimator/src/visualization.py" afterPath="$PROJECT_DIR$/../CyclicLossEstimator/src/visualization.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/FIDDLE.iml" afterPath="$PROJECT_DIR$/.idea/FIDDLE.iml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/modules.xml" afterPath="$PROJECT_DIR$/.idea/modules.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/vcs.xml" afterPath="$PROJECT_DIR$/.idea/vcs.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/fiddle/analysis.py" afterPath="$PROJECT_DIR$/fiddle/analysis.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/README.md" afterPath="$PROJECT_DIR$/README.md" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/fiddle/configurations.json" afterPath="$PROJECT_DIR$/fiddle/configurations.json" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/fiddle/main.py" afterPath="$PROJECT_DIR$/fiddle/main.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/fiddle/models.py" afterPath="$PROJECT_DIR$/fiddle/models.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/fiddle/visualization.py" afterPath="$PROJECT_DIR$/fiddle/visualization.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/requirements.txt" afterPath="$PROJECT_DIR$/requirements.txt" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -29,8 +30,8 @@
       <file leaf-file-name="models.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/fiddle/models.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="601">
-              <caret line="598" column="38" lean-forward="false" selection-start-line="598" selection-start-column="38" selection-end-line="598" selection-end-column="38" />
+            <state relative-caret-position="646">
+              <caret line="875" column="0" lean-forward="true" selection-start-line="875" selection-start-column="0" selection-end-line="875" selection-end-column="0" />
               <folding>
                 <element signature="e#0#38#0" expanded="true" />
               </folding>
@@ -99,11 +100,10 @@
       <file leaf-file-name="main.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/fiddle/main.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-239">
-              <caret line="111" column="42" lean-forward="false" selection-start-line="111" selection-start-column="42" selection-end-line="111" selection-end-column="42" />
+            <state relative-caret-position="211">
+              <caret line="199" column="22" lean-forward="true" selection-start-line="199" selection-start-column="22" selection-end-line="199" selection-end-column="22" />
               <folding>
                 <element signature="e#0#38#0" expanded="true" />
-                <marker date="1491519476000" expanded="true" signature="5919:6125" ph="..." />
               </folding>
             </state>
           </provider>
@@ -152,7 +152,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>key</find>
       <find>if not hass</find>
       <find>if not has</find>
       <find>self.architecture</find>
@@ -182,6 +181,7 @@
       <find>self.inp_size</find>
       <find>self.config</find>
       <find>self.predictions</find>
+      <find>case</find>
     </findStrings>
     <replaceStrings>
       <replace>architecture_template</replace>
@@ -543,7 +543,6 @@
           <caret line="69" column="49" lean-forward="false" selection-start-line="69" selection-start-column="49" selection-end-line="69" selection-end-column="49" />
           <folding>
             <element signature="e#0#38#0" expanded="true" />
-            <marker date="1491519476000" expanded="true" signature="5919:6125" ph="..." />
           </folding>
         </state>
       </provider>
@@ -803,17 +802,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/fiddle/main.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-239">
-          <caret line="111" column="42" lean-forward="false" selection-start-line="111" selection-start-column="42" selection-end-line="111" selection-end-column="42" />
-          <folding>
-            <element signature="e#0#38#0" expanded="true" />
-            <marker date="1491519476000" expanded="true" signature="5919:6125" ph="..." />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/../CyclicLossEstimator/src/models.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="646">
@@ -824,10 +812,20 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/fiddle/main.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="211">
+          <caret line="199" column="22" lean-forward="true" selection-start-line="199" selection-start-column="22" selection-end-line="199" selection-end-column="22" />
+          <folding>
+            <element signature="e#0#38#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/fiddle/models.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="601">
-          <caret line="598" column="38" lean-forward="false" selection-start-line="598" selection-start-column="38" selection-end-line="598" selection-end-column="38" />
+        <state relative-caret-position="646">
+          <caret line="875" column="0" lean-forward="true" selection-start-line="875" selection-start-column="0" selection-end-line="875" selection-end-column="0" />
           <folding>
             <element signature="e#0#38#0" expanded="true" />
           </folding>

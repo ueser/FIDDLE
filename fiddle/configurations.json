@@ -30,7 +30,11 @@
     }
   },
   "Options": {
+<<<<<<< HEAD
     "Inputs":["dnaseq","netseq"],
+=======
+    "Inputs":["netseq", "mnaseseq", "rnaseq", "dnaseq", "tssseq", "chipseq"],
+>>>>>>> ab822887c9c730b67d67c441cdb7a743ad1a2fbe
     "Outputs":["tssseq"],
     "Freeze":[],
     "Reload":[],
