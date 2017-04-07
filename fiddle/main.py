@@ -99,14 +99,17 @@ def main(_):
         idx = np.argsort(validation_data[key].reshape(validation_data[key].shape[0],-1).sum(axis=1))
 
 
-    idx = idx[-5:]
+    idx = np.argsort(validation_data[model.architecture['Outputs'][0]].reshape(validation_data[model.architecture['Outputs'][0]].shape[0], -1).max(axis=1))
+    idx = idx[-1000:-995]
     input_for_prediction = {key: validation_data[key][idx] for key in model.architecture['Inputs']}
     orig_output = {key: validation_data[key][idx] for key in model.architecture['Outputs']}
+    # pdb.set_trace()
+
 
     pickle.dump(orig_output, open(os.path.join(FLAGS.resultsDir, FLAGS.runName, 'originals.pck'), "wb"))
 
     ######## TRAIN #########
-    globalMinLoss = np.inf
+    globalMinLoss = 1e6 # some high number
     step = 0
     train_size = train_h5_handle.values()[0].shape[0]
 
@@ -116,22 +119,20 @@ def main(_):
     # print("Pre-train validation accuracy (%): " + str(
     #     100. * return_dict['accuracy_' + key] / validation_data.values()[0].shape[0]))
     case=True
-    prev = np.Inf
+    prev = 1e6 # some very high number
     totalIterations = 1000
     for it in range(totalIterations):
 
         # Multimodal Dropout Regularizer:
         # linearly decreasing dropout probability from 20% (@ 1st iteration) to 0% (@ 1% of total iterations)
-        # inputDropout = 0.2 - 0.2 * it / 10. if it <= (totalIterations // 100) else 0.
-        inputDropout = 0.
+        inputDropout = 0.2 - 0.2 * it / 10. if it <= (totalIterations // 100) else 0.
+        # inputDropout = 0.
 
         epoch = int(it * 10 * FLAGS.batchSize/train_size)
 
         print('Epoch: ' + str(epoch) + ', Iterations: ' + str(it))
         print('Number of examples seen: ' + str(it * 10 * FLAGS.batchSize))
         print('Input dropout probability: ' + str(inputDropout))
-
-        # ido_ = 0.8 + 0.2 * it / 10. if it <= 10 else 1.
 
         return_dict_train = Counter({})
         t_batcher, t_trainer = 0, 0
@@ -140,21 +141,13 @@ def main(_):
                 train_batch = batcher.next()
             t_batcher += t.secs
             with Timer() as t:
-                if True:
-                    tmp = model.train(train_batch, accuracy=True, inp_dropout=inputDropout, batch_size=FLAGS.batchSize)
-                else:
-                    tmp, ret2 = model.train_discriminator(train_batch, inp_dropout=inputDropout, batch_size=FLAGS.batchSize, case=case, prev=prev)
-                    # if ret2['G_cost']>(1.5*tmp['D_cost']):
-                    #     case=False
-                    #     prev = tmp['D_cost']
-
+                tmp = model.train(train_batch, accuracy=True, inp_dropout=inputDropout, batch_size=FLAGS.batchSize)
                 train_summary = tmp['summary']
                 return_dict = Counter(tmp)
 
             t_trainer += t.secs
 
             return_dict_train += return_dict
-            # return_dict_train += Counter(ret2)
             step += 1
         print('Batcher time: ' + "%.3f" % t_batcher)
         print('Trainer time: ' + "%.3f" % t_trainer)

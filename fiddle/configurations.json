@@ -30,8 +30,8 @@
     }
   },
   "Options": {
-    "Inputs":["chipseq"],
-    "Outputs":["dnaseq"],
+    "Inputs":["dnaseq","netseq"],
+    "Outputs":["tssseq"],
     "Freeze":[],
     "Reload":[],
     "Strand":"Double",
