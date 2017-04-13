@@ -39,9 +39,8 @@ def main(_):
     ############################################################################
     #                           Read data to graph                             #
     ############################################################################
-
     # read in configurations
-    with open(FLAGS.configuration) as fp:
+    with open(FLAGS.configuration, 'r') as fp:
         config = byteify(json.load(fp))
 
     # create or recognize results directory
@@ -117,10 +116,9 @@ def main(_):
     print('Pre-train validation run:')
     return_dict = model.validate(validation_data, accuracy=True)
     print("Pre-train validation loss: " + str(return_dict['cost']))
-    print("Pre-train validation accuracy (%): " + str(
-        100. * return_dict['accuracy_' + key] / validation_data.values()[0].shape[0]))
-    prev = 1e6 # some very high number
+    print("Pre-train validation accuracy (%): " + str(return_dict['accuracy_' + key] / validation_data.values()[0].shape[0]))
     totalIterations = 1000
+
     for it in range(totalIterations):
 
         # Multimodal Dropout Regularizer:
@@ -211,7 +209,7 @@ def write_to_txt(return_dict, batch_size=FLAGS.batchSize, case='train', verbose=
         elif (key == '_') or (key == 'summary'):
             continue
         else:
-            cur_line = str(100. * return_dict[key] / batch_size)
+            cur_line = str(return_dict[key] / batch_size)
             line_to_write += '\t' + cur_line
         if verbose:
             print(case + '\t' + key + ': ' + cur_line)

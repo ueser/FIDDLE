@@ -144,6 +144,7 @@ class NNscaffold(object):
 
         self.output_tensor = {}  # initializes output_tensor
         self.outputs = {}  # initializes output dictionary
+        self.cost_functions = {} # initializes cost functions dictionary
         for key in self.architecture['Outputs']:
             # feeds to output key a placeholder with key's input height and with
             self.outputs[key] = tf.placeholder(
@@ -162,8 +163,10 @@ class NNscaffold(object):
                     # converts output key placeholder to probability distribution function
                     self.output_tensor[key] = transform_track(
                         self.outputs[key], option='pdf')
+                self.cost_functions[key] = kl_loss
             else:
                 self.output_tensor[key] = self.outputs[key]
+                self.cost_functions[key] = multi_softmax_classification
 
         self.freeze(self.config['Options']['Freeze'])
 
@@ -348,65 +351,6 @@ class NNscaffold(object):
                     self.predictions[key] = tf.nn.softmax(
                         self.net, name='softmax')
 
-    # def _adversarial_loss(self):
-    #     D_real, D_logit_real = discriminator(self.outputs['dnaseq'])
-    #     D_fake, D_logit_fake = discriminator(self.predictions['dnaseq'])
-    #
-    #     self.D_loss = -tf.reduce_mean(tf.log(D_real) + tf.log(1. - D_fake))
-    #     self.G_loss = -tf.reduce_mean(tf.log(D_fake))
-    #
-    #     # Only update D(X)'s parameters, so var_list = theta_D
-    #     self.D_solver = tf.train.AdamOptimizer().minimize(D_loss,
-    #                                                       var_list=tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES,
-    #                                                                                  scope='Discriminator'))
-    #     # Only update G(X)'s parameters, so var_list = theta_G
-    #     self.G_solver = tf.train.AdamOptimizer().minimize(G_loss,
-    #                                                       var_list=self.trainables)
-
-    def train_discriminator(self,
-                            train_data,
-                            inp_dropout=0.1,
-                            batch_size=128,
-                            case=True,
-                            prev=np.Inf):
-
-        if train_data == []:
-            train_feed = {}
-        else:
-            train_feed = {
-                self.outputs[key]: train_data[key]
-                for key in self.architecture['Outputs']
-            }
-            train_feed.update({
-                self.inputs[key]: train_data[key]
-                for key in self.architecture['Inputs']
-            })
-
-        train_feed.update({
-            self.dropout:
-            self.architecture['Scaffold']['dropout'],
-            self.keep_prob_input: (1 - inp_dropout),
-            self.inp_size:
-            batch_size,
-            K.learning_phase():
-            1
-        })
-        return_dict1 = {'_': 0, 'D_cost': prev, 'summary': 'train'}
-        if case:
-            fetches1 = {
-                '_': self.D_solver,
-                'D_cost': self.D_loss,
-                'summary': self.summary_op
-            }
-            return_dict1 = self._run(fetches1, train_feed)
-        fetches2 = {
-            '_': self.G_solver,
-            'G_cost': self.G_loss,
-            'summary': self.summary_op
-        }
-        return_dict2 = self._run(fetches2, train_feed)
-
-        return return_dict1, return_dict2
 
     def _create_loss_optimizer(self):
         self.global_step = tf.Variable(0, name='globalStep', trainable=False)
@@ -414,29 +358,33 @@ class NNscaffold(object):
         self.cost = 0
         for key in self.architecture['Outputs']:
             if key != 'dnaseq':
-
-                self.loss = kullback_leibler_divergence(
-                    self.output_tensor[key], self.predictions[key])
-                # self.loss = KL_divergence(self.output_tensor[key], self.predictions[key])
-                width = self.architecture['Modules'][key][
-                    "input_width"] * self.architecture['Modules'][key][
-                        "input_height"]
-                target = tf.floor((10. * tf.cast(
-                    tf.argmax(self.output_tensor[key], dimension=1), tf.float32
-                )) / np.float(width))
-                pred = tf.floor((10. * tf.cast(
-                    tf.argmax(self.predictions[key], dimension=1), tf.float32))
-                                / np.float(width))
-                self.accuracy[key] = tf.reduce_sum(
-                    tf.cast(tf.equal(pred, target), tf.int32))
-                self.cost += tf.reduce_mean(self.loss)
+#####
+                self.cost+= self.cost_functions[key](self.output_tensor[key], self.common_predictor.predictions[key])
+                self.accuracy[key] = average_peak_distance(self.output_tensor[key], self.common_predictor.predictions[key])
+                # self.performance[key] = self.performance_measures[key](self.output_tensor[key], self.common_predictor.predictions[key])
+ #####
+                # self.loss = kullback_leibler_divergence(
+                #     self.output_tensor[key], self.common_predictor.predictions[key])
+                # # self.loss = KL_divergence(self.output_tensor[key], self.common_predictor.predictions[key])
+                # width = self.architecture['Modules'][key][
+                #     "input_width"] * self.architecture['Modules'][key][
+                #         "input_height"]
+                # target = tf.floor((10. * tf.cast(
+                #     tf.argmax(self.output_tensor[key], dimension=1), tf.float32
+                # )) / np.float(width))
+                # pred = tf.floor((10. * tf.cast(
+                #     tf.argmax(self.common_predictor.predictions[key], dimension=1), tf.float32))
+                #                 / np.float(width))
+                # self.accuracy[key] = tf.reduce_sum(
+                #     tf.cast(tf.equal(pred, target), tf.int32))
+                # self.cost += tf.reduce_mean(self.loss)
             else:
                 #TODO implement for DNA seq # but is necessary??
                 self.loss = tf.reduce_sum(
                     tf.multiply(self.output_tensor[key] + 1e-10,
                                 tf.subtract(
                                     tf.log(self.output_tensor[key] + 1e-10),
-                                    tf.log(self.predictions[key] + 1e-10))),
+                                    tf.log(self.common_predictor.predictions[key] + 1e-10))),
                     [1, 2])
 
         self.optimizer = \
