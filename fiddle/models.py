@@ -563,12 +563,13 @@ class NNscaffold(object):
         return return_dict
 
     def summarize(self, train_summary, validation_summary, step):
+        # pdb.set_trace()
+        self.summary_writer_train.add_summary(train_summary, step)
+        self.summary_writer_valid.add_summary(validation_summary, step)
+        self.summary_writer_train.flush()
+        self.summary_writer_valid.flush()
 
-        self.summaryWriter.add_summary(train_summary, step)
-        self.summaryWriter.add_summary(validation_summary, step)
-        self.summaryWriter.flush()
-
-    def create_monitor_variables(self, show_filters=False):
+    def create_monitor_variables(self, show_filters=True):
         """Writes to results directory a summary of graph variables"""
 
         if show_filters:
@@ -588,7 +589,9 @@ class NNscaffold(object):
             tf.summary.scalar(key + '/Accuracy', val)
 
         self.summary_op = tf.summary.merge_all()
-        self.summaryWriter = tf.summary.FileWriter(self.model_path,
+        self.summary_writer_train = tf.summary.FileWriter(self.model_path+'/training',
+                                                   self.sess.graph)
+        self.summary_writer_valid = tf.summary.FileWriter(self.model_path+'/validation',
                                                    self.sess.graph)
 
     def _run(self, fetches, feed_dict):

@@ -27,6 +27,7 @@ flags.DEFINE_string('configuration', 'configurations.json', 'configuration file 
 flags.DEFINE_string('architecture', 'architecture.json', 'configuration file [json file]')
 flags.DEFINE_string('restorePath', '../results/test', 'Regions to validate [bed or gff files]')
 flags.DEFINE_string('visualizePrediction', 'offline', 'Prediction profiles to be plotted [online or offline] ')
+flags.DEFINE_integer('savePredictionFreq', 5, 'Frequency of saving prediction profiles to be plotted')
 flags.DEFINE_integer('maxEpoch', 1000, 'Number of epochs to run trainer.')
 flags.DEFINE_integer('batchSize', 20, 'Batch size.')
 flags.DEFINE_float('learningRate', 0.001, 'Initial learning rate.')
@@ -145,7 +146,6 @@ def main(_):
             t_trainer += t.secs
 
             return_dict_train += return_dict
-            # return_dict_train += Counter(ret2)
             step += 1
         print('Batcher time: ' + "%.3f" % t_batcher)
         print('Trainer time: ' + "%.3f" % t_trainer)
@@ -155,7 +155,7 @@ def main(_):
         return_dict_valid = model.validate(validation_data, accuracy=True)
 
         # for every 50 iteration,
-        if it % 5 ==0:
+        if (it % FLAGS.savePredictionFreq ==0:
 
             if 'dnaseq' not in model.outputs.keys():
                 predicted_dict = model.predict(input_for_prediction)
