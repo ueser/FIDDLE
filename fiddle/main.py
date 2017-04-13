@@ -28,7 +28,7 @@ flags.DEFINE_string('architecture', 'architecture.json', 'configuration file [js
 flags.DEFINE_string('restorePath', '../results/test', 'Regions to validate [bed or gff files]')
 flags.DEFINE_string('visualizePrediction', 'offline', 'Prediction profiles to be plotted [online or offline] ')
 flags.DEFINE_integer('maxEpoch', 1000, 'Number of epochs to run trainer.')
-flags.DEFINE_integer('batchSize', 100, 'Batch size.')
+flags.DEFINE_integer('batchSize', 20, 'Batch size.')
 flags.DEFINE_float('learningRate', 0.001, 'Initial learning rate.')
 flags.DEFINE_float('dropout', 0.5, 'Keep probability for training dropout.')
 flags.DEFINE_string('resultsDir', '../results', 'Directory for results data')
@@ -95,10 +95,10 @@ def main(_):
         validation_file.write(header_str)
 
     # select quality signals for prediction overlay during training
-    num_signals = 10
+    num_signals = 5
     for key in model.architecture['Outputs']:
         idx = np.argsort(validation_data[key].reshape(validation_data[key].shape[0], -1).sum(axis = 1))
-    idx = idx[-(num_signals // 2):]
+    idx = idx[int(validation_data[key].shape[0] / 2):(int(validation_data[key].shape[0] / 2) + num_signals)]
     input_for_prediction = {key: validation_data[key][idx] for key in model.architecture['Inputs']}
         # not sure of "orig_output" purpose here? , also, why it was pickled
     orig_output = {key: validation_data[key][idx] for key in model.architecture['Outputs']}
@@ -108,7 +108,7 @@ def main(_):
     #                                  Train                                   #
     ############################################################################
 
-    globalMinLoss = np.inf
+    globalMinLoss = 1e16
     step = 0
     train_size = train_h5_handle.values()[0].shape[0]
 
@@ -117,8 +117,6 @@ def main(_):
     # print("Pre-train validation loss: " + str(return_dict['cost']))
     # print("Pre-train validation accuracy (%): " + str(
     #     100. * return_dict['accuracy_' + key] / validation_data.values()[0].shape[0]))
-    case = True
-    prev = np.Inf
     totalIterations = 1000
     for it in range(totalIterations):
 
@@ -133,8 +131,6 @@ def main(_):
         print('Number of examples seen: ' + str(it * 10 * FLAGS.batchSize))
         print('Input dropout probability: ' + str(inputDropout))
 
-        # ido_ = 0.8 + 0.2 * it / 10. if it <= 10 else 1.
-
         return_dict_train = Counter({})
         t_batcher, t_trainer = 0, 0
         for iterationNo in tq(range(10)):
@@ -142,14 +138,7 @@ def main(_):
                 train_batch = batcher.next()
             t_batcher += t.secs
             with Timer() as t:
-                if True:
-                    tmp = model.train(train_batch, accuracy=True, inp_dropout=inputDropout, batch_size=FLAGS.batchSize)
-                else:
-                    tmp, ret2 = model.train_discriminator(train_batch, inp_dropout=inputDropout, batch_size=FLAGS.batchSize, case=case, prev=prev)
-                    # if ret2['G_cost']>(1.5*tmp['D_cost']):
-                    #     case=False
-                    #     prev = tmp['D_cost']
-
+                tmp = model.train(train_batch, accuracy=True, inp_dropout=inputDropout, batch_size=FLAGS.batchSize)
                 train_summary = tmp['summary']
                 return_dict = Counter(tmp)
 
@@ -160,8 +149,8 @@ def main(_):
             step += 1
         print('Batcher time: ' + "%.3f" % t_batcher)
         print('Trainer time: ' + "%.3f" % t_trainer)
-        for key in return_dict_train.keys():
-            if type(key) is not str:
+        for key, val in return_dict_train.items():
+            if type(val) is not type('fdsfs'):
                 return_dict_train[key] /= iterationNo
         return_dict_valid = model.validate(validation_data, accuracy=True)
 
@@ -200,7 +189,7 @@ def main(_):
                          validation_summary=return_dict_valid['summary'],
                          step=step)
 
-        if return_dict_valid['cost'] < globalMinLoss:
+        if (return_dict_valid['cost'] < globalMinLoss) and (it>20):
             globalMinLoss = return_dict_valid['cost']
             for track_name, saver in model.savers_dict.items():
                 save_path = saver.save(model.sess, os.path.join(FLAGS.savePath, track_name+'_model.ckpt'))

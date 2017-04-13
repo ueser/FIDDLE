@@ -30,11 +30,11 @@
     }
   },
   "Options": {
-    "Inputs":["netseq", "mnaseseq", "rnaseq", "dnaseq", "tssseq", "chipseq"],
+    "Inputs":["netseq", "mnaseseq", "dnaseq", "chipseq"],
     "Outputs":["tssseq"],
     "Freeze":[],
     "Reload":[],
-    "Strand":"Double",
+    "Strand":"Single",
     "DataName":"NSMSDSRSCSTSRI_500bp"
   }
 }

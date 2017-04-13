@@ -349,21 +349,6 @@ class NNscaffold(object):
                     self.predictions[key] = tf.nn.softmax(
                         self.net, name='softmax')
 
-    # def _adversarial_loss(self):
-    #     D_real, D_logit_real = discriminator(self.outputs['dnaseq'])
-    #     D_fake, D_logit_fake = discriminator(self.predictions['dnaseq'])
-    #
-    #     self.D_loss = -tf.reduce_mean(tf.log(D_real) + tf.log(1. - D_fake))
-    #     self.G_loss = -tf.reduce_mean(tf.log(D_fake))
-    #
-    #     # Only update D(X)'s parameters, so var_list = theta_D
-    #     self.D_solver = tf.train.AdamOptimizer().minimize(D_loss,
-    #                                                       var_list=tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES,
-    #                                                                                  scope='Discriminator'))
-    #     # Only update G(X)'s parameters, so var_list = theta_G
-    #     self.G_solver = tf.train.AdamOptimizer().minimize(G_loss,
-    #                                                       var_list=self.trainables)
-
     def train_discriminator(self,
                             train_data,
                             inp_dropout=0.1,
@@ -445,27 +430,6 @@ class NNscaffold(object):
                     tf.cast(tf.equal(pred, target), tf.float32)
                 )  #/tf.cast(tf.shape(target)[1], tf.float32)
                 self.cost += tf.reduce_mean(self.loss)  # average over batch
-
-                # D_real, D_logit_real = discriminator(self.outputs['dnaseq'])
-                # D_fake, D_logit_fake = discriminator(self.predictions['dnaseq'])
-                #
-                # self.D_loss = tf.reduce_mean(D_real) - tf.reduce_mean(D_fake)
-                # self.G_loss = -tf.reduce_mean(D_fake)
-                #
-                # # self.D_loss = -tf.reduce_mean(tf.log(D_real) + tf.log(1. - D_fake))
-                # # self.G_loss = -tf.reduce_mean(tf.log(D_fake))
-                # # pdb.set_trace()
-                # # Only update D(X)'s parameters, so var_list = theta_D
-                #
-                # self.D_solver = tf.train.AdamOptimizer(learning_rate=1e-4).minimize(self.D_loss,
-                #                                                   global_step=self.global_step,
-                #                                                   var_list=tf.get_collection(
-                #                                                       tf.GraphKeys.GLOBAL_VARIABLES,
-                #                                                       scope='Discriminator'))
-                # # Only update G(X)'s parameters, so var_list = theta_G
-                # self.G_solver = tf.train.AdamOptimizer(learning_rate=1e-3).minimize(self.G_loss,
-                #                                                   global_step=self.global_step,
-                #                                                   var_list=self.trainables)
 
             # Use ADAM optimizer
         self.optimizer = \
