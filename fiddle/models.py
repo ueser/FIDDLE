@@ -282,75 +282,6 @@ class NNscaffold(object):
                 self.trainables += tf.get_collection(
                     tf.GraphKeys.GLOBAL_VARIABLES, scope=key)
 
-    def _encapsulate_models(self):
-        with tf.variable_scope('scaffold'):
-            self.net = tf.reshape(
-                self.combined_representation,
-                shape=[-1, self.scaffold_height, self.scaffold_width, 1])
-            # Modality-wise dropout
-            self.net = tf.nn.dropout(
-                tf.identity(self.net),
-                self.keep_prob_input,
-                noise_shape=[self.inp_size, len(self.representations), 1, 1])
-            self.net = Conv2D(
-                self.architecture['Scaffold']['Layer1']['number_of_filters'], [
-                    len(self.representations),
-                    self.architecture['Scaffold']['Layer1']['filter_width']
-                ],
-                activation=self.architecture['Scaffold']['Layer1'][
-                    'activation'],
-                kernel_regularizer='l2',
-                padding='valid',
-                name='conv_combined')(self.net)
-            self.net = AveragePooling2D(
-                [1, self.architecture['Scaffold']['Layer1']['pool_size']],
-                strides=[
-                    1, self.architecture['Scaffold']['Layer1']['pool_stride']
-                ],
-                padding='valid',
-                name='AvgPool_combined')(self.net)
-            if self.batch_norm:
-                self.net = BatchNormalization()(self.net)
-            self.net = Flatten()(self.net)
-            self.scaffold_representation = Dense(
-                self.architecture['Scaffold']['representation_width'],
-                activation='linear',
-                name='representation')(self.net)
-
-            self.predictions = {}
-            for key in self.architecture['Outputs']:
-                if (self.config['Options']['Strand'] == 'Single') and (
-                        key != 'dnaseq'):
-                    self.net = Dense(
-                        self.architecture['Modules'][key]['input_width'],
-                        activation='linear',
-                        name='final_FC')(self.scaffold_representation)
-                elif (self.config['Options']['Strand'] == 'Double') or (
-                        key == 'dnaseq'):
-                    self.net = Dense(
-                        self.architecture['Modules'][key]['input_height'] *
-                        self.architecture['Modules'][key]['input_width'],
-                        activation='linear',
-                        name='final_FC')(self.scaffold_representation)
-                else:
-                    raise ConfigurationParsingError(
-                        'Configuration file should have Strand field as either Single or Double'
-                    )
-
-                if key == 'dnaseq':
-                    # pdb.set_trace()
-                    self.dna_before_softmax = tf.reshape(
-                        self.net, [
-                            -1, 4, self.architecture['Modules']['dnaseq'][
-                                'input_width'], 1
-                        ])
-                    self.predictions[key] = multi_softmax(
-                        self.dna_before_softmax, axis=1, name='multiSoftmax')
-
-                else:
-                    self.predictions[key] = tf.nn.softmax(
-                        self.net, name='softmax')
-
 
     def _create_loss_optimizer(self):
         self.global_step = tf.Variable(0, name='globalStep', trainable=False)
@@ -363,29 +294,14 @@ class NNscaffold(object):
                 self.accuracy[key] = average_peak_distance(self.output_tensor[key], self.common_predictor.predictions[key])
                 # self.performance[key] = self.performance_measures[key](self.output_tensor[key], self.common_predictor.predictions[key])
  #####
-                # self.loss = kullback_leibler_divergence(
-                #     self.output_tensor[key], self.common_predictor.predictions[key])
-                # # self.loss = KL_divergence(self.output_tensor[key], self.common_predictor.predictions[key])
-                # width = self.architecture['Modules'][key][
-                #     "input_width"] * self.architecture['Modules'][key][
-                #         "input_height"]
-                # target = tf.floor((10. * tf.cast(
-                #     tf.argmax(self.output_tensor[key], dimension=1), tf.float32
-                # )) / np.float(width))
-                # pred = tf.floor((10. * tf.cast(
-                #     tf.argmax(self.common_predictor.predictions[key], dimension=1), tf.float32))
-                #                 / np.float(width))
-                # self.accuracy[key] = tf.reduce_sum(
-                #     tf.cast(tf.equal(pred, target), tf.int32))
-                # self.cost += tf.reduce_mean(self.loss)
+
             else:
                 #TODO implement for DNA seq # but is necessary??
                 self.loss = tf.reduce_sum(
                     tf.multiply(self.output_tensor[key] + 1e-10,
                                 tf.subtract(
                                     tf.log(self.output_tensor[key] + 1e-10),
-                                    tf.log(self.common_predictor.predictions[key] + 1e-10))),
-                    [1, 2])
+                                    tf.log(self.common_predictor.predictions[key] + 1e-10))), [1, 2])
 
         self.optimizer = \
             tf.train.AdamOptimizer(learning_rate=self.learning_rate).minimize(self.cost,
@@ -633,6 +549,7 @@ class BaseTrackContainer(object):
     def save(self):
         pass
 
+### Convolutional Container ###
 
 class ConvolutionalContainer(BaseTrackContainer):
     def __init__(self, track_name, architecture, batch_norm=False):
@@ -703,6 +620,8 @@ class ConvolutionalContainer(BaseTrackContainer):
                     'representation_width'],
                 name='representation')(net)
 
+
+#### Common container #####
 
 class CommonContainer():
     def __init__(self, architecture, dropout=1.,
