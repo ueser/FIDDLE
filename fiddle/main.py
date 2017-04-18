@@ -155,7 +155,7 @@ def main(_):
         return_dict_valid = model.validate(validation_data, accuracy=True)
 
         # for every 50 iteration,
-        if (it % FLAGS.savePredictionFreq ==0:
+        if (it % FLAGS.savePredictionFreq ==0):
 
             if 'dnaseq' not in model.outputs.keys():
                 predicted_dict = model.predict(input_for_prediction)

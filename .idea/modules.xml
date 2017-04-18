@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/FIDDLE.iml" filepath="$PROJECT_DIR$/.idea/FIDDLE.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../CyclicLossEstimator/src/.idea/src.iml" filepath="$PROJECT_DIR$/../CyclicLossEstimator/src/.idea/src.iml" />
     </modules>
   </component>
 </project>
