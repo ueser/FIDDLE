@@ -28,7 +28,7 @@ flags.DEFINE_string('architecture', 'architecture.json', 'configuration file [js
 flags.DEFINE_string('restorePath', '../results/test', 'Regions to validate [bed or gff files]')
 flags.DEFINE_string('visualizePrediction', 'offline', 'Prediction profiles to be plotted [online or offline] ')
 flags.DEFINE_integer('maxEpoch', 1000, 'Number of epochs to run trainer.')
-flags.DEFINE_integer('batchSize', 100, 'Batch size.')
+flags.DEFINE_integer('batchSize', 20, 'Batch size.')
 flags.DEFINE_float('learningRate', 0.001, 'Initial learning rate.')
 flags.DEFINE_float('dropout', 0.5, 'Keep probability for training dropout.')
 flags.DEFINE_string('resultsDir', '../results', 'Directory for results data')
