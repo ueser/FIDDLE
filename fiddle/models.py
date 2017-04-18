@@ -214,29 +214,7 @@ class NNscaffold(object):
                             self.architecture['Modules'][key][
                                 key_key] = sub_val
 
-    def _combine_representations(self, mode):
-        """Concatenates tensors in representations list to either a convolution or fully connected representation
-        Args:
-            mode: convolution or fully_connected
-        """
-        if mode == 'convolution':
-            self.combined_representation = tf.concat(
-                self.representations.values(), 1)
-            self.scaffold_height = len(self.representations)
-            self.scaffold_width = self.architecture['Modules'].values()[0][
-                'representation_width']
 
-        elif mode == 'fully_connected':
-            raise NotImplementedError
-            self.combined_representation = tf.concat(
-                self.representations.values(), 0)
-            self.scaffold_height = 1
-            self.scaffold_width = len(
-                self.representations) * self.architecture['Modules'].values()[
-                    0]['representation_width']
-
-        else:
-            raise NotImplementedError
     def initialize(self):
         """Initialize the scaffold model either from saved checkpoints (pre-trained)
         or from scratch

@@ -23,18 +23,18 @@
       <file leaf-file-name="models.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/fiddle/models.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="195">
-              <caret line="283" column="0" lean-forward="true" selection-start-line="283" selection-start-column="0" selection-end-line="283" selection-end-column="0" />
+            <state relative-caret-position="-1648">
+              <caret line="383" column="21" lean-forward="true" selection-start-line="383" selection-start-column="21" selection-end-line="383" selection-end-column="21" />
               <folding>
                 <element signature="e#0#38#0" expanded="true" />
-                <marker date="1492554769000" expanded="true" signature="12418:12812" ph="..." />
-                <marker date="1492554769000" expanded="true" signature="21407:21965" ph="..." />
-                <marker date="1492554769000" expanded="true" signature="22049:24994" ph="..." />
-                <marker date="1492554769000" expanded="true" signature="22636:24994" ph="..." />
-                <marker date="1492554769000" expanded="true" signature="25050:29036" ph="..." />
-                <marker date="1492554769000" expanded="true" signature="26151:29036" ph="..." />
-                <marker date="1492554769000" expanded="true" signature="26207:29036" ph="..." />
-                <marker date="1492554769000" expanded="true" signature="27656:29036" ph="..." />
+                <marker date="1492554896000" expanded="true" signature="11431:11825" ph="..." />
+                <marker date="1492554896000" expanded="true" signature="20420:20978" ph="..." />
+                <marker date="1492554896000" expanded="true" signature="21062:24007" ph="..." />
+                <marker date="1492554896000" expanded="true" signature="21649:24007" ph="..." />
+                <marker date="1492554896000" expanded="true" signature="24063:28049" ph="..." />
+                <marker date="1492554896000" expanded="true" signature="25164:28049" ph="..." />
+                <marker date="1492554896000" expanded="true" signature="25220:28049" ph="..." />
+                <marker date="1492554896000" expanded="true" signature="26669:28049" ph="..." />
               </folding>
             </state>
           </provider>
@@ -63,7 +63,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>if not hass</find>
       <find>if not has</find>
       <find>self.architecture</find>
       <find>self.inputs</find>
@@ -93,6 +92,7 @@
       <find>self.config</find>
       <find>case</find>
       <find>self.predictions</find>
+      <find>combine_repre</find>
     </findStrings>
     <replaceStrings>
       <replace>architecture_template</replace>
@@ -432,14 +432,14 @@
           <caret line="189" column="37" lean-forward="false" selection-start-line="189" selection-start-column="37" selection-end-line="189" selection-end-column="37" />
           <folding>
             <element signature="e#0#38#0" expanded="true" />
-            <marker date="1492554769000" expanded="true" signature="12418:12812" ph="..." />
-            <marker date="1492554769000" expanded="true" signature="21407:21965" ph="..." />
-            <marker date="1492554769000" expanded="true" signature="22049:24994" ph="..." />
-            <marker date="1492554769000" expanded="true" signature="22636:24994" ph="..." />
-            <marker date="1492554769000" expanded="true" signature="25050:29036" ph="..." />
-            <marker date="1492554769000" expanded="true" signature="26151:29036" ph="..." />
-            <marker date="1492554769000" expanded="true" signature="26207:29036" ph="..." />
-            <marker date="1492554769000" expanded="true" signature="27656:29036" ph="..." />
+            <marker date="1492554896000" expanded="true" signature="11431:11825" ph="..." />
+            <marker date="1492554896000" expanded="true" signature="20420:20978" ph="..." />
+            <marker date="1492554896000" expanded="true" signature="21062:24007" ph="..." />
+            <marker date="1492554896000" expanded="true" signature="21649:24007" ph="..." />
+            <marker date="1492554896000" expanded="true" signature="24063:28049" ph="..." />
+            <marker date="1492554896000" expanded="true" signature="25164:28049" ph="..." />
+            <marker date="1492554896000" expanded="true" signature="25220:28049" ph="..." />
+            <marker date="1492554896000" expanded="true" signature="26669:28049" ph="..." />
           </folding>
         </state>
       </provider>
@@ -714,18 +714,18 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/fiddle/models.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="195">
-          <caret line="283" column="0" lean-forward="true" selection-start-line="283" selection-start-column="0" selection-end-line="283" selection-end-column="0" />
+        <state relative-caret-position="-1648">
+          <caret line="383" column="21" lean-forward="true" selection-start-line="383" selection-start-column="21" selection-end-line="383" selection-end-column="21" />
           <folding>
             <element signature="e#0#38#0" expanded="true" />
-            <marker date="1492554769000" expanded="true" signature="12418:12812" ph="..." />
-            <marker date="1492554769000" expanded="true" signature="21407:21965" ph="..." />
-            <marker date="1492554769000" expanded="true" signature="22049:24994" ph="..." />
-            <marker date="1492554769000" expanded="true" signature="22636:24994" ph="..." />
-            <marker date="1492554769000" expanded="true" signature="25050:29036" ph="..." />
-            <marker date="1492554769000" expanded="true" signature="26151:29036" ph="..." />
-            <marker date="1492554769000" expanded="true" signature="26207:29036" ph="..." />
-            <marker date="1492554769000" expanded="true" signature="27656:29036" ph="..." />
+            <marker date="1492554896000" expanded="true" signature="11431:11825" ph="..." />
+            <marker date="1492554896000" expanded="true" signature="20420:20978" ph="..." />
+            <marker date="1492554896000" expanded="true" signature="21062:24007" ph="..." />
+            <marker date="1492554896000" expanded="true" signature="21649:24007" ph="..." />
+            <marker date="1492554896000" expanded="true" signature="24063:28049" ph="..." />
+            <marker date="1492554896000" expanded="true" signature="25164:28049" ph="..." />
+            <marker date="1492554896000" expanded="true" signature="25220:28049" ph="..." />
+            <marker date="1492554896000" expanded="true" signature="26669:28049" ph="..." />
           </folding>
         </state>
       </provider>
