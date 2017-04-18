@@ -778,32 +778,6 @@ class CommonContainer():
                 else:
                     self.predictions[key] = tf.nn.softmax(net, name='softmax')
 
-### Experimental ###
-def discriminator(x):
-    with tf.variable_scope('Discriminator'):
-        net = Conv2D(
-            32, [4, 10],
-            activation='relu',
-            kernel_regularizer='l2',
-            padding='valid',
-            name='conv_1')(x)
-        net = MaxPooling2D((1, 5), strides=(1, 5))(net)
-
-        net = Conv2D(
-            10, [1, 10],
-            activation='relu',
-            kernel_regularizer='l2',
-            padding='valid',
-            name='conv_2')(net)
-
-        net = MaxPooling2D((1, 5), strides=(1, 5))(net)
-
-        net = Flatten()(net)
-        D_logit = Dense(1, name='representation')(net)
-        D_prob = tf.nn.sigmoid(D_logit)
-
-    return D_prob, D_logit
-
 
 ###### LOSS FUNCTIONS #######
 
