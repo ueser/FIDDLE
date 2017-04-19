@@ -131,7 +131,7 @@ def main(_):
 
         epoch = int(it * 10 * FLAGS.batchSize/train_size)
 
-        print('Epoch: ' + str(epoch) + ', Iterations: ' + str(it))
+        print('\n\nEpoch: ' + str(epoch) + ', Iterations: ' + str(it))
         print('Number of examples seen: ' + str(it * 10 * FLAGS.batchSize))
         print('Input dropout probability: ' + str(inputDropout))
 
@@ -152,8 +152,8 @@ def main(_):
             step += 1
         print('Batcher time: ' + "%.3f" % t_batcher)
         print('Trainer time: ' + "%.3f" % t_trainer)
-        for key in return_dict_train.keys():
-            if type(key) is not str:
+        for key, val in return_dict_train.items():
+            if type(val) is not type('some_str_type'):
                 return_dict_train[key] /= iterationNo
         return_dict_valid = model.validate(validation_data, accuracy=True)
 
