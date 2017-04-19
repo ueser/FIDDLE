@@ -137,28 +137,40 @@ def main(_):
         print('Number of examples seen: ' + str(it * 10 * FLAGS.batchSize))
         print('Input dropout probability: ' + str(inputDropout))
 
-        return_dict_train = Counter({})
+
         t_batcher, t_trainer = 0, 0
         for iterationNo in tq(range(10)):
             with Timer() as t:
                 train_batch = batcher.next()
             t_batcher += t.secs
             with Timer() as t:
-                tmp = model.train(train_batch, accuracy=True, inp_dropout=inputDropout, batch_size=FLAGS.batchSize)
-                train_summary = tmp['summary']
-                return_dict = Counter(tmp)
+                return_dict = model.train(train_batch, accuracy=True, inp_dropout=inputDropout, batch_size=FLAGS.batchSize)
+                train_summary = return_dict['summary']
 
             t_trainer += t.secs
+            #
+            if iterationNo==0:
+                return_dict_train = return_dict.copy()
+            else:
+                # pdb.set_trace()
+                return_dict_train = {key: return_dict_train[key]+val for key, val in return_dict.items()
+                                     if (type(val) is np.ndarray) or (type(val) is np.float32)}
+                return_dict_train.update({key: val for key, val in return_dict.items() if val is type('string')})
 
-            return_dict_train += return_dict
             step += 1
         print('Batcher time: ' + "%.3f" % t_batcher)
         print('Trainer time: ' + "%.3f" % t_trainer)
         for key, val in return_dict_train.items():
-
             if type(val) is not type('some_str_type'):
                 return_dict_train[key] /= iterationNo
+
+        return_dict_train.update({key: np.sum(val) for key, val in return_dict_train.items()
+                                  if (type(val) is np.ndarray) or (type(val) is np.float32)})
         return_dict_valid = model.validate(validation_data, accuracy=True)
+        return_dict_valid.update({key: np.sum(val) for key, val in return_dict_valid.items()
+                                  if (type(val) is np.ndarray) or (type(val) is np.float32)})
+        return_dict_valid.update({key: val for key, val in return_dict_valid.items()
+                                  if (type(val) is type('string'))})
 
         # for every 50 iteration,
         if (it % FLAGS.savePredictionFreq ==0):

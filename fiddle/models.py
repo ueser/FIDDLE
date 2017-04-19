@@ -146,12 +146,10 @@ class NNscaffold(object):
         self.cost_functions = {} # initializes cost functions dictionary
         for key in self.architecture['Outputs']:
             # feeds to output key a placeholder with key's input height and with
-            self.outputs[key] = tf.placeholder(
-                tf.float32, [
-                    None, self.architecture['Modules'][key]["input_height"],
-                    self.architecture['Modules'][key]["input_width"], 1
-                ],
-                name='output_' + key)
+            self.outputs[key] = tf.placeholder(tf.float32,
+                                               [None, self.architecture['Modules'][key]["input_height"],
+                                                self.architecture['Modules'][key]["input_width"], 1],
+                                               name='output_' + key)
             if key != 'dnaseq':
                 if self.config['Options']['Strand'] == 'Single':
                     self.positive_strand = tf.slice(
@@ -280,7 +278,6 @@ class NNscaffold(object):
                                     tf.log(self.output_tensor[key] + 1e-10),
 
                                     tf.log(self.common_predictor.predictions[key] + 1e-10))), [1, 2])
-
         self.optimizer = \
             tf.train.AdamOptimizer(learning_rate=self.learning_rate).minimize(self.cost,
                                                                               global_step=self.global_step,
@@ -294,14 +291,9 @@ class NNscaffold(object):
         if train_data == []:
             train_feed = {}
         else:
-            train_feed = {
-                self.outputs[key]: train_data[key]
-                for key in self.architecture['Outputs']
-            }
-            train_feed.update({
-                self.inputs[key]: train_data[key]
-                for key in self.architecture['Inputs']
-            })
+            train_feed = {self.outputs[key]: train_data[key] for key in self.architecture['Outputs']}
+            train_feed.update({self.inputs[key]: train_data[key] for key in self.architecture['Inputs']})
+
 
         train_feed.update({
             self.dropout:
@@ -322,6 +314,8 @@ class NNscaffold(object):
             fetches.update(
                 {'accuracy_' + key: val
                  for key, val in self.accuracy.items()})
+        fetches.update({key + '_gates': self.common_predictor.gates[key]
+                        for key in self.architecture['Inputs']})
         return_dict = self._run(fetches, train_feed)
         return return_dict
 
@@ -353,7 +347,8 @@ class NNscaffold(object):
             fetches.update(
                 {'accuracy_' + key: val
                  for key, val in self.accuracy.items()})
-
+        fetches.update({key + '_gates': self.common_predictor.gates[key]
+                        for key in self.architecture['Inputs']})
         return_dict = self._run(fetches, self.test_feed)
         return return_dict
 
@@ -609,7 +604,6 @@ class CommonContainer():
                  inp_size=None,
                  batch_norm=False,
                  strand='Single'):
-
         self.architecture = architecture
         self.dropout = dropout
         self.keep_prob_input = keep_prob_input
@@ -627,7 +621,15 @@ class CommonContainer():
         Args:
             mode: convolution or fully_connected
         """
-        self.combined_representation = tf.concat(self.representations.values(), 1)
+        self.gates = {}
+        repr_list = []
+        with tf.variable_scope('scaffold'):
+            for track_name, val in self.representations.items():
+                self.gates[track_name] = tf.nn.sigmoid(Dense(1)(val), name='gate_'+track_name)
+                tf.summary.histogram('Gate_'+track_name, self.gates[track_name])
+                repr_list.append(self.gates[track_name] * tf.nn.tanh(val))
+
+        self.combined_representation = tf.concat(repr_list, 1)
         self.scaffold_height = len(self.representations)
         self.scaffold_width = self.architecture['Modules'].values()[0]['representation_width']
         self._encapsulate_models()
@@ -678,19 +680,17 @@ class CommonContainer():
                     self.predictions[key] = tf.nn.softmax(net, name='softmax')
 
 
+
 ###### LOSS FUNCTIONS #######
 
 def kl_loss(y_true, y_pred):
     return tf.reduce_mean(kullback_leibler_divergence(y_true, y_pred))
 
 
-
 ##### OTHER PERFORMENCE MEASURES #####
 def per_bp_accuracy(y_true, y_pred):
     pass
 
-def peak_detection_accuracy(y_true, y_pred, bin_size=50):
-    pass
 
 def average_peak_distance(y_true, y_pred):
-    return tf.reduce_mean(tf.abs(tf.argmax(y_true, dimension=1)-tf.argmax(y_pred, dimension=1)))
+    return tf.reduce_mean(tf.cast(tf.abs(tf.argmax(y_true, dimension=1)-tf.argmax(y_pred, dimension=1)),tf.float32))
