@@ -117,7 +117,6 @@ class NNscaffold(object):
         print('Strand:', self.config['Options']['Strand'])
         self.model_path = model_path
         self._parse_parameters(architecture_path)
-
         self.dropout = tf.placeholder(tf.float32) # initializing data type input for dropout
         self.keep_prob_input = tf.placeholder(tf.float32) # initializing data type input for keep_prob_input
         # Used for modality-wise dropout. Equivalent to batch_size for training, test size for testing
@@ -494,11 +493,10 @@ class NNscaffold(object):
             tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='scaffold'))
 
 
-
-
-
 ######
-
+######
+######
+######
 
 class BaseTrackContainer(object):
     def __init__(self, track_name):
