@@ -40,9 +40,10 @@ def main(_):
         config = byteify(json.load(fp))
     test_h5_handle = h5py.File(os.path.join(FLAGS.dataDir, config['Options']['DataName'], 'test.h5'), 'r')
     model = NNscaffold(config=config,
-                       architecture_path=os.path.join(project_directory, 'architecture.json'))
+                       architecture_path=os.path.join(project_directory, 'architecture.json'),
+                       model_path=project_directory)
     model.config['Options']['Reload'] = 'all'
-    test_data = {key: test_h5_handle[key][:] for key in model.inputs}
+    test_data = {key: test_h5_handle[key][:1000] for key in model.inputs}
     model.initialize()
 
     ### get representations for each tracks and scaffolds.
@@ -64,6 +65,8 @@ def main(_):
             f_ = pred_h5_handle.create_dataset(key, (pred_dict[key].shape))
             f_[:] = pred_dict[key][:]
         pred_h5_handle.close()
+
+    model.sess.close()
 
     ### filter visualization
 

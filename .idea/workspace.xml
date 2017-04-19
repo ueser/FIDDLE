@@ -2,9 +2,15 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="af957dae-1932-4bfe-989e-420dfff878bb" name="Default" comment="">
+<<<<<<< HEAD
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/FIDDLE.iml" afterPath="$PROJECT_DIR$/.idea/FIDDLE.iml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/modules.xml" afterPath="$PROJECT_DIR$/.idea/modules.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/fiddle/configurations.json" afterPath="$PROJECT_DIR$/fiddle/configurations.json" />
+=======
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../CyclicLossEstimator/src/configurations.json" afterPath="$PROJECT_DIR$/../CyclicLossEstimator/src/configurations.json" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../CyclicLossEstimator/src/main.py" afterPath="$PROJECT_DIR$/../CyclicLossEstimator/src/main.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../CyclicLossEstimator/src/visualization.py" afterPath="$PROJECT_DIR$/../CyclicLossEstimator/src/visualization.py" />
+>>>>>>> 82d7eefe6de69eab625a40473cc3eb5b5a4ae50f
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/fiddle/main.py" afterPath="$PROJECT_DIR$/fiddle/main.py" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -20,6 +26,7 @@
   <component name="ExecutionTargetManager" SELECTED_TARGET="default_target" />
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
+<<<<<<< HEAD
       <file leaf-file-name="models.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/fiddle/models.py">
           <provider selected="true" editor-type-id="text-editor">
@@ -28,11 +35,29 @@
               <folding>
                 <element signature="e#0#38#0" expanded="true" />
                 <marker date="1492554219000" expanded="true" signature="3123:3738" ph="..." />
+=======
+      <file leaf-file-name="models.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/fiddle/models.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="-3490">
+              <caret line="89" column="0" lean-forward="true" selection-start-line="89" selection-start-column="0" selection-end-line="89" selection-end-column="0" />
+              <folding>
+                <element signature="e#0#38#0" expanded="true" />
+                <marker date="1492555115000" expanded="true" signature="11430:11824" ph="..." />
+                <marker date="1492555115000" expanded="true" signature="20436:20994" ph="..." />
+                <marker date="1492555115000" expanded="true" signature="21078:24023" ph="..." />
+                <marker date="1492555115000" expanded="true" signature="21665:24023" ph="..." />
+                <marker date="1492555115000" expanded="true" signature="24079:28065" ph="..." />
+                <marker date="1492555115000" expanded="true" signature="25180:28065" ph="..." />
+                <marker date="1492555115000" expanded="true" signature="25236:28065" ph="..." />
+                <marker date="1492555115000" expanded="true" signature="26685:28065" ph="..." />
+>>>>>>> 82d7eefe6de69eab625a40473cc3eb5b5a4ae50f
               </folding>
             </state>
           </provider>
         </entry>
       </file>
+<<<<<<< HEAD
       <file leaf-file-name="main.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/fiddle/main.py">
           <provider selected="true" editor-type-id="text-editor">
@@ -97,10 +122,21 @@
             <state relative-caret-position="75">
               <caret line="38" column="40" lean-forward="false" selection-start-line="38" selection-start-column="40" selection-end-line="38" selection-end-column="40" />
               <folding />
+=======
+      <file leaf-file-name="main.py" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/fiddle/main.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="380">
+              <caret line="133" column="16" lean-forward="false" selection-start-line="133" selection-start-column="16" selection-end-line="133" selection-end-column="16" />
+              <folding>
+                <element signature="e#0#38#0" expanded="true" />
+              </folding>
+>>>>>>> 82d7eefe6de69eab625a40473cc3eb5b5a4ae50f
             </state>
           </provider>
         </entry>
       </file>
+<<<<<<< HEAD
       <file leaf-file-name="dataPrep_generic.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/../intragenicTranscription/TFmodels/dataPrep_generic.py">
           <provider selected="true" editor-type-id="text-editor">
@@ -116,6 +152,13 @@
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="435">
               <caret line="52" column="20" lean-forward="false" selection-start-line="50" selection-start-column="4" selection-end-line="52" selection-end-column="20" />
+=======
+      <file leaf-file-name="io_tools.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/fiddle/io_tools.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="375">
+              <caret line="31" column="6" lean-forward="true" selection-start-line="31" selection-start-column="6" selection-end-line="31" selection-end-column="6" />
+>>>>>>> 82d7eefe6de69eab625a40473cc3eb5b5a4ae50f
               <folding />
             </state>
           </provider>
@@ -132,10 +175,13 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
+<<<<<<< HEAD
       <find>self.config</find>
       <find>configu</find>
       <find>key</find>
       <find>if not hass</find>
+=======
+>>>>>>> 82d7eefe6de69eab625a40473cc3eb5b5a4ae50f
       <find>if not has</find>
       <find>self.architecture</find>
       <find>self.inputs</find>
@@ -158,10 +204,21 @@
       <find>plot_filter_logo</find>
       <find>vizFLAGS</find>
       <find>create_moni</find>
+<<<<<<< HEAD
       <find>monitor</find>
       <find>put_kernels_on_grid</find>
       <find>set_tra</find>
       <find>'condition'</find>
+=======
+      <find>predictions</find>
+      <find>self.net</find>
+      <find>keep_pro</find>
+      <find>self.inp_size</find>
+      <find>self.config</find>
+      <find>case</find>
+      <find>self.predictions</find>
+      <find>combine_repre</find>
+>>>>>>> 82d7eefe6de69eab625a40473cc3eb5b5a4ae50f
     </findStrings>
     <replaceStrings>
       <replace>architecture_template</replace>
@@ -169,7 +226,12 @@
       <replace>self.track_name</replace>
       <replace>FLAGS</replace>
       <replace>print(</replace>
+<<<<<<< HEAD
       <replace>condition</replace>
+=======
+      <replace>net</replace>
+      <replace>self.common_predictor.predictions</replace>
+>>>>>>> 82d7eefe6de69eab625a40473cc3eb5b5a4ae50f
     </replaceStrings>
   </component>
   <component name="Git.Settings">
@@ -201,7 +263,9 @@
         <option value="$PROJECT_DIR$/dev/seq_logo.py" />
         <option value="$PROJECT_DIR$/../deeplift/deeplift/visualization/viz_sequence.py" />
         <option value="$PROJECT_DIR$/dev/viz_sequence.py" />
+        <option value="$PROJECT_DIR$/fiddle/visualization.py" />
         <option value="$PROJECT_DIR$/fiddle/analysis.py" />
+<<<<<<< HEAD
         <option value="$PROJECT_DIR$/fiddle/visualization.py" />
         <option value="$PROJECT_DIR$/fiddle/main.py" />
         <option value="$PROJECT_DIR$/../CyclicLossEstimator/data/get_fasta.sh" />
@@ -211,6 +275,13 @@
         <option value="$PROJECT_DIR$/../CyclicLossEstimator/src/main.py" />
         <option value="$PROJECT_DIR$/../CyclicLossEstimator/src/visualization.py" />
         <option value="$PROJECT_DIR$/fiddle/models.py" />
+=======
+        <option value="$PROJECT_DIR$/../CyclicLossEstimator/src/models.py" />
+        <option value="$PROJECT_DIR$/../CyclicLossEstimator/src/main.py" />
+        <option value="$PROJECT_DIR$/../CyclicLossEstimator/src/visualization.py" />
+        <option value="$PROJECT_DIR$/fiddle/models.py" />
+        <option value="$PROJECT_DIR$/fiddle/main.py" />
+>>>>>>> 82d7eefe6de69eab625a40473cc3eb5b5a4ae50f
       </list>
     </option>
   </component>
@@ -220,6 +291,7 @@
     <option name="width" value="1821" />
     <option name="height" value="1032" />
   </component>
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectView">
     <navigator currentView="ProjectPane" proportions="" version="1">
       <flattenPackages />
@@ -263,6 +335,7 @@
           </PATH>
         </subPane>
       </pane>
+      <pane id="Scratches" />
       <pane id="Scope" />
       <pane id="Scratches" />
     </panes>
@@ -440,7 +513,11 @@
     <frame x="27" y="23" width="1821" height="1032" extended-state="0" />
     <editor active="true" />
     <layout>
+<<<<<<< HEAD
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.15540911" sideWeight="0.5" order="1" side_tool="false" content_ui="combo" />
+=======
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.24876441" sideWeight="0.5" order="1" side_tool="false" content_ui="combo" />
+>>>>>>> 82d7eefe6de69eab625a40473cc3eb5b5a4ae50f
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="10" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3294271" sideWeight="0.5" order="0" side_tool="true" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
@@ -469,6 +546,54 @@
     <watches-manager />
   </component>
   <component name="editorHistoryManager">
+<<<<<<< HEAD
+=======
+    <entry file="file://$PROJECT_DIR$/../HiC/analysis/plotCoverages.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-255">
+          <caret line="47" column="8" lean-forward="false" selection-start-line="47" selection-start-column="0" selection-end-line="48" selection-end-column="0" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/results/test/architecture.json" />
+    <entry file="file://$PROJECT_DIR$/fiddle/visualization.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="150">
+          <caret line="10" column="0" lean-forward="true" selection-start-line="10" selection-start-column="0" selection-end-line="10" selection-end-column="0" />
+          <folding>
+            <element signature="e#0#34#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/fiddle/analysis.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="240">
+          <caret line="16" column="0" lean-forward="true" selection-start-line="16" selection-start-column="0" selection-end-line="16" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/fiddle/CN2TS.config.json" />
+    <entry file="file://$PROJECT_DIR$/fiddle/models.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="2835">
+          <caret line="189" column="37" lean-forward="false" selection-start-line="189" selection-start-column="37" selection-end-line="189" selection-end-column="37" />
+          <folding>
+            <element signature="e#0#38#0" expanded="true" />
+            <marker date="1492555115000" expanded="true" signature="11430:11824" ph="..." />
+            <marker date="1492555115000" expanded="true" signature="20436:20994" ph="..." />
+            <marker date="1492555115000" expanded="true" signature="21078:24023" ph="..." />
+            <marker date="1492555115000" expanded="true" signature="21665:24023" ph="..." />
+            <marker date="1492555115000" expanded="true" signature="24079:28065" ph="..." />
+            <marker date="1492555115000" expanded="true" signature="25180:28065" ph="..." />
+            <marker date="1492555115000" expanded="true" signature="25236:28065" ph="..." />
+            <marker date="1492555115000" expanded="true" signature="26685:28065" ph="..." />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+>>>>>>> 82d7eefe6de69eab625a40473cc3eb5b5a4ae50f
     <entry file="file://$PROJECT_DIR$/fiddle/main.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="915">
@@ -564,6 +689,7 @@
         </state>
       </provider>
     </entry>
+<<<<<<< HEAD
     <entry file="file://$PROJECT_DIR$/fiddle/io_tools.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="360">
@@ -578,11 +704,15 @@
         </state>
       </provider>
     </entry>
+=======
+    <entry file="file://$PROJECT_DIR$/results/test/architecture.json" />
+>>>>>>> 82d7eefe6de69eab625a40473cc3eb5b5a4ae50f
     <entry file="file://$PROJECT_DIR$/fiddle/CN2TS.config.json" />
     <entry file="file://$PROJECT_DIR$/../Basset/src/basset_motifs.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="105">
           <caret line="39" column="54" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="660" selection-end-column="0" />
+<<<<<<< HEAD
         </state>
       </provider>
     </entry>
@@ -590,9 +720,12 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
           <caret line="0" column="35" lean-forward="false" selection-start-line="0" selection-start-column="35" selection-end-line="0" selection-end-column="35" />
+=======
+>>>>>>> 82d7eefe6de69eab625a40473cc3eb5b5a4ae50f
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/results/cnds_ts_stranded/architecture.json" />
     <entry file="file://$PROJECT_DIR$/fiddle/configurations.json">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="300">
@@ -611,7 +744,10 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="330">
           <caret line="27" column="34" lean-forward="false" selection-start-line="27" selection-start-column="34" selection-end-line="27" selection-end-column="34" />
+<<<<<<< HEAD
           <folding />
+=======
+>>>>>>> 82d7eefe6de69eab625a40473cc3eb5b5a4ae50f
         </state>
       </provider>
     </entry>
@@ -645,9 +781,14 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/dev/seq_logo.py">
       <provider selected="true" editor-type-id="text-editor">
+<<<<<<< HEAD
         <state relative-caret-position="600">
           <caret line="41" column="9" lean-forward="false" selection-start-line="41" selection-start-column="9" selection-end-line="41" selection-end-column="9" />
           <folding />
+=======
+        <state relative-caret-position="615">
+          <caret line="41" column="9" lean-forward="false" selection-start-line="41" selection-start-column="9" selection-end-line="41" selection-end-column="9" />
+>>>>>>> 82d7eefe6de69eab625a40473cc3eb5b5a4ae50f
         </state>
       </provider>
     </entry>
@@ -660,32 +801,71 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/dev/viz_sequence.py">
       <provider selected="true" editor-type-id="text-editor">
+<<<<<<< HEAD
         <state relative-caret-position="1770">
           <caret line="120" column="0" lean-forward="false" selection-start-line="120" selection-start-column="0" selection-end-line="120" selection-end-column="0" />
+          <folding />
+=======
+        <state relative-caret-position="1800">
+          <caret line="120" column="0" lean-forward="false" selection-start-line="120" selection-start-column="0" selection-end-line="120" selection-end-column="0" />
+>>>>>>> 82d7eefe6de69eab625a40473cc3eb5b5a4ae50f
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/dev/basset_motifs.py">
+      <provider selected="true" editor-type-id="text-editor">
+<<<<<<< HEAD
+        <state relative-caret-position="150">
+          <caret line="25" column="0" lean-forward="false" selection-start-line="17" selection-start-column="0" selection-end-line="25" selection-end-column="0" />
+=======
+        <state relative-caret-position="465">
+          <caret line="31" column="80" lean-forward="false" selection-start-line="28" selection-start-column="0" selection-end-line="31" selection-end-column="80" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/fiddle/data_prep/data_prep.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="75">
+          <caret line="6" column="20" lean-forward="false" selection-start-line="6" selection-start-column="20" selection-end-line="6" selection-end-column="20" />
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/fiddle/analysis.py">
+    <entry file="file://$PROJECT_DIR$/fiddle/data_prep/create_hdf5.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="150">
-          <caret line="25" column="0" lean-forward="false" selection-start-line="17" selection-start-column="0" selection-end-line="25" selection-end-column="0" />
+        <state relative-caret-position="1455">
+          <caret line="99" column="30" lean-forward="false" selection-start-line="98" selection-start-column="4" selection-end-line="99" selection-end-column="30" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../CyclicLossEstimator/src/main.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="2220">
+          <caret line="148" column="39" lean-forward="false" selection-start-line="148" selection-start-column="39" selection-end-line="148" selection-end-column="39" />
+>>>>>>> 82d7eefe6de69eab625a40473cc3eb5b5a4ae50f
           <folding>
             <element signature="e#0#38#0" expanded="false" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/dev/basset_motifs.py">
+    <entry file="file://$PROJECT_DIR$/../CyclicLossEstimator/src/visualization.py">
       <provider selected="true" editor-type-id="text-editor">
+<<<<<<< HEAD
         <state relative-caret-position="405">
           <caret line="31" column="80" lean-forward="false" selection-start-line="28" selection-start-column="0" selection-end-line="31" selection-end-column="80" />
+=======
+        <state relative-caret-position="341">
+          <caret line="400" column="0" lean-forward="false" selection-start-line="400" selection-start-column="0" selection-end-line="400" selection-end-column="0" />
+>>>>>>> 82d7eefe6de69eab625a40473cc3eb5b5a4ae50f
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/fiddle/visualization.py">
       <provider selected="true" editor-type-id="text-editor">
+<<<<<<< HEAD
         <state relative-caret-position="3083">
           <caret line="223" column="37" lean-forward="false" selection-start-line="223" selection-start-column="37" selection-end-line="223" selection-end-column="37" />
           <folding>
@@ -710,10 +890,17 @@
           <caret line="148" column="18" lean-forward="false" selection-start-line="148" selection-start-column="0" selection-end-line="149" selection-end-column="0" />
           <folding>
             <element signature="e#0#38#0" expanded="true" />
+=======
+        <state relative-caret-position="905">
+          <caret line="135" column="79" lean-forward="false" selection-start-line="135" selection-start-column="79" selection-end-line="135" selection-end-column="79" />
+          <folding>
+            <element signature="e#0#34#0" expanded="true" />
+>>>>>>> 82d7eefe6de69eab625a40473cc3eb5b5a4ae50f
           </folding>
         </state>
       </provider>
     </entry>
+<<<<<<< HEAD
     <entry file="file://$PROJECT_DIR$/../CyclicLossEstimator/data/get_fasta.sh">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="75">
@@ -750,18 +937,30 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="630">
           <caret line="43" column="35" lean-forward="false" selection-start-line="43" selection-start-column="35" selection-end-line="43" selection-end-column="35" />
+=======
+    <entry file="file://$PROJECT_DIR$/../InfoGAN/infogan/algos/infogan_trainer.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="905">
+          <caret line="244" column="34" lean-forward="false" selection-start-line="244" selection-start-column="34" selection-end-line="244" selection-end-column="34" />
+>>>>>>> 82d7eefe6de69eab625a40473cc3eb5b5a4ae50f
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/fiddle/data_prep/create_hdf5.py">
+    <entry file="file://$PROJECT_DIR$/fiddle/analysis.py">
       <provider selected="true" editor-type-id="text-editor">
+<<<<<<< HEAD
         <state relative-caret-position="435">
           <caret line="52" column="20" lean-forward="false" selection-start-line="50" selection-start-column="4" selection-end-line="52" selection-end-column="20" />
+=======
+        <state relative-caret-position="630">
+          <caret line="57" column="67" lean-forward="false" selection-start-line="57" selection-start-column="67" selection-end-line="57" selection-end-column="67" />
+>>>>>>> 82d7eefe6de69eab625a40473cc3eb5b5a4ae50f
           <folding />
         </state>
       </provider>
     </entry>
+<<<<<<< HEAD
     <entry file="file://$PROJECT_DIR$/../intragenicTranscription/data/bigwigs/create_hdf5_chipnexus_tssseq.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="75">
@@ -785,10 +984,19 @@
           <folding>
             <marker date="1492097393000" expanded="true" signature="1491:9477" ph="..." />
             <marker date="1492097393000" expanded="true" signature="5619:9477" ph="..." />
+=======
+    <entry file="file://$PROJECT_DIR$/../CyclicLossEstimator/src/models.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="905">
+          <caret line="176" column="0" lean-forward="false" selection-start-line="176" selection-start-column="0" selection-end-line="176" selection-end-column="0" />
+          <folding>
+            <element signature="e#0#38#0" expanded="true" />
+>>>>>>> 82d7eefe6de69eab625a40473cc3eb5b5a4ae50f
           </folding>
         </state>
       </provider>
     </entry>
+<<<<<<< HEAD
     <entry file="file://$PROJECT_DIR$/../CyclicLossEstimator/src/main.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="435">
@@ -796,18 +1004,42 @@
           <folding>
             <element signature="e#0#38#0" expanded="true" />
             <marker date="1492526457000" expanded="true" signature="15638:16063" ph="..." />
+=======
+    <entry file="file://$PROJECT_DIR$/fiddle/models.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-3490">
+          <caret line="89" column="0" lean-forward="true" selection-start-line="89" selection-start-column="0" selection-end-line="89" selection-end-column="0" />
+          <folding>
+            <element signature="e#0#38#0" expanded="true" />
+            <marker date="1492555115000" expanded="true" signature="11430:11824" ph="..." />
+            <marker date="1492555115000" expanded="true" signature="20436:20994" ph="..." />
+            <marker date="1492555115000" expanded="true" signature="21078:24023" ph="..." />
+            <marker date="1492555115000" expanded="true" signature="21665:24023" ph="..." />
+            <marker date="1492555115000" expanded="true" signature="24079:28065" ph="..." />
+            <marker date="1492555115000" expanded="true" signature="25180:28065" ph="..." />
+            <marker date="1492555115000" expanded="true" signature="25236:28065" ph="..." />
+            <marker date="1492555115000" expanded="true" signature="26685:28065" ph="..." />
+>>>>>>> 82d7eefe6de69eab625a40473cc3eb5b5a4ae50f
           </folding>
         </state>
       </provider>
     </entry>
+<<<<<<< HEAD
     <entry file="file://$PROJECT_DIR$/../CyclicLossEstimator/src/visualization.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="46">
           <caret line="67" column="0" lean-forward="true" selection-start-line="67" selection-start-column="0" selection-end-line="67" selection-end-column="0" />
+=======
+    <entry file="file://$PROJECT_DIR$/fiddle/io_tools.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="375">
+          <caret line="31" column="6" lean-forward="true" selection-start-line="31" selection-start-column="6" selection-end-line="31" selection-end-column="6" />
+>>>>>>> 82d7eefe6de69eab625a40473cc3eb5b5a4ae50f
           <folding />
         </state>
       </provider>
     </entry>
+<<<<<<< HEAD
     <entry file="file://$PROJECT_DIR$/fiddle/models.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="350">
@@ -815,6 +1047,14 @@
           <folding>
             <element signature="e#0#38#0" expanded="true" />
             <marker date="1492554219000" expanded="true" signature="3123:3738" ph="..." />
+=======
+    <entry file="file://$PROJECT_DIR$/fiddle/main.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="380">
+          <caret line="133" column="16" lean-forward="false" selection-start-line="133" selection-start-column="16" selection-end-line="133" selection-end-column="16" />
+          <folding>
+            <element signature="e#0#38#0" expanded="true" />
+>>>>>>> 82d7eefe6de69eab625a40473cc3eb5b5a4ae50f
           </folding>
         </state>
       </provider>

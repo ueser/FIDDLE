@@ -27,7 +27,7 @@ flags.DEFINE_string('configuration', 'configurations.json', 'configuration file 
 flags.DEFINE_string('architecture', 'architecture.json', 'configuration file [json file]')
 flags.DEFINE_string('restorePath', '../results/test', 'Regions to validate [bed or gff files]')
 flags.DEFINE_string('visualizePrediction', 'offline', 'Prediction profiles to be plotted [online or offline] ')
-flags.DEFINE_integer('savePredictionFreq', 5, 'Frequency of saving prediction profiles to be plotted')
+flags.DEFINE_integer('savePredictionFreq', 50, 'Frequency of saving prediction profiles to be plotted')
 flags.DEFINE_integer('maxEpoch', 1000, 'Number of epochs to run trainer.')
 flags.DEFINE_integer('batchSize', 20, 'Batch size.')
 flags.DEFINE_float('learningRate', 0.001, 'Initial learning rate.')
@@ -40,9 +40,8 @@ def main(_):
     ############################################################################
     #                           Read data to graph                             #
     ############################################################################
-
     # read in configurations
-    with open(FLAGS.configuration) as fp:
+    with open(FLAGS.configuration, 'r') as fp:
         config = byteify(json.load(fp))
 
     # create or recognize results directory
@@ -68,10 +67,13 @@ def main(_):
     # create iterator over training data
     data = MultiModalData(train_h5_handle, batch_size=FLAGS.batchSize)
     batcher = data.batcher()
+
+
+    to_size = min(validation_h5_handle.values()[0].shape[0], 1000)
     print('Storing validation data to the memory')
     try:
         all_keys = list(set(model.architecture['Inputs'] + model.architecture['Outputs']))
-        validation_data = {key: validation_h5_handle[key][:] for key in all_keys}
+        validation_data = {key: validation_h5_handle[key][:to_size] for key in all_keys}
     except KeyError:
         print('\nERROR: Make sure that the configurations file contains the correct track names (keys), which should match the hdf5 keys\n')
         sys.exit()
@@ -109,26 +111,29 @@ def main(_):
     #                                  Train                                   #
     ############################################################################
 
-    globalMinLoss = 1e16
+
+    ######## TRAIN #########
+    globalMinLoss = 1e16 # some high number
+
     step = 0
     train_size = train_h5_handle.values()[0].shape[0]
 
     print('Pre-train validation run:')
-    # return_dict = model.validate(validation_data, accuracy=True)
-    # print("Pre-train validation loss: " + str(return_dict['cost']))
-    # print("Pre-train validation accuracy (%): " + str(
-    #     100. * return_dict['accuracy_' + key] / validation_data.values()[0].shape[0]))
+    return_dict = model.validate(validation_data, accuracy=True)
+    print("Pre-train validation loss: " + str(return_dict['cost']))
+    print("Pre-train validation accuracy (%): " + str(return_dict['accuracy_' + key] / validation_data.values()[0].shape[0]))
     totalIterations = 1000
+
     for it in range(totalIterations):
 
         # Multimodal Dropout Regularizer:
         # linearly decreasing dropout probability from 20% (@ 1st iteration) to 0% (@ 1% of total iterations)
-        # inputDropout = 0.2 - 0.2 * it / 10. if it <= (totalIterations // 100) else 0.
-        inputDropout = 0.
+        inputDropout = 0.2 - 0.2 * it / 10. if it <= (totalIterations // 100) else 0.
+        # inputDropout = 0.
 
         epoch = int(it * 10 * FLAGS.batchSize/train_size)
 
-        print('Epoch: ' + str(epoch) + ', Iterations: ' + str(it))
+        print('\n\nEpoch: ' + str(epoch) + ', Iterations: ' + str(it))
         print('Number of examples seen: ' + str(it * 10 * FLAGS.batchSize))
         print('Input dropout probability: ' + str(inputDropout))
 
@@ -150,7 +155,8 @@ def main(_):
         print('Batcher time: ' + "%.3f" % t_batcher)
         print('Trainer time: ' + "%.3f" % t_trainer)
         for key, val in return_dict_train.items():
-            if type(val) is not type('fdsfs'):
+
+            if type(val) is not type('some_str_type'):
                 return_dict_train[key] /= iterationNo
         return_dict_valid = model.validate(validation_data, accuracy=True)
 
@@ -209,7 +215,7 @@ def write_to_txt(return_dict, batch_size=FLAGS.batchSize, case='train', verbose=
         elif (key == '_') or (key == 'summary'):
             continue
         else:
-            cur_line = str(100. * return_dict[key] / batch_size)
+            cur_line = str(return_dict[key] / batch_size)
             line_to_write += '\t' + cur_line
         if verbose:
             print(case + '\t' + key + ': ' + cur_line)
