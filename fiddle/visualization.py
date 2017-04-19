@@ -33,7 +33,7 @@ def main():
 
     if FLAGS.makePng:
         pckl_files = [fname for fname in os.listdir(save_dir) if 'pred_viz' in fname]
-        orig_file = [fname for fname in os.listdir(save_dir) if 'originals.pck' in fname]
+        orig_file = [fname for fname in os.listdir(save_dir) if 'original_outputs.pck' in fname]
         pred_dict = pickle.load(open(os.path.join(save_dir, pckl_files[0]), 'r'))
 
         if ('dna_before_softmax' in pred_dict.keys()):
