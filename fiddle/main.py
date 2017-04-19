@@ -66,10 +66,13 @@ def main(_):
     # create iterator over training data
     data = MultiModalData(train_h5_handle, batch_size=FLAGS.batchSize)
     batcher = data.batcher()
+
+
+    to_size = min(valudation_h5_handle.values()[0].shape[0], 1000)
     print('Storing validation data to the memory')
     try:
         all_keys = list(set(model.architecture['Inputs'] + model.architecture['Outputs']))
-        validation_data = {key: validation_h5_handle[key][:] for key in all_keys}
+        validation_data = {key: validation_h5_handle[key][:to_size] for key in all_keys}
     except KeyError:
         print('\nERROR: Make sure that the configurations file contains the correct track names (keys), which should match the hdf5 keys\n')
         sys.exit()
@@ -155,7 +158,7 @@ def main(_):
         return_dict_valid = model.validate(validation_data, accuracy=True)
 
         # for every 50 iteration,
-        if it % 5 ==0:
+        if it % 50 ==0:
 
             if 'dnaseq' not in model.outputs.keys():
                 predicted_dict = model.predict(input_for_prediction)
@@ -189,7 +192,7 @@ def main(_):
                          validation_summary=return_dict_valid['summary'],
                          step=step)
 
-        if return_dict_valid['cost'] < globalMinLoss:
+        if (return_dict_valid['cost'] < globalMinLoss) and (it>20):
             globalMinLoss = return_dict_valid['cost']
             for track_name, saver in model.savers_dict.items():
                 save_path = saver.save(model.sess, os.path.join(FLAGS.savePath, track_name+'_model.ckpt'))
