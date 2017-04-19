@@ -627,7 +627,8 @@ class CommonContainer():
             for track_name, val in self.representations.items():
                 self.gates[track_name] = tf.nn.sigmoid(Dense(1)(val), name='gate_'+track_name)
                 tf.summary.histogram('Gate_'+track_name, self.gates[track_name])
-                repr_list.append(self.gates[track_name] * tf.nn.tanh(val))
+                # repr_list.append(self.gates[track_name] * tf.nn.tanh(val))
+                repr_list.append(self.gates[track_name] * val)
 
         self.combined_representation = tf.concat(repr_list, 1)
         self.scaffold_height = len(self.representations)
