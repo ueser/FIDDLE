@@ -621,26 +621,51 @@ class CommonContainer():
         Args:
             mode: convolution or fully_connected
         """
-        self.gates = {}
-        repr_list = []
-        with tf.variable_scope('scaffold'):
-            for track_name, val in self.representations.items():
-                self.gates[track_name] = tf.nn.sigmoid(Dense(1)(val), name='gate_'+track_name)
-                tf.summary.histogram('Gate_'+track_name, self.gates[track_name])
-                # repr_list.append(self.gates[track_name] * tf.nn.tanh(val))
-                repr_list.append(self.gates[track_name] * val)
 
-        self.combined_representation = tf.concat(repr_list, 1)
         self.scaffold_height = len(self.representations)
         self.scaffold_width = self.architecture['Modules'].values()[0]['representation_width']
+
+        self.gates = {}
+        repr_list = []
+        activation_type = None
+        gating_type = 'softmax'
+        with tf.variable_scope('scaffold'):
+            if gating_type == 'sigmoid':
+                for track_name, val in self.representations.items():
+                    self.gates[track_name] = tf.nn.sigmoid(Dense(1)(val), name='gate_'+track_name)
+                    tf.summary.histogram('Gate_'+track_name, self.gates[track_name])
+                    if activation_type == 'tanh':
+                        repr_list.append(self.gates[track_name] * tf.nn.tanh(val))
+                    elif activation_type == None:
+                        repr_list.append(self.gates[track_name] * val)
+                self.combined_representation = tf.reshape(tf.concat(repr_list, 1),
+                                                          shape=[-1, self.scaffold_height, self.scaffold_width, 1])
+            elif gating_type == 'softmax':
+
+                ix = 0
+                for track_name, val in self.representations.items():
+                    ix_dict[track_name]=ix
+                    repr_list.append(val)
+                    ix+=1
+                tmp_comb_repr = tf.concat(repr_list, 1)
+                gates = tf.nn.softmax(Dense(self.scaffold_height)(tmp_comb_repr))
+
+                for ix,track_name in enumarate(self.representations.keys()):
+                    self.gates[track_name] = gates[:,ix]
+                    tf.summary.histogram('Gate_'+track_name, self.gates[track_name])
+
+                self.combined_representation = gates*tf.reshape(tmp_comb_repr,
+                           shape=[-1, self.scaffold_height, self.scaffold_width, 1])
+
+
+
+
         self._encapsulate_models()
 
     def _encapsulate_models(self):
         with tf.variable_scope('scaffold', reuse=True):
-            net = tf.reshape(self.combined_representation,
-                                  shape=[-1, self.scaffold_height, self.scaffold_width, 1])
             # Modality-wise dropout
-            net = tf.nn.dropout(tf.identity(net), self.keep_prob_input,
+            net = tf.nn.dropout(tf.identity(self.combined_representation), self.keep_prob_input,
                                      noise_shape=[self.inp_size, len(self.representations), 1, 1])
             net = Conv2D(self.architecture['Scaffold']['Layer1']['number_of_filters'],
                               [len(self.representations), self.architecture['Scaffold']['Layer1']['filter_width']],
