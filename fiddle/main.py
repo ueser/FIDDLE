@@ -128,8 +128,8 @@ def main(_):
 
         # Multimodal Dropout Regularizer:
         # linearly decreasing dropout probability from 20% (@ 1st iteration) to 0% (@ 1% of total iterations)
-        inputDropout = 0.2 - 0.2 * it / 10. if it <= (totalIterations // 100) else 0.
-        # inputDropout = 0.
+        # inputDropout = 0.2 - 0.2 * it / 10. if it <= (totalIterations // 100) else 0.
+        inputDropout = 0.
 
         epoch = int(it * 10 * FLAGS.batchSize/train_size)
 

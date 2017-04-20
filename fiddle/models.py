@@ -278,8 +278,10 @@ class NNscaffold(object):
                                     tf.log(self.output_tensor[key] + 1e-10),
 
                                     tf.log(self.common_predictor.predictions[key] + 1e-10))), [1, 2])
+
+        beta = 1.
         self.optimizer = \
-            tf.train.AdamOptimizer(learning_rate=self.learning_rate).minimize(self.cost,
+            tf.train.AdamOptimizer(learning_rate=self.learning_rate).minimize(self.cost,# + beta*self.common_predictor.gates_regularization ,
                                                                               global_step=self.global_step,
                                                                               var_list=self.trainables)
 
@@ -316,6 +318,8 @@ class NNscaffold(object):
                  for key, val in self.accuracy.items()})
         fetches.update({key + '_gates': self.common_predictor.gates[key]
                         for key in self.architecture['Inputs']})
+
+        fetches.update({'gates_regularization': self.common_predictor.gates_regularization})
         return_dict = self._run(fetches, train_feed)
         return return_dict
 
@@ -349,6 +353,7 @@ class NNscaffold(object):
                  for key, val in self.accuracy.items()})
         fetches.update({key + '_gates': self.common_predictor.gates[key]
                         for key in self.architecture['Inputs']})
+        fetches.update({'gates_regularization': self.common_predictor.gates_regularization})
         return_dict = self._run(fetches, self.test_feed)
         return return_dict
 
@@ -603,13 +608,15 @@ class CommonContainer():
                  keep_prob_input=None,
                  inp_size=None,
                  batch_norm=False,
-                 strand='Single'):
+                 strand='Single',
+                 unified=True):
         self.architecture = architecture
         self.dropout = dropout
         self.keep_prob_input = keep_prob_input
         self.inp_size = inp_size
         self.batch_norm = batch_norm
         self.strand = strand
+        self.unified = unified
         self.representations = {}
 
     def stack_input(self, new_representation, track_name):
@@ -630,32 +637,26 @@ class CommonContainer():
         activation_type = None
         gating_type = 'softmax'
         with tf.variable_scope('scaffold'):
-            if gating_type == 'sigmoid':
-                for track_name, val in self.representations.items():
-                    self.gates[track_name] = tf.nn.sigmoid(Dense(1)(val), name='gate_'+track_name)
-                    tf.summary.histogram('Gate_'+track_name, self.gates[track_name])
-                    if activation_type == 'tanh':
-                        repr_list.append(self.gates[track_name] * tf.nn.tanh(val))
-                    elif activation_type == None:
-                        repr_list.append(self.gates[track_name] * val)
-                self.combined_representation = tf.reshape(tf.concat(repr_list, 1),
-                                                          shape=[-1, self.scaffold_height, self.scaffold_width, 1])
-            elif gating_type == 'softmax':
+            ix = 0
+            ix_dict = {}
+            for track_name, val in self.representations.items():
+                ix_dict[track_name]=ix
+                repr_list.append(val)
+                ix+=1
+            tmp_comb_repr = tf.concat(repr_list, 1)
 
-                ix = 0
-                for track_name, val in self.representations.items():
-                    ix_dict[track_name]=ix
-                    repr_list.append(val)
-                    ix+=1
-                tmp_comb_repr = tf.concat(repr_list, 1)
-                gates = tf.nn.softmax(Dense(self.scaffold_height)(tmp_comb_repr))
+            if gating_type == 'softmax':
+                gates = tf.nn.softmax(Dense(self.scaffold_height)(tf.nn.tanh(tmp_comb_repr)) / 10.)
+            elif gating_type =='sigmoid':
+                gates = tf.nn.sigmoid(Dense(self.scaffold_height)(tf.nn.tanh(tmp_comb_repr))/10.)
 
-                for ix,track_name in enumarate(self.representations.keys()):
-                    self.gates[track_name] = gates[:,ix]
-                    tf.summary.histogram('Gate_'+track_name, self.gates[track_name])
+            self.gates_regularization = tf.reduce_sum(tf.abs(gates))
+            for track_name in self.representations.keys():
+                self.gates[track_name] = gates[:,ix_dict[track_name]]
+                tf.summary.histogram('Gate_'+track_name, self.gates[track_name])
 
-                self.combined_representation = gates*tf.reshape(tmp_comb_repr,
-                           shape=[-1, self.scaffold_height, self.scaffold_width, 1])
+            self.combined_representation = tf.multiply(tf.reshape(gates,[-1,self.scaffold_height, 1, 1]),tf.reshape(tmp_comb_repr,
+                       shape=[-1, self.scaffold_height, self.scaffold_width, 1]))
 
 
 
@@ -663,12 +664,20 @@ class CommonContainer():
         self._encapsulate_models()
 
     def _encapsulate_models(self):
-        with tf.variable_scope('scaffold', reuse=True):
+
+        with tf.variable_scope('scaffold', reuse=False):
             # Modality-wise dropout
             net = tf.nn.dropout(tf.identity(self.combined_representation), self.keep_prob_input,
-                                     noise_shape=[self.inp_size, len(self.representations), 1, 1])
+                                     noise_shape=[self.inp_size, self.scaffold_height, 1, 1])
+
+            if self.unified:
+                conv_height = 1
+                net = tf.reduce_mean(net, 1, keep_dims=True)
+            else:
+                conv_height = self.scaffold_height
+
             net = Conv2D(self.architecture['Scaffold']['Layer1']['number_of_filters'],
-                              [len(self.representations), self.architecture['Scaffold']['Layer1']['filter_width']],
+                              [conv_height, self.architecture['Scaffold']['Layer1']['filter_width']],
                               activation=self.architecture['Scaffold']['Layer1']['activation'],
                               kernel_regularizer='l2', padding='valid', name='conv_combined')(net)
             net = AveragePooling2D([1, self.architecture['Scaffold']['Layer1']['pool_size']],
