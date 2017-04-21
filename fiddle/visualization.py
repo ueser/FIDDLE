@@ -26,6 +26,7 @@ def main():
     flags.DEFINE_boolean('makeGif', True, 'Make gif from png files')
     flags.DEFINE_boolean('makePng', True, 'Make png from saved prediction pickles')
     flags.DEFINE_string('vizType', 'dnaseq', 'data type to be vizualized')
+    flags.DEFINE_integer('startFrom', 0, 'minimum iteration number to start plotting')
 
     FLAGS = flags.FLAGS
 
@@ -42,6 +43,8 @@ def main():
             for f_ in tq(pckl_files):
                 pred_dict = pickle.load(open(os.path.join(save_dir, f_),'r'))
                 iter_no  = int(f_.split('.')[0].split('_')[-1])
+                if iter_no<FLAGS.startFrom:
+                    continue
                 qq+=1
                 # print('\nplotting {} of {}'.format(qq, len(pckl_files)))
                 weights = pred_dict['dna_before_softmax']
@@ -57,6 +60,8 @@ def main():
             for f_ in tq(pckl_files):
                 pred_dict = pickle.load(open(os.path.join(save_dir, f_), 'r'))
                 iter_no = int(f_.split('.')[0].split('_')[-1])
+                if iter_no<FLAGS.startFrom:
+                    continue
                 qq += 1
                 # print('\nplotting {} of {}'.format(qq, len(pckl_files)))
 

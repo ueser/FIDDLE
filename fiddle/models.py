@@ -17,6 +17,17 @@ from keras.objectives import kullback_leibler_divergence
 import json, six, copy, os
 from visualization import put_kernels_on_grid, plot_prediction
 
+###############
+# GLOBAL VARs #
+###############
+global TRAIN_FETCHES
+global VALIDATION_FETCHES
+global PREDICTION_FETCHES
+
+TRAIN_FETCHES = {}
+VALIDATION_FETCHES = {}
+PREDICTION_FETCHES ={}
+
 #######################
 # Auxiliary functions #
 #######################
@@ -38,9 +49,7 @@ def KL_divergence(P_, Q_):
     return tf.reduce_sum(
         tf.multiply(
             K.clip(P_, K.epsilon(), 1),
-            tf.subtract(
-                tf.log(K.clip(P_, K.epsilon(), 1)),
-                tf.log(K.clip(Q_, K.epsilon(), 1)))), 1)
+            tf.subtract(tf.log(K.clip(P_, K.epsilon(), 1)), tf.log(K.clip(Q_, K.epsilon(), 1)))), 1)
 
 
 def transform_track(track_data_placeholder, option='pdf'):
@@ -146,12 +155,10 @@ class NNscaffold(object):
         self.cost_functions = {} # initializes cost functions dictionary
         for key in self.architecture['Outputs']:
             # feeds to output key a placeholder with key's input height and with
-            self.outputs[key] = tf.placeholder(
-                tf.float32, [
-                    None, self.architecture['Modules'][key]["input_height"],
-                    self.architecture['Modules'][key]["input_width"], 1
-                ],
-                name='output_' + key)
+            self.outputs[key] = tf.placeholder(tf.float32,
+                                               [None, self.architecture['Modules'][key]["input_height"],
+                                                self.architecture['Modules'][key]["input_width"], 1],
+                                               name='output_' + key)
             if key != 'dnaseq':
                 if self.config['Options']['Strand'] == 'Single':
                     self.positive_strand = tf.slice(
@@ -213,7 +220,6 @@ class NNscaffold(object):
                             self.architecture['Modules'][key][
                                 key_key] = sub_val
 
-
     def initialize(self):
         """Initialize the scaffold model either from saved checkpoints (pre-trained)
         or from scratch
@@ -259,7 +265,6 @@ class NNscaffold(object):
                 self.trainables += tf.get_collection(
                     tf.GraphKeys.GLOBAL_VARIABLES, scope=key)
 
-
     def _create_loss_optimizer(self):
         self.global_step = tf.Variable(0, name='globalStep', trainable=False)
         self.accuracy = {}
@@ -269,6 +274,8 @@ class NNscaffold(object):
 #####
                 self.cost+= self.cost_functions[key](self.output_tensor[key], self.common_predictor.predictions[key])
                 self.accuracy[key] = average_peak_distance(self.output_tensor[key], self.common_predictor.predictions[key])
+                TRAIN_FETCHES.update({'Average_peak_distance': self.accuracy[key]})
+                VALIDATION_FETCHES.update({'Average_peak_distance': self.accuracy[key]})
                 # self.performance[key] = self.performance_measures[key](self.output_tensor[key], self.common_predictor.predictions[key])
  #####
 
@@ -278,92 +285,66 @@ class NNscaffold(object):
                     tf.multiply(self.output_tensor[key] + 1e-10,
                                 tf.subtract(
                                     tf.log(self.output_tensor[key] + 1e-10),
+
                                     tf.log(self.common_predictor.predictions[key] + 1e-10))), [1, 2])
 
+        beta = 1.
         self.optimizer = \
-            tf.train.AdamOptimizer(learning_rate=self.learning_rate).minimize(self.cost,
+            tf.train.AdamOptimizer(learning_rate=self.learning_rate).minimize(self.cost,# + beta*self.common_predictor.gates_regularization ,
                                                                               global_step=self.global_step,
                                                                               var_list=self.trainables)
+        TRAIN_FETCHES.update({'_':self.optimizer, 'cost':self.cost})
+        VALIDATION_FETCHES.update({'cost': self.cost})
 
-    def train(self, train_data, accuracy=None, inp_dropout=0.1,
-              batch_size=128):
+    def train(self, train_data, accuracy=None, inp_dropout=0.1, batch_size=128):
         """Trains model based on mini-batch of input data. Returns cost of mini-batch.
         """
 
         if train_data == []:
             train_feed = {}
         else:
-            train_feed = {
-                self.outputs[key]: train_data[key]
-                for key in self.architecture['Outputs']
-            }
-            train_feed.update({
-                self.inputs[key]: train_data[key]
-                for key in self.architecture['Inputs']
-            })
+            train_feed = {self.outputs[key]: train_data[key] for key in self.architecture['Outputs']}
+            train_feed.update({self.inputs[key]: train_data[key] for key in self.architecture['Inputs']})
+            train_feed.update({self.common_predictor.all_gates:
+                                   np.random.randint(2, size=[batch_size, len(self.architecture['Inputs'])]) + 0.})
+
 
         train_feed.update({
-            self.dropout:
-            self.architecture['Scaffold']['dropout'],
+            self.dropout: self.architecture['Scaffold']['dropout'],
             self.keep_prob_input: (1 - inp_dropout),
-            self.inp_size:
-            batch_size,
-            K.learning_phase():
-            1
-        })
+            self.inp_size: batch_size,
+            K.learning_phase(): 1 })
 
-        fetches = {
-            '_': self.optimizer,
-            'cost': self.cost,
-            'summary': self.summary_op
-        }
-        if accuracy is not None:
-            fetches.update(
-                {'accuracy_' + key: val
-                 for key, val in self.accuracy.items()})
-        return_dict = self._run(fetches, train_feed)
+
+        TRAIN_FETCHES.update({'summary': self.summary_op})
+        return_dict = self._run(TRAIN_FETCHES, train_feed)
         return return_dict
 
     def validate(self, validation_data, accuracy=None):
-        """Tests model based on mini-batch of input data. Returns cost of test.
-        """
+        '''
+        Tests model based on mini-batch of input data. Returns cost of test.
+        '''
         if not hasattr(self, 'test_feed'):
-            self.test_feed = {
-                self.outputs[key]: validation_data[key]
-                for key in self.architecture['Outputs']
-            }
-            self.test_feed.update({
-                self.inputs[key]: validation_data[key]
-                for key in self.architecture['Inputs']
-            })
-            self.test_feed.update({
-                self.dropout:
-                1.,
-                self.keep_prob_input:
-                1.,
-                self.inp_size:
-                validation_data.values()[0].shape[0],
-                K.learning_phase():
-                0
-            })
+            self.test_feed = {self.outputs[key]: validation_data[key] for key in self.architecture['Outputs']}
+            self.test_feed.update({ self.inputs[key]: validation_data[key] for key in self.architecture['Inputs']})
+            self.test_feed.update( {self.common_predictor.all_gates: np.ones((validation_data.values()[0].shape[0], len(self.architecture['Inputs']))) + 0.})
 
-        fetches = {'cost': self.cost, 'summary': self.summary_op}
-        if accuracy is not None:
-            fetches.update(
-                {'accuracy_' + key: val
-                 for key, val in self.accuracy.items()})
+            self.test_feed.update({
+                self.dropout: 1.,
+                self.keep_prob_input: 1.,
+                self.inp_size: validation_data.values()[0].shape[0],
+                K.learning_phase():0 })
 
-        return_dict = self._run(fetches, self.test_feed)
+        VALIDATION_FETCHES.update({'summary': self.summary_op})
+        return_dict = self._run(VALIDATION_FETCHES, self.test_feed)
         return return_dict
 
     def predict(self, predict_data):
         """
         """
         pred_feed = {}
-        pred_feed.update({
-            self.inputs[key]: predict_data[key]
-            for key in self.architecture['Inputs']
-        })
+        pred_feed.update({ self.inputs[key]: predict_data[key] for key in self.architecture['Inputs'] })
+        pred_feed.update({self.common_predictor.all_gates: np.ones((predict_data.values()[0].shape[0], len(self.architecture['Inputs']))) + 0.})
 
         pred_feed.update({
             self.dropout: 1.,
@@ -372,20 +353,8 @@ class NNscaffold(object):
             K.learning_phase(): 0
         })
 
-        fetches = {}
-        fetches.update({key: val for key, val in self.common_predictor.predictions.items()})
-        return_dict = self._run(fetches, pred_feed)
-        #
-        #
-        # buf_plots = plot_prediction(return_dict, orig_output,
-        #                             name='Prediction pdf',
-        #                             save_dir=self.model_path,
-        #                             strand=self.config['Options']['Strand'])
-        # # Convert PNG buffer to TF image
-        # image = tf.image.decode_png(buf_plots.getvalue(), channels=4)
-        #
-        # # Add the batch dimension
-        # self.image = tf.expand_dims(image, 0)
+        PREDICTION_FETCHES.update({key: val for key, val in self.common_predictor.predictions.items()})
+        return_dict = self._run(PREDICTION_FETCHES, pred_feed)
 
         return return_dict
 
@@ -411,12 +380,13 @@ class NNscaffold(object):
         return return_dict
 
     def summarize(self, train_summary, validation_summary, step):
+        # pdb.set_trace()
+        self.summary_writer_train.add_summary(train_summary, step)
+        self.summary_writer_valid.add_summary(validation_summary, step)
+        self.summary_writer_train.flush()
+        self.summary_writer_valid.flush()
 
-        self.summaryWriter.add_summary(train_summary, step)
-        self.summaryWriter.add_summary(validation_summary, step)
-        self.summaryWriter.flush()
-
-    def create_monitor_variables(self, show_filters=False):
+    def create_monitor_variables(self, show_filters=True):
         """Writes to results directory a summary of graph variables"""
 
         if show_filters:
@@ -436,7 +406,9 @@ class NNscaffold(object):
             tf.summary.scalar(key + '/Accuracy', val)
 
         self.summary_op = tf.summary.merge_all()
-        self.summaryWriter = tf.summary.FileWriter(self.model_path,
+        self.summary_writer_train = tf.summary.FileWriter(self.model_path+'/training',
+                                                   self.sess.graph)
+        self.summary_writer_valid = tf.summary.FileWriter(self.model_path+'/validation',
                                                    self.sess.graph)
 
     def _run(self, fetches, feed_dict):
@@ -604,14 +576,15 @@ class CommonContainer():
                  keep_prob_input=None,
                  inp_size=None,
                  batch_norm=False,
-                 strand='Single'):
-
+                 strand='Single',
+                 unified=True):
         self.architecture = architecture
         self.dropout = dropout
         self.keep_prob_input = keep_prob_input
         self.inp_size = inp_size
         self.batch_norm = batch_norm
         self.strand = strand
+        self.unified = unified
         self.representations = {}
 
     def stack_input(self, new_representation, track_name):
@@ -623,20 +596,55 @@ class CommonContainer():
         Args:
             mode: convolution or fully_connected
         """
-        self.combined_representation = tf.concat(self.representations.values(), 1)
+
         self.scaffold_height = len(self.representations)
         self.scaffold_width = self.architecture['Modules'].values()[0]['representation_width']
+
+        self.gates = {}
+        repr_list = []
+        activation_type = None
+        gating = True
+        with tf.variable_scope('scaffold'):
+            ix = 0
+            ix_dict = {}
+            for track_name, val in self.representations.items():
+                ix_dict[track_name]=ix
+                repr_list.append(val)
+                ix+=1
+            tmp_comb_repr = tf.concat(repr_list, 1)
+            if gating:
+                self.all_gates = tf.placeholder(tf.float32, [None, self.scaffold_height])
+                for track_name in self.representations.keys():
+                    self.gates[track_name] = self.all_gates[:,ix_dict[track_name]]
+                    TRAIN_FETCHES.update({track_name+'_gates': self.gates[track_name]})
+                    # VALIDATION_FETCHES.update({track_name + '_gates': self.gates[track_name]})
+                    PREDICTION_FETCHES.update({track_name + '_gates': self.gates[track_name]})
+
+                self.combined_representation = tf.multiply(tf.reshape(self.all_gates,[-1,self.scaffold_height, 1, 1]),
+                                                           tf.reshape(tmp_comb_repr,
+                                                                      shape=[-1, self.scaffold_height, self.scaffold_width, 1]))
+            else:
+                self.combined_representation = tf.reshape(tmp_comb_repr,
+                                                          shape=[-1, self.scaffold_height, self.scaffold_width, 1])
+
         self._encapsulate_models()
 
     def _encapsulate_models(self):
-        with tf.variable_scope('scaffold', reuse=True):
-            net = tf.reshape(self.combined_representation,
-                                  shape=[-1, self.scaffold_height, self.scaffold_width, 1])
+        with tf.variable_scope('scaffold', reuse=False):
             # Modality-wise dropout
-            net = tf.nn.dropout(tf.identity(net), self.keep_prob_input,
-                                     noise_shape=[self.inp_size, len(self.representations), 1, 1])
+            # net = tf.nn.dropout(tf.identity(self.combined_representation), self.keep_prob_input,
+            #                          noise_shape=[self.inp_size, self.scaffold_height, 1, 1])
+
+            net = tf.identity(self.combined_representation)
+            if self.unified:
+                conv_height = 1
+                net = tf.reduce_sum(net, 1, keep_dims=True)
+            else:
+                conv_height = self.scaffold_height
+
+            # net = tf.divide(net, tf.reshape(tf.reduce_sum(self.all_gates, 1), [-1, 1, 1, 1]))
             net = Conv2D(self.architecture['Scaffold']['Layer1']['number_of_filters'],
-                              [len(self.representations), self.architecture['Scaffold']['Layer1']['filter_width']],
+                              [conv_height, self.architecture['Scaffold']['Layer1']['filter_width']],
                               activation=self.architecture['Scaffold']['Layer1']['activation'],
                               kernel_regularizer='l2', padding='valid', name='conv_combined')(net)
             net = AveragePooling2D([1, self.architecture['Scaffold']['Layer1']['pool_size']],
@@ -674,19 +682,22 @@ class CommonContainer():
                     self.predictions[key] = tf.nn.softmax(net, name='softmax')
 
 
+
 ###### LOSS FUNCTIONS #######
 
 def kl_loss(y_true, y_pred):
-    return tf.reduce_mean(kullback_leibler_divergence(y_true, y_pred))
-
+    KLdiv = kullback_leibler_divergence(y_true, y_pred)
+    # PREDICTION_FETCHES.update({'KL_divergence': KLdiv})
+    KLloss = tf.reduce_mean(KLdiv)
+    DeltaKL = KLdiv - KLloss
+    TRAIN_FETCHES.update({'DeltaKL': DeltaKL})
+    return KLloss
 
 
 ##### OTHER PERFORMENCE MEASURES #####
 def per_bp_accuracy(y_true, y_pred):
     pass
 
-def peak_detection_accuracy(y_true, y_pred, bin_size=50):
-    pass
 
 def average_peak_distance(y_true, y_pred):
-    return tf.reduce_mean(tf.abs(tf.argmax(y_true, dimension=1)-tf.argmax(y_pred, dimension=1)))
+    return tf.reduce_mean(tf.cast(tf.abs(tf.argmax(y_true, dimension=1)-tf.argmax(y_pred, dimension=1)),tf.float32))
