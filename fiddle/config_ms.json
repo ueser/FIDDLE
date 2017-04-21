@@ -1,0 +1,40 @@
+{ "Genome": "sacCer3",
+  "Tracks": {
+    "chipnexus": {
+      "id": "cn",
+      "input_height": 2
+    },
+    "netseq": {
+      "id": "ns",
+      "input_height": 2
+    },
+    "chipseq": {
+      "id": "cs",
+      "input_height": 2
+    },
+    "mnaseseq": {
+      "id": "ms",
+      "input_height": 2
+    },
+    "rnaseq": {
+      "id": "rs",
+      "input_height": 1
+    },
+    "dnaseq": {
+      "id": "ds",
+      "input_height": 4
+    },
+    "tssseq": {
+      "id": "ts",
+      "input_height": 2
+    }
+  },
+  "Options": {
+    "Inputs":["dnaseq","rnaseq","chipseq","tssseq","netseq"],
+    "Outputs":["mnaseseq"],
+    "Freeze":[],
+    "Reload":[],
+    "Strand":"Single",
+    "DataName":"NSMSDSRSCSTSRI_500bp"
+  }
+}

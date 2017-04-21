@@ -32,6 +32,7 @@ flags.DEFINE_integer('batchSize', 20, 'Batch size.')
 flags.DEFINE_float('learningRate', 0.001, 'Initial learning rate.')
 flags.DEFINE_float('dropout', 0.5, 'Keep probability for training dropout.')
 flags.DEFINE_string('resultsDir', '../results', 'Directory for results data')
+flags.DEFINE_string('inputs', 'ns', 'Directory for results data')
 FLAGS = flags.FLAGS
 
 def main(_):
