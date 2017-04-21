@@ -12,6 +12,7 @@ import os
 import h5py
 import json
 import cPickle as pickle
+import pandas as pd
 
 ### FIDDLE specific tools ###
 from models import *
@@ -121,8 +122,9 @@ def main(_):
     print('Pre-train validation run:')
     return_dict = model.validate(validation_data, accuracy=True)
     print("Pre-train validation loss: " + str(return_dict['cost']))
-    print("Pre-train validation accuracy (%): " + str(return_dict['accuracy_' + key] / validation_data.values()[0].shape[0]))
+    # print("Pre-train validation accuracy (%): " + str(return_dict['accuracy_' + key] / validation_data.values()[0].shape[0]))
     totalIterations = 1000
+
 
     for it in range(totalIterations):
 
@@ -138,7 +140,9 @@ def main(_):
         print('Input dropout probability: ' + str(inputDropout))
 
 
+
         t_batcher, t_trainer = 0, 0
+        df = pd.DataFrame()
         for iterationNo in tq(range(10)):
             with Timer() as t:
                 train_batch = batcher.next()
@@ -146,6 +150,7 @@ def main(_):
             with Timer() as t:
                 return_dict = model.train(train_batch, accuracy=True, inp_dropout=inputDropout, batch_size=FLAGS.batchSize)
                 train_summary = return_dict['summary']
+                df = df.append(get_delta_KL(return_dict, model.architecture['Inputs'], step))
 
             t_trainer += t.secs
             #
@@ -158,6 +163,10 @@ def main(_):
                 return_dict_train.update({key: val for key, val in return_dict.items() if val is type('string')})
 
             step += 1
+        header_tf = True if it==0 else None
+        mode_tf = 'w' if it==0 else 'a'
+        df.to_csv(FLAGS.savePath + '/deltaKL.txt', header=header_tf, index=None, mode=mode_tf, sep='\t')
+
         print('Batcher time: ' + "%.3f" % t_batcher)
         print('Trainer time: ' + "%.3f" % t_trainer)
         for key, val in return_dict_train.items():
@@ -166,6 +175,7 @@ def main(_):
 
         return_dict_train.update({key: np.sum(val) for key, val in return_dict_train.items()
                                   if (type(val) is np.ndarray) or (type(val) is np.float32)})
+
         return_dict_valid = model.validate(validation_data, accuracy=True)
         return_dict_valid.update({key: np.sum(val) for key, val in return_dict_valid.items()
                                   if (type(val) is np.ndarray) or (type(val) is np.float32)})
@@ -179,7 +189,6 @@ def main(_):
                 predicted_dict = model.predict(input_for_prediction)
                 pickle.dump(predicted_dict, open((FLAGS.savePath + "/" + 'pred_viz_{}.pck'.format(it)), "wb"))
                 if FLAGS.visualizePrediction == 'online':
-
                     viz.plot_prediction(predicted_dict, orig_output,
                                             name='iteration_{}'.format(it),
                                             save_dir=FLAGS.savePath,
@@ -235,7 +244,17 @@ def write_to_txt(return_dict, batch_size=FLAGS.batchSize, case='train', verbose=
     with open((save_path + "/" + case + ".txt"), "a") as fp:
         fp.write(line_to_write + '\n')
 
+def get_delta_KL(return_dict, track_list, iter_no):
+    column_list = []
+    column_list.append('Iter_no')
+    column_list += track_list + ['DeltaKL']
+    df = pd.DataFrame(columns=column_list)
+    df['DeltaKL'] = return_dict['DeltaKL']
+    for track_name in track_list:
+        df[track_name] = return_dict[track_name + '_gates']
+    df['Iter_no'] = iter_no
 
+    return df
 if __name__ == '__main__':
     try:
         tf.app.run()
