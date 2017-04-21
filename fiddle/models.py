@@ -310,7 +310,7 @@ class NNscaffold(object):
                                    np.random.randint(2, size=[batch_size, len(self.architecture['Inputs'])]) + 0.})
             else:
                 train_feed.update({self.common_predictor.all_gates:
-                                       p.ones((batch_size,
+                                       np.ones((batch_size,
                                                len(self.architecture['Inputs']))) + 0.})
 
 
