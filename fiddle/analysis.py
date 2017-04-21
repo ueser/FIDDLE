@@ -66,6 +66,8 @@ def main(_):
             f_[:] = pred_dict[key][:]
         pred_h5_handle.close()
 
+
+
     model.sess.close()
 
     ### filter visualization
