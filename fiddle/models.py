@@ -296,7 +296,7 @@ class NNscaffold(object):
         TRAIN_FETCHES.update({'_':self.optimizer, 'cost':self.cost})
         VALIDATION_FETCHES.update({'cost': self.cost})
 
-    def train(self, train_data, accuracy=None, inp_dropout=0.1, batch_size=128):
+    def train(self, train_data, accuracy=None, inp_dropout=0.1, batch_size=128, gating=False):
         """Trains model based on mini-batch of input data. Returns cost of mini-batch.
         """
 
@@ -305,8 +305,13 @@ class NNscaffold(object):
         else:
             train_feed = {self.outputs[key]: train_data[key] for key in self.architecture['Outputs']}
             train_feed.update({self.inputs[key]: train_data[key] for key in self.architecture['Inputs']})
-            train_feed.update({self.common_predictor.all_gates:
+            if gating:
+                train_feed.update({self.common_predictor.all_gates:
                                    np.random.randint(2, size=[batch_size, len(self.architecture['Inputs'])]) + 0.})
+            else:
+                train_feed.update({self.common_predictor.all_gates:
+                                       np.ones((batch_size,
+                                               len(self.architecture['Inputs']))) + 0.})
 
 
         train_feed.update({
