@@ -167,7 +167,7 @@ def main(_):
                 train_batch = batcher.next()
             t_batcher += t.secs
             with Timer() as t:
-                return_dict = model.train(train_batch, accuracy=True, inp_dropout=inputDropout, batch_size=FLAGS.batchSize)
+                return_dict = model.train(train_batch, accuracy=True, inp_dropout=inputDropout, batch_size=FLAGS.batchSize, gating=FLAGS.gating)
                 train_summary = return_dict['summary']
                 if FLAGS.gating:
                     df = df.append(get_delta_KL(return_dict, model.architecture['Inputs'], step))
