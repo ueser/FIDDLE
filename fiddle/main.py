@@ -12,7 +12,6 @@ import os
 import h5py
 import json
 import cPickle as pickle
-import pandas as pd
 
 ### FIDDLE specific tools ###
 from models import *
@@ -36,8 +35,12 @@ flags.DEFINE_float('dropout', 0.5, 'Keep probability for training dropout.')
 flags.DEFINE_string('resultsDir', '../results', 'Directory for results data')
 flags.DEFINE_string('inputs', 'None', 'inputs')
 flags.DEFINE_string('outputs', 'None', 'outputs')
+flags.DEFINE_boolean('gating', False, 'modality-wise gating to be applied at scaffold [True or False]')
 
 FLAGS = flags.FLAGS
+
+if FLAGS.gating:
+    import pandas as pd
 
 def main(_):
 
@@ -157,7 +160,8 @@ def main(_):
 
 
         t_batcher, t_trainer = 0, 0
-        df = pd.DataFrame()
+        if FLAGS.gating:
+            df = pd.DataFrame()
         for iterationNo in tq(range(10)):
             with Timer() as t:
                 train_batch = batcher.next()
@@ -165,7 +169,8 @@ def main(_):
             with Timer() as t:
                 return_dict = model.train(train_batch, accuracy=True, inp_dropout=inputDropout, batch_size=FLAGS.batchSize)
                 train_summary = return_dict['summary']
-                df = df.append(get_delta_KL(return_dict, model.architecture['Inputs'], step))
+                if FLAGS.gating:
+                    df = df.append(get_delta_KL(return_dict, model.architecture['Inputs'], step))
 
             t_trainer += t.secs
             #
@@ -178,9 +183,11 @@ def main(_):
                 return_dict_train.update({key: val for key, val in return_dict.items() if val is type('string')})
 
             step += 1
-        header_tf = True if it==0 else None
-        mode_tf = 'w' if it==0 else 'a'
-        df.to_csv(FLAGS.savePath + '/deltaKL.txt', header=header_tf, index=None, mode=mode_tf, sep='\t')
+
+        if FLAGS.gating:
+            header_tf = True if it==0 else None
+            mode_tf = 'w' if it==0 else 'a'
+            df.to_csv(FLAGS.savePath + '/deltaKL.txt', header=header_tf, index=None, mode=mode_tf, sep='\t')
 
         print('Batcher time: ' + "%.3f" % t_batcher)
         print('Trainer time: ' + "%.3f" % t_trainer)
