@@ -34,7 +34,7 @@
     "Inputs":["dnaseq","rnaseq","chipseq","netseq","mnaseseq"],
     "Outputs":["tssseq"],
     "Freeze":[],
-    "Reload":[],
+    "Reload":["all"],
     "Strand":"Single",
     "DataName":"NSMSDSRSCSTSRI_500bp"
   }

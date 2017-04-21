@@ -34,6 +34,9 @@ flags.DEFINE_integer('batchSize', 20, 'Batch size.')
 flags.DEFINE_float('learningRate', 0.001, 'Initial learning rate.')
 flags.DEFINE_float('dropout', 0.5, 'Keep probability for training dropout.')
 flags.DEFINE_string('resultsDir', '../results', 'Directory for results data')
+flags.DEFINE_string('inputs', 'None', 'inputs')
+flags.DEFINE_string('outputs', 'None', 'outputs')
+
 FLAGS = flags.FLAGS
 
 def main(_):
@@ -45,6 +48,19 @@ def main(_):
     with open(FLAGS.configuration, 'r') as fp:
         config = byteify(json.load(fp))
 
+    if FLAGS.inputs is not 'None':
+        print('Overwriting configurations for inputs...')
+        input_ids = FLAGS.inputs.split('_')
+        input_list = [key for key, val in config['Tracks'].items() if val['id'] in input_ids]
+        print('Inputs', input_list)
+        config['Options']['Inputs'] = input_list
+
+    if FLAGS.outputs is not 'None':
+        print('Overwriting configurations for outputs...')
+        output_ids = FLAGS.outputs.split('_')
+        output_list = [key for key, val in config['Tracks'].items() if val['id'] in output_ids]
+        print('Outputs', output_list)
+        config['Options']['Outputs'] = output_list
     # create or recognize results directory
     FLAGS.savePath = FLAGS.resultsDir + '/' + FLAGS.runName
     print('Results will be saved in ' + str(FLAGS.savePath))
@@ -138,7 +154,6 @@ def main(_):
         print('\n\nEpoch: ' + str(epoch) + ', Iterations: ' + str(it))
         print('Number of examples seen: ' + str(it * 10 * FLAGS.batchSize))
         print('Input dropout probability: ' + str(inputDropout))
-
 
 
         t_batcher, t_trainer = 0, 0
