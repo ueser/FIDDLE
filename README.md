@@ -25,9 +25,9 @@ sudo pip install virtualenv
 
 ```markdown
 git clone https://github.com/ueser/FIDDLE.git 
+cd FIDDLE/
 virtualenv ../venv/
 source ../venv/bin/activate
-cd FIDDLE/
 pip install -r requirements.txt
 mkdir data/
 cd data/
@@ -68,3 +68,7 @@ python visualization.py --vizType tssseq
 ### 5) Check out training trajectory:
 
 Change directories to FIDDLE/results/experiment/, open up the gif in a browser.
+
+### Documentation...
+
+on it's way
