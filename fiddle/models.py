@@ -1,3 +1,18 @@
+"""Author: Umut Eser
+Documentation: Dylan Marshall
+
+FIDDLE (Flexible Integration of Data with Deep LEarning) is an open source
+data-agnostic flexible integrative framework that learns a unified
+representation from multiple sequencing data types to infer another
+sequencing data type.
+
+Usage:
+    To utilize methods and classes in io_tools.py, place the following import
+    command in the imports of a python file.
+
+        > from io_tools import *
+"""
+
 from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import division
@@ -7,7 +22,7 @@ import sys
 sys.path.append('/home/ue4/tfvenv/lib/python2.7/site-packages/')
 ##################################
 
-import pdb, traceback, sys  # EDIT
+import pdb, traceback, sys
 import tensorflow as tf
 import numpy as np
 from keras.layers import Input, Dense, Lambda, Conv2D, concatenate, Reshape, AveragePooling2D, Flatten, BatchNormalization, MaxPooling2D

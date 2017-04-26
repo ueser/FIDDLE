@@ -1,3 +1,36 @@
+"""Author: Umut Eser
+Documentation: Dylan Marshall
+
+FIDDLE (Flexible Integration of Data with Deep LEarning) is an open source
+data-agnostic flexible integrative framework that learns a unified
+representation from multiple sequencing data types to infer another
+sequencing data type.
+
+Example:
+    Assuming instructions for directory setup and file installation on the
+    github page have been followed, default flags and the following command will
+    create a results directory "FIDDLE/results/experiment/" with an example
+    prediction of TSSseq data from DNA sequence, RNA-seq, CHiP-seq, NET-seq,
+    and MNase-seq data.
+
+        $ python main.py
+
+FLAGS:
+    --runName               'experiment'            name of run
+    --dataDir               '../data/hdf5datasets'  directory where hdf5datasets are stored
+    --configuration         'configurations.json'   parameters of data inputs and outputs [json file]
+    --architecture          'architecture.json'     parameters describing CNNs [json file]
+    --visualizePrediction   'offline'               prediction profiles to be plotted [online or offline]
+    --savePredictionFreq    50                      frequency of saving prediction profiles to be plotted
+    --maxEpoch              1000                    total number of epochs through training data
+    --batchSize             20                      batch size of training data
+    --learningRate          0.001                   initial learning rate
+    --resultsDir            '../results'            directory where results from runName will be stored
+    --inputs                'None'                  inputs
+    --outputs               'None'                  outputs
+    --gating                False                   modality-wise gating to be applied at scaffold [True or False]
+"""
+
 from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import division
@@ -13,36 +46,34 @@ import h5py
 import json
 import cPickle as pickle
 
-### FIDDLE specific tools ###
+#############################
+# FIDDLE specific tools
 from models import *
 from io_tools import *
 import visualization as viz
 #############################
 
-
 flags = tf.app.flags
-flags.DEFINE_string('runName', 'experiment', 'Running name.')
-flags.DEFINE_string('dataDir', '../data/hdf5datasets', 'Default data directory')
-flags.DEFINE_string('configuration', 'configurations.json', 'configuration file [json file]')
-flags.DEFINE_string('architecture', 'architecture.json', 'configuration file [json file]')
-flags.DEFINE_string('restorePath', '../results/test', 'Regions to validate [bed or gff files]')
-flags.DEFINE_string('visualizePrediction', 'offline', 'Prediction profiles to be plotted [online or offline] ')
-flags.DEFINE_integer('savePredictionFreq', 50, 'Frequency of saving prediction profiles to be plotted')
-flags.DEFINE_integer('maxEpoch', 1000, 'Number of epochs to run trainer.')
-flags.DEFINE_integer('batchSize', 20, 'Batch size.')
-flags.DEFINE_float('learningRate', 0.001, 'Initial learning rate.')
-flags.DEFINE_float('dropout', 0.5, 'Keep probability for training dropout.')
-flags.DEFINE_string('resultsDir', '../results', 'Directory for results data')
+flags.DEFINE_string('runName', 'experiment', 'name of run')
+flags.DEFINE_string('dataDir', '../data/hdf5datasets', 'directory where hdf5datasets are stored')
+flags.DEFINE_string('configuration', 'configurations.json', 'parameters of data inputs and outputs [json file]')
+flags.DEFINE_string('architecture', 'architecture.json', 'parameters describing CNNs [json file]')
+flags.DEFINE_string('visualizePrediction', 'offline', 'prediction profiles to be plotted [online or offline] ')
+flags.DEFINE_integer('savePredictionFreq', 50, 'frequency of saving prediction profiles to be plotted')
+flags.DEFINE_integer('maxEpoch', 1000, 'total number of epochs through training data')
+flags.DEFINE_integer('batchSize', 20, 'batch size.')
+flags.DEFINE_float('learningRate', 0.001, 'initial learning rate.')
+flags.DEFINE_string('resultsDir', '../results', 'directory where results from runName will be stored')
 flags.DEFINE_string('inputs', 'None', 'inputs')
 flags.DEFINE_string('outputs', 'None', 'outputs')
 flags.DEFINE_boolean('gating', False, 'modality-wise gating to be applied at scaffold [True or False]')
-
 FLAGS = flags.FLAGS
 
 if FLAGS.gating:
     import pandas as pd
 
 def main(_):
+    """Read in data, launch graph, train neural network"""
 
     ############################################################################
     #                           Read data to graph                             #
@@ -64,6 +95,7 @@ def main(_):
         output_list = [key for key, val in config['Tracks'].items() if val['id'] in output_ids]
         print('Outputs', output_list)
         config['Options']['Outputs'] = output_list
+
     # create or recognize results directory
     FLAGS.savePath = FLAGS.resultsDir + '/' + FLAGS.runName
     print('Results will be saved in ' + str(FLAGS.savePath))
@@ -87,7 +119,6 @@ def main(_):
     # create iterator over training data
     data = MultiModalData(train_h5_handle, batch_size=FLAGS.batchSize)
     batcher = data.batcher()
-
 
     to_size = min(validation_h5_handle.values()[0].shape[0], 1000)
     print('Storing validation data to the memory')
@@ -131,10 +162,8 @@ def main(_):
     #                                  Train                                   #
     ############################################################################
 
-
     ######## TRAIN #########
     globalMinLoss = 1e16 # some high number
-
     step = 0
     train_size = train_h5_handle.values()[0].shape[0]
 
@@ -143,7 +172,6 @@ def main(_):
     print("Pre-train validation loss: " + str(return_dict['cost']))
     # print("Pre-train validation accuracy (%): " + str(return_dict['accuracy_' + key] / validation_data.values()[0].shape[0]))
     totalIterations = 1000
-
 
     for it in range(totalIterations):
 
@@ -177,7 +205,6 @@ def main(_):
             if iterationNo==0:
                 return_dict_train = return_dict.copy()
             else:
-                # pdb.set_trace()
                 return_dict_train = {key: return_dict_train[key]+val for key, val in return_dict.items()
                                      if (type(val) is np.ndarray) or (type(val) is np.float32)}
                 return_dict_train.update({key: val for key, val in return_dict.items() if val is type('string')})
@@ -205,7 +232,7 @@ def main(_):
                                   if (type(val) is type('string'))})
 
         # for every 50 iteration,
-        if (it % FLAGS.savePredictionFreq ==0):
+        if (it % FLAGS.savePredictionFreq == 0):
 
             if 'dnaseq' not in model.outputs.keys():
                 predicted_dict = model.predict(input_for_prediction)
@@ -232,7 +259,7 @@ def main(_):
                                   save_dir=FLAGS.savePath)
         #
         write_to_txt(return_dict_train)
-        write_to_txt(return_dict_valid, batch_size=validation_data.values()[0].shape[0], case='validation')
+        write_to_txt(return_dict_valid, batch_size=validation_data.values()[0].shape[0], datatype='validation')
 
         model.summarize( train_summary = train_summary,
                          validation_summary=return_dict_valid['summary'],
@@ -248,8 +275,16 @@ def main(_):
 
 
 
-def write_to_txt(return_dict, batch_size=FLAGS.batchSize, case='train', verbose=True):
-    save_path = FLAGS.savePath
+def write_to_txt(return_dict, batch_size=FLAGS.batchSize, datatype='train', verbose=True):
+    """Writes to text file the contents of return_dict, saves in FLAGS.savePath
+
+    Args:
+        :param return_dict: (dictionary) typically {key=loss, value=accuracy} of datasets
+        :param batch_size: (int) size of inputted data batches
+        :param datatype: (string) type of data in return_dict
+        :param verbose: (boolean) level of information displayed
+    """
+
     line_to_write = ''
     for key, val in return_dict.items():
         if key == 'cost':
@@ -261,12 +296,21 @@ def write_to_txt(return_dict, batch_size=FLAGS.batchSize, case='train', verbose=
             cur_line = str(return_dict[key] / batch_size)
             line_to_write += '\t' + cur_line
         if verbose:
-            print(case + '\t' + key + ': ' + cur_line)
-
-    with open((save_path + "/" + case + ".txt"), "a") as fp:
+            print(datatype + '\t' + key + ': ' + cur_line)
+    with open((FLAGS.savePath + "/" + datatype + ".txt"), "a") as fp:
         fp.write(line_to_write + '\n')
 
 def get_delta_KL(return_dict, track_list, iter_no):
+    """Returns dataframe of difference in KL divergence
+
+    Args:
+        :param return_dict: (dictionary) typically of loss and accuracy of datasets
+        :param track_list: (list) list of tracks in consideration
+
+    Todo:
+        clarify this method and gating in general - if implemented
+    """
+
     column_list = []
     column_list.append('Iter_no')
     column_list += track_list + ['DeltaKL']
@@ -275,8 +319,8 @@ def get_delta_KL(return_dict, track_list, iter_no):
     for track_name in track_list:
         df[track_name] = return_dict[track_name + '_gates']
     df['Iter_no'] = iter_no
-
     return df
+
 if __name__ == '__main__':
     try:
         tf.app.run()
