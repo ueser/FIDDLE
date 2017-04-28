@@ -16,6 +16,8 @@ Example:
         $ python main.py
 
 FLAGS:
+    flag:                   default:                description:
+
     --runName               'experiment'            name of run
     --dataDir               '../data/hdf5datasets'  directory where hdf5datasets are stored
     --configuration         'configurations.json'   parameters of data inputs and outputs [json file]
@@ -35,7 +37,7 @@ from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import division
 
-import pdb, traceback, sys #
+import pdb, traceback, sys
 import tensorflow as tf
 import numpy as np
 from tqdm import tqdm as tq
@@ -78,6 +80,7 @@ def main(_):
     ############################################################################
     #                           Read data to graph                             #
     ############################################################################
+
     # read in configurations
     with open(FLAGS.configuration, 'r') as fp:
         config = byteify(json.load(fp))
@@ -103,10 +106,7 @@ def main(_):
         tf.gfile.MakeDirs(FLAGS.savePath)
 
     # define neural network
-    model = NNscaffold(config=config,
-                       architecture_path=FLAGS.architecture,
-                       learning_rate=FLAGS.learningRate,
-                       model_path=FLAGS.savePath)
+    model = NNscaffold(config = config, architecture_path = FLAGS.architecture, learning_rate = FLAGS.learningRate, model_path = FLAGS.savePath)
 
     # save resulting modified architecture and configuration
     json.dump(model.architecture, open(FLAGS.savePath + "/architecture.json", 'w'))
@@ -138,6 +138,8 @@ def main(_):
     model.create_monitor_variables(show_filters=False)
     model.saver()
 
+    pdb.set_trace()
+
     # instantiate training and validation log files
     header_str = 'Loss'
     for key in model.architecture['Outputs']:
@@ -154,7 +156,6 @@ def main(_):
         idx = np.argsort(validation_data[key].reshape(validation_data[key].shape[0], -1).sum(axis = 1))
     idx = idx[int(validation_data[key].shape[0] / 2):(int(validation_data[key].shape[0] / 2) + num_signals)]
     input_for_prediction = {key: validation_data[key][idx] for key in model.architecture['Inputs']}
-        # not sure of "orig_output" purpose here? , also, why it was pickled
     orig_output = {key: validation_data[key][idx] for key in model.architecture['Outputs']}
     pickle.dump(orig_output, open((FLAGS.savePath + "/" + 'original_outputs.pck'), "wb"))
 
@@ -162,7 +163,6 @@ def main(_):
     #                                  Train                                   #
     ############################################################################
 
-    ######## TRAIN #########
     globalMinLoss = 1e16 # some high number
     step = 0
     train_size = train_h5_handle.values()[0].shape[0]
@@ -179,13 +179,11 @@ def main(_):
         # linearly decreasing dropout probability from 20% (@ 1st iteration) to 0% (@ 1% of total iterations)
         # inputDropout = 0.2 - 0.2 * it / 10. if it <= (totalIterations // 100) else 0.
         inputDropout = 0.
-
         epoch = int(it * 10 * FLAGS.batchSize/train_size)
 
         print('\n\nEpoch: ' + str(epoch) + ', Iterations: ' + str(it))
         print('Number of examples seen: ' + str(it * 10 * FLAGS.batchSize))
         print('Input dropout probability: ' + str(inputDropout))
-
 
         t_batcher, t_trainer = 0, 0
         if FLAGS.gating:
@@ -195,20 +193,17 @@ def main(_):
                 train_batch = batcher.next()
             t_batcher += t.secs
             with Timer() as t:
-                return_dict = model.train(train_batch, accuracy=True, inp_dropout=inputDropout, batch_size=FLAGS.batchSize, gating=FLAGS.gating)
+                return_dict = model.train(train_batch, accuracy = True, inp_dropout = inputDropout, batch_size = FLAGS.batchSize, gating = FLAGS.gating)
                 train_summary = return_dict['summary']
                 if FLAGS.gating:
                     df = df.append(get_delta_KL(return_dict, model.architecture['Inputs'], step))
-
             t_trainer += t.secs
-            #
             if iterationNo==0:
                 return_dict_train = return_dict.copy()
             else:
                 return_dict_train = {key: return_dict_train[key]+val for key, val in return_dict.items()
                                      if (type(val) is np.ndarray) or (type(val) is np.float32)}
                 return_dict_train.update({key: val for key, val in return_dict.items() if val is type('string')})
-
             step += 1
 
         if FLAGS.gating:
@@ -218,30 +213,25 @@ def main(_):
 
         print('Batcher time: ' + "%.3f" % t_batcher)
         print('Trainer time: ' + "%.3f" % t_trainer)
+
         for key, val in return_dict_train.items():
             if type(val) is not type('some_str_type'):
                 return_dict_train[key] /= iterationNo
 
         return_dict_train.update({key: np.sum(val) for key, val in return_dict_train.items()
                                   if (type(val) is np.ndarray) or (type(val) is np.float32)})
-
         return_dict_valid = model.validate(validation_data, accuracy=True)
         return_dict_valid.update({key: np.sum(val) for key, val in return_dict_valid.items()
                                   if (type(val) is np.ndarray) or (type(val) is np.float32)})
         return_dict_valid.update({key: val for key, val in return_dict_valid.items()
                                   if (type(val) is type('string'))})
 
-        # for every 50 iteration,
         if (it % FLAGS.savePredictionFreq == 0):
-
             if 'dnaseq' not in model.outputs.keys():
                 predicted_dict = model.predict(input_for_prediction)
                 pickle.dump(predicted_dict, open((FLAGS.savePath + "/" + 'pred_viz_{}.pck'.format(it)), "wb"))
                 if FLAGS.visualizePrediction == 'online':
-                    viz.plot_prediction(predicted_dict, orig_output,
-                                            name='iteration_{}'.format(it),
-                                            save_dir=FLAGS.savePath,
-                                            strand=model.config['Options']['Strand'])
+                    viz.plot_prediction(predicted_dict, orig_output, name = 'iteration_{}'.format(it), save_dir = FLAGS.savePath, strand = model.config['Options']['Strand'])
             else:
                 feed_d = {val: input_for_prediction[key] for key, val in model.inputs.items()}
                 feed_d.update({val: orig_output[key] for key, val in model.outputs.items()})
@@ -250,20 +240,15 @@ def main(_):
                                model.inp_size: input_for_prediction.values()[0].shape[0],
                                K.learning_phase(): 0})
                 weights, pred_vec = model.sess.run([model.dna_before_softmax, model.predictions['dnaseq']], feed_d)
-                predicted_dict={'dna_before_softmax':weights,
+                predicted_dict = {'dna_before_softmax':weights,
                                 'prediction': pred_vec}
                 pickle.dump(predicted_dict, open((FLAGS.savePath + "/" + 'pred_viz_{}.pck'.format(it)), "wb"))
                 if FLAGS.visualizePrediction == 'online':
-                    viz.visualize_dna(weights, pred_vec,
-                                  name='iteration_{}'.format(it),
-                                  save_dir=FLAGS.savePath)
-        #
+                    viz.visualize_dna(weights, pred_vec, name = 'iteration_{}'.format(it), save_dir = FLAGS.savePath)
+
         write_to_txt(return_dict_train)
         write_to_txt(return_dict_valid, batch_size=validation_data.values()[0].shape[0], datatype='validation')
-
-        model.summarize( train_summary = train_summary,
-                         validation_summary=return_dict_valid['summary'],
-                         step=step)
+        model.summarize(train_summary = train_summary, validation_summary = return_dict_valid['summary'], step = step)
 
         if (return_dict_valid['cost'] < globalMinLoss) and (it>20):
             globalMinLoss = return_dict_valid['cost']
@@ -275,14 +260,14 @@ def main(_):
 
 
 
-def write_to_txt(return_dict, batch_size=FLAGS.batchSize, datatype='train', verbose=True):
+def write_to_txt(return_dict, batch_size = FLAGS.batchSize, datatype = 'train', verbose = True):
     """Writes to text file the contents of return_dict, saves in FLAGS.savePath
 
     Args:
         :param return_dict: (dictionary) typically {key=loss, value=accuracy} of datasets
-        :param batch_size: (int) size of inputted data batches
-        :param datatype: (string) type of data in return_dict
-        :param verbose: (boolean) level of information displayed
+        :param batch_size: (int, default = FLAGS.batchSize) size of inputted data batches
+        :param datatype: (string, default = 'train') type of data in return_dict
+        :param verbose: (boolean, default = True) level of information displayed
     """
 
     line_to_write = ''
@@ -301,11 +286,15 @@ def write_to_txt(return_dict, batch_size=FLAGS.batchSize, datatype='train', verb
         fp.write(line_to_write + '\n')
 
 def get_delta_KL(return_dict, track_list, iter_no):
-    """Returns dataframe of difference in KL divergence
+    """Creates dataframe of difference in KL divergence between loss and accuracy
+    of considered track list
 
     Args:
         :param return_dict: (dictionary) typically of loss and accuracy of datasets
         :param track_list: (list) list of tracks in consideration
+
+    Returns:
+        Dataframe of difference in KL divergence between keys and values of inputted dictionary
 
     Todo:
         clarify this method and gating in general - if implemented

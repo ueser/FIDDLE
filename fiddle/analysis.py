@@ -12,6 +12,8 @@ Example:
         $ python analysis.py
 
 FLAGS:
+    flag:                   default:                description:
+
     --runName               'experiment'            name of run
     --resultsDir            '../results'            directory where results from runName will be stored
     --dataDir               '../data/hdf5datasets'  directory where hdf5datasets are stored
@@ -49,28 +51,25 @@ flags.DEFINE_string('configuration', 'configurations.json', 'parameters of data 
 FLAGS = flags.FLAGS
 
 def main(_):
-    """Read in data, get representations, get predictions, output to hdf5
-    """
+    """Read in data, get representations, get predictions, output to hdf5"""
 
     # read in data and configurations
     project_directory = os.path.join(FLAGS.resultsDir, FLAGS.runName)
     with open(os.path.join(project_directory, 'configuration.json')) as fp:
         config = byteify(json.load(fp))
     test_h5_handle = h5py.File(os.path.join(FLAGS.dataDir, config['Options']['DataName'], 'test.h5'), 'r')
-    model = NNscaffold(config = config,
-                       architecture_path = os.path.join(project_directory, 'architecture.json'),
-                       model_path = project_directory)
+    model = NNscaffold(config = config, architecture_path = os.path.join(project_directory, 'architecture.json'), model_path = project_directory)
     model.config['Options']['Reload'] = 'all'
     test_data = {key: test_h5_handle[key][:1000] for key in model.inputs}
     model.initialize()
 
     # get representations for each tracks and scaffolds.
-    repr_dict = model.get_representations(test_data)
+    reprDict = model.get_representations(test_data)
     if FLAGS.saveDataForLater:
         repr_h5_handle = h5py.File(os.path.join(project_directory, 'representations.h5'),'w')
-        for key, val in repr_dict.items():
-            f_ = repr_h5_handle.create_dataset(key, (repr_dict[key].shape))
-            f_[:] = repr_dict[key][:]
+        for key, val in reprDict.items():
+            f_ = repr_h5_handle.create_dataset(key, (reprDict[key].shape))
+            f_[:] = reprDict[key][:]
         repr_h5_handle.close()
 
         #TODO: 2.dimensionality reduction and visualization (t-SNE, PCA etc.)

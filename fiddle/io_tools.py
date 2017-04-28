@@ -38,8 +38,8 @@ def one_hot_encode_sequence(seq):
     return result.T
 
 class MultiModalData(object):
-    """Training data object capable of being iterated through easily.
-    """
+    """Training data object capable of being iterated through easily"""
+
     def __init__(self, train_h5_handle, batch_size):
         """
         Args:
@@ -62,8 +62,7 @@ class MultiModalData(object):
 
 
 class Timer(object):
-    """Timer object to monitor rate of computationally intensive steps
-    """
+    """Timer object to monitor rate of computationally intensive steps"""
 
     def __init__(self, verbose=False):
         """
