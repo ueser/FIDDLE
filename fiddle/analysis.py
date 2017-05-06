@@ -38,12 +38,16 @@ def main(_):
     project_directory = os.path.join(FLAGS.resultsDir, FLAGS.runName)
     with open(os.path.join(project_directory, 'configuration.json')) as fp:
         config = byteify(json.load(fp))
-    test_h5_handle = h5py.File(os.path.join(FLAGS.dataDir, config['Options']['DataName'], 'test.h5'), 'r')
+
+    #### temporary ####
+    # test_h5_handle = h5py.File(os.path.join(FLAGS.dataDir, config['Options']['DataName'], 'test.h5'), 'r')
+    test_h5_handle = h5py.File(os.path.join(FLAGS.dataDir, config['Options']['DataName'], 'for_viz.h5'), 'r')
     model = NNscaffold(config=config,
                        architecture_path=os.path.join(project_directory, 'architecture.json'),
-                       model_path=project_directory)
+                       model_path=project_directory,
+                       gating=False)
     model.config['Options']['Reload'] = 'all'
-    test_data = {key: test_h5_handle[key][:1000] for key in model.inputs}
+    test_data = {key: test_h5_handle[key][:] for key in model.inputs}
     model.initialize()
 
 
@@ -71,25 +75,25 @@ def main(_):
 
     ### filter visualization
 
+#
+# def (self, predict_data):
+#     """
+#     """
+#     pred_feed = {}
+#     pred_feed.update({ self.inputs[key]: predict_data[key] for key in self.architecture['Inputs'] })
+#     pred_feed.update({self.common_predictor.all_gates: np.ones((predict_data.values()[0].shape[0], len(self.architecture['Inputs']))) + 0.})
+#
+#     pred_feed.update({
+#         self.dropout: 1.,
+#         self.keep_prob_input: 1.,
+#         self.inp_size: predict_data.values()[0].shape[0],
+#         K.learning_phase(): 0
+#     })
+#
+#     PREDICTION_FETCHES.update({key: val for key, val in self.common_predictor.predictions.items()})
+#     return_dict = self._run(PREDICTION_FETCHES, pred_feed)
 
-def (self, predict_data):
-    """
-    """
-    pred_feed = {}
-    pred_feed.update({ self.inputs[key]: predict_data[key] for key in self.architecture['Inputs'] })
-    pred_feed.update({self.common_predictor.all_gates: np.ones((predict_data.values()[0].shape[0], len(self.architecture['Inputs']))) + 0.})
-
-    pred_feed.update({
-        self.dropout: 1.,
-        self.keep_prob_input: 1.,
-        self.inp_size: predict_data.values()[0].shape[0],
-        K.learning_phase(): 0
-    })
-
-    PREDICTION_FETCHES.update({key: val for key, val in self.common_predictor.predictions.items()})
-    return_dict = self._run(PREDICTION_FETCHES, pred_feed)
-
-    return return_dict
+    # return return_dict
 if __name__ == '__main__':
     try:
         tf.app.run()

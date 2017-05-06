@@ -129,10 +129,12 @@ def plot_prediction(pred_vec, orig_vec=None, save_dir='../results/', name='profi
     else:
 
         fig, axarr = pl.subplots(pred_vec.values()[0].shape[0],len(pred_vec))
+        pred_keys = [key for key in pred_vec.keys() if 'gates' not in key]
+
         if strand=='Double':
             to_size = pred_vec.values()[0].shape[1]/2
             for ix in range(pred_vec.values()[0].shape[0]):
-                for jx, key in enumerate(pred_vec.keys()):
+                for jx, key in enumerate(pred_keys):
                     if orig_vec is not None:
                         # pdb.set_trace()
                         axarr[ix, jx].plot(orig_vec[key][ix, 0, :]/np.sum(orig_vec[key][ix,:,:]+ 1e-7), label=key+'_Original', color='g')

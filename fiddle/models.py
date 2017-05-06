@@ -115,7 +115,8 @@ class NNscaffold(object):
                  architecture_path='architecture.json',
                  learning_rate=0.01,
                  batch_norm=False,
-                 model_path='../results/example'):
+                 model_path='../results/example',
+                 gating=False):
         """Initiates a scaffold network with default values
         Args:
             architecture: JSON file outlining neural network scaffold
@@ -135,12 +136,14 @@ class NNscaffold(object):
         self.representations = {}  # initializes representations dictionary
         self.tracks = {}  # initializes input dictionary
         self.inputs = {}
+        self.gating = gating
         self.common_predictor = CommonContainer(architecture=self.architecture,
                                                 dropout=self.dropout,
                                                 keep_prob_input=self.keep_prob_input,
                                                 inp_size=self.inp_size,
                                                 batch_norm=batch_norm,
-                                                strand=self.config['Options']['Strand'])
+                                                strand=self.config['Options']['Strand'],
+                                                gating=gating)
 
         for track_name in self.architecture['Inputs']:
             self.tracks[track_name] = ConvolutionalContainer(
@@ -296,7 +299,7 @@ class NNscaffold(object):
         TRAIN_FETCHES.update({'_':self.optimizer, 'cost':self.cost})
         VALIDATION_FETCHES.update({'cost': self.cost})
 
-    def train(self, train_data, accuracy=None, inp_dropout=0.1, batch_size=128, gating=False):
+    def train(self, train_data, accuracy=None, inp_dropout=0.1, batch_size=128):
         """Trains model based on mini-batch of input data. Returns cost of mini-batch.
         """
 
@@ -305,13 +308,12 @@ class NNscaffold(object):
         else:
             train_feed = {self.outputs[key]: train_data[key] for key in self.architecture['Outputs']}
             train_feed.update({self.inputs[key]: train_data[key] for key in self.architecture['Inputs']})
-            if gating:
+            if self.gating:
                 train_feed.update({self.common_predictor.all_gates:
                                    np.random.randint(2, size=[batch_size, len(self.architecture['Inputs'])]) + 0.})
-            else:
                 train_feed.update({self.common_predictor.all_gates:
                                        np.ones((batch_size,
-                                               len(self.architecture['Inputs']))) + 0.})
+                                                len(self.architecture['Inputs']))) + 0.})
 
 
         train_feed.update({
@@ -332,7 +334,9 @@ class NNscaffold(object):
         if not hasattr(self, 'test_feed'):
             self.test_feed = {self.outputs[key]: validation_data[key] for key in self.architecture['Outputs']}
             self.test_feed.update({ self.inputs[key]: validation_data[key] for key in self.architecture['Inputs']})
-            self.test_feed.update( {self.common_predictor.all_gates: np.ones((validation_data.values()[0].shape[0], len(self.architecture['Inputs']))) + 0.})
+            if self.gating:
+                self.test_feed.update( {self.common_predictor.all_gates:
+                                            np.ones((validation_data.values()[0].shape[0], len(self.architecture['Inputs']))) + 0.})
 
             self.test_feed.update({
                 self.dropout: 1.,
@@ -349,7 +353,9 @@ class NNscaffold(object):
         """
         pred_feed = {}
         pred_feed.update({ self.inputs[key]: predict_data[key] for key in self.architecture['Inputs'] })
-        pred_feed.update({self.common_predictor.all_gates: np.ones((predict_data.values()[0].shape[0], len(self.architecture['Inputs']))) + 0.})
+        if self.gating:
+            pred_feed.update({self.common_predictor.all_gates:
+                                  np.ones((predict_data.values()[0].shape[0], len(self.architecture['Inputs']))) + 0.})
 
         pred_feed.update({
             self.dropout: 1.,
@@ -582,7 +588,8 @@ class CommonContainer():
                  inp_size=None,
                  batch_norm=False,
                  strand='Single',
-                 unified=True):
+                 unified=True,
+                 gating=False):
         self.architecture = architecture
         self.dropout = dropout
         self.keep_prob_input = keep_prob_input
@@ -590,6 +597,7 @@ class CommonContainer():
         self.batch_norm = batch_norm
         self.strand = strand
         self.unified = unified
+        self.gating = gating
         self.representations = {}
 
     def stack_input(self, new_representation, track_name):
@@ -608,7 +616,6 @@ class CommonContainer():
         self.gates = {}
         repr_list = []
         activation_type = None
-        gating = True
         with tf.variable_scope('scaffold'):
             ix = 0
             ix_dict = {}
@@ -617,7 +624,7 @@ class CommonContainer():
                 repr_list.append(val)
                 ix+=1
             tmp_comb_repr = tf.concat(repr_list, 1)
-            if gating:
+            if self.gating:
                 self.all_gates = tf.placeholder(tf.float32, [None, self.scaffold_height])
                 for track_name in self.representations.keys():
                     self.gates[track_name] = self.all_gates[:,ix_dict[track_name]]

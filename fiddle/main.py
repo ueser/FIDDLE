@@ -74,7 +74,8 @@ def main(_):
     model = NNscaffold(config=config,
                        architecture_path=FLAGS.architecture,
                        learning_rate=FLAGS.learningRate,
-                       model_path=FLAGS.savePath)
+                       model_path=FLAGS.savePath,
+                       gating=FLAGS.gating)
 
     # save resulting modified architecture and configuration
     json.dump(model.architecture, open(FLAGS.savePath + "/architecture.json", 'w'))
@@ -167,7 +168,7 @@ def main(_):
                 train_batch = batcher.next()
             t_batcher += t.secs
             with Timer() as t:
-                return_dict = model.train(train_batch, accuracy=True, inp_dropout=inputDropout, batch_size=FLAGS.batchSize, gating=FLAGS.gating)
+                return_dict = model.train(train_batch, accuracy=True, inp_dropout=inputDropout, batch_size=FLAGS.batchSize)
                 train_summary = return_dict['summary']
                 if FLAGS.gating:
                     df = df.append(get_delta_KL(return_dict, model.architecture['Inputs'], step))
