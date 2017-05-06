@@ -268,13 +268,13 @@ def write_to_txt(return_dict, batch_size = FLAGS.batchSize, datatype = 'train', 
     line_to_write = ''
     for key, val in return_dict.items():
         if key == 'cost':
-            cur_line = str(return_dict['cost'])
+            cur_line = str(return_dict['cost']) + '\t'
             line_to_write += str(return_dict[key])
         elif (key == '_') or (key == 'summary'):
             continue
         else:
             cur_line = str(return_dict[key] / batch_size)
-            line_to_write += '\t' + cur_line
+            line_to_write += cur_line + '\t'
         if verbose:
             print(datatype + '\t' + key + ': ' + cur_line)
     with open((FLAGS.savePath + "/" + datatype + ".txt"), "a") as fp:

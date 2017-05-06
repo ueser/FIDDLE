@@ -281,14 +281,18 @@ class Integrator(object):
         freeze_list += [track_name + '/decoder' for track_name in self.config['Options']['Freeze']['Decoders']]
         self.trainables = []
         for key in self.architecture['Inputs']:
-            scope = key + '/encoder'
+            scope = key + '/decoder'
             if scope not in freeze_list:
-                self.trainables += tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope = scope)
+                vars = [y for y in [x for x in tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES) if key in x.name] if
+                        'encoder' in y.name]
+                self.trainables += vars
 
         for key in self.architecture['Outputs']:
             scope = key + '/decoder'
             if scope not in freeze_list:
-                self.trainables += tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope = scope)
+                vars = [y for y in [x for x in tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES) if key in x.name] if
+                        'decoder' in y.name]
+                self.trainables += vars
 
     def _create_loss_optimizer(self):
         """Define loss function based on variational upper-bound and corresponding gradient optimizer"""
@@ -302,11 +306,15 @@ class Integrator(object):
         for key in self.architecture['Outputs']:
 
             # apply cost function between output probability distribution and NN predictions
-            self.cost += self.cost_functions[key](self.output_tensor[key], self.decoders[key].prediction)
+            cst = self.cost_functions[key](self.output_tensor[key], self.decoders[key].prediction)
+            TRAIN_FETCHES.update({key + '_loss': cst})
+            VALIDATION_FETCHES.update({key + '_loss': cst})
+            self.cost += cst
             # determine % accuracy of sequencing peak recalls
             self.accuracy[key] = average_peak_distance(self.output_tensor[key], self.decoders[key].prediction)
-            TRAIN_FETCHES.update({'Average_peak_distance': self.accuracy[key]})
-            VALIDATION_FETCHES.update({'Average_peak_distance': self.accuracy[key]})
+            TRAIN_FETCHES.update({key+ '_average_peak_distance': self.accuracy[key]})
+            VALIDATION_FETCHES.update({key+ 'Average_peak_distance': self.accuracy[key]})
+
             # self.performance[key] = self.performance_measures[key](self.output_tensor[key], self.decoders[key].prediction)
 
         # define Integrator gradient optimizer
@@ -508,11 +516,14 @@ class Integrator(object):
         """Allows saving of checkpoint versions of tf.graph"""
         self.savers_dict = {}
         for key in self.architecture['Inputs']:
-            self.savers_dict[key+'_encoder'] = tf.train.Saver(tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope = key+'/encoder'))
+            vars = [y for y in [x for x in tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES) if key in x.name] if 'encoder' in y.name]
+            self.savers_dict[key+'_encoder'] = tf.train.Saver(vars)
 
         for key in self.architecture['Outputs']:
-            self.savers_dict[key+'_decoder'] = tf.train.Saver(
-                tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=key+'/decoder'))
+            # pdb.set_trace()
+            vars = [y for y in [x for x in tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES) if key in x.name] if
+                    'decoder' in y.name]
+            self.savers_dict[key+'_decoder'] = tf.train.Saver(vars)
 
 
 
@@ -653,55 +664,54 @@ class Decoder():
                 repr_list.append(val)
                 ix += 1
             self.combined_representation = tf.reshape(tf.concat(repr_list, 1), shape = [-1, self.decoder_height, self.decoder_width, 1])
-        self._encapsulate_models()
+            self._encapsulate_models()
 
     def _encapsulate_models(self):
         """Semi private continuation of combine_representation method"""
-        with tf.variable_scope('decoder'):
             # Modality-wise dropout
             # net = tf.nn.dropout(tf.identity(self.combined_representation), self.keep_prob_input, noise_shape = [self.inp_size, self.decoder_height, 1, 1])
-            net = tf.identity(self.combined_representation)
-            if self.unified:
-                conv_height = 1
-                net = tf.reduce_sum(net, 1, keep_dims = True)
-            else:
-                conv_height = self.decoder_height
+        net = tf.identity(self.combined_representation)
+        if self.unified:
+            conv_height = 1
+            net = tf.reduce_sum(net, 1, keep_dims = True)
+        else:
+            conv_height = self.decoder_height
 
-            # 2 dimensional convolutional operation
-            numFilt = self.architecture['Scaffold']['Layer1']['number_of_filters']
-            filterShape = [conv_height, self.architecture['Scaffold']['Layer1']['filter_width']]
-            actFunc = self.architecture['Scaffold']['Layer1']['activation']
-            net = Conv2D(numFilt, filterShape, activation = actFunc, kernel_regularizer = 'l2', padding = 'valid', name = 'conv_combined')(net)
+        # 2 dimensional convolutional operation
+        numFilt = self.architecture['Scaffold']['Layer1']['number_of_filters']
+        filterShape = [conv_height, self.architecture['Scaffold']['Layer1']['filter_width']]
+        actFunc = self.architecture['Scaffold']['Layer1']['activation']
+        net = Conv2D(numFilt, filterShape, activation = actFunc, kernel_regularizer = 'l2', padding = 'valid', name = 'conv_combined')(net)
 
-            # 2 dimensional average pooling operation
-            poolSize = self.architecture['Scaffold']['Layer1']['pool_size']
-            poolStrides = [1, self.architecture['Scaffold']['Layer1']['pool_stride']]
-            net = AveragePooling2D([1, poolSize], strides = poolStrides, padding = 'valid', name = 'AvgPool_combined')(net)
+        # 2 dimensional average pooling operation
+        poolSize = self.architecture['Scaffold']['Layer1']['pool_size']
+        poolStrides = [1, self.architecture['Scaffold']['Layer1']['pool_stride']]
+        net = AveragePooling2D([1, poolSize], strides = poolStrides, padding = 'valid', name = 'AvgPool_combined')(net)
 
-            # apply batch normalization if true
-            if self.batch_norm:
-                net = BatchNormalization()(net)
+        # apply batch normalization if true
+        if self.batch_norm:
+            net = BatchNormalization()(net)
 
-            # flatten and apply activation( input * kernel + bias )
-            net = Flatten()(net)
-            represenWidth = self.architecture['Scaffold']['representation_width']
-            self.decoder_representation = Dense(represenWidth, activation = 'linear', name = 'representation')(net)
+        # flatten and apply activation( input * kernel + bias )
+        net = Flatten()(net)
+        represenWidth = self.architecture['Scaffold']['representation_width']
+        self.decoder_representation = Dense(represenWidth, activation = 'linear', name = 'representation')(net)
 
-            # apply fully connected layer and softmax
+        # apply fully connected layer and softmax
 
-            inpWidth = self.architecture['Modules'][self.scope]['input_width']
+        inpWidth = self.architecture['Modules'][self.scope]['input_width']
 
-            # define fully connected layer
-            if (self.strand == 'Single'):
-                net = Dense(inpWidth, activation = 'linear', name = 'final_FC')(self.decoder_representation)
-            elif (self.strand == 'Double'):
-                inpHeight = self.architecture['Modules'][self.scope]['input_height']
-                net = Dense(inpHeight * inpWidth, activation = 'linear', name = 'final_FC')(self.decoder_representation)
-            else:
-                #TODO: perhaps raise ConfigurationParsingError earlier in main.py?
-                raise ConfigurationParsingError('Configuration file should have Strand field as either Single or Double')
+        # define fully connected layer
+        if (self.strand == 'Single'):
+            net = Dense(inpWidth, activation = 'linear', name = 'final_FC')(self.decoder_representation)
+        elif (self.strand == 'Double'):
+            inpHeight = self.architecture['Modules'][self.scope]['input_height']
+            net = Dense(inpHeight * inpWidth, activation = 'linear', name = 'final_FC')(self.decoder_representation)
+        else:
+            #TODO: perhaps raise ConfigurationParsingError earlier in main.py?
+            raise ConfigurationParsingError('Configuration file should have Strand field as either Single or Double')
 
-            self.prediction = tf.nn.softmax(net, name = 'softmax')
+        self.prediction = tf.nn.softmax(net, name = 'softmax')
 
 
 class Router(object):
@@ -731,8 +741,8 @@ def kl_loss(y_true, y_pred):
     KLdiv = kullback_leibler_divergence(y_true, y_pred)
     # PREDICTION_FETCHES.update({'KL_divergence': KLdiv})
     KLloss = tf.reduce_mean(KLdiv)
-    DeltaKL = KLdiv - KLloss
-    TRAIN_FETCHES.update({'DeltaKL': DeltaKL})
+    # DeltaKL = KLdiv - KLloss
+    # TRAIN_FETCHES.update({'DeltaKL': DeltaKL})
     return KLloss
 
 def per_bp_accuracy(y_true, y_pred):
