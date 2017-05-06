@@ -120,7 +120,7 @@ class ConfigurationParsingError(Exception):
 ################################################################################
 #                               Model Classes                                  #
 ################################################################################
-class NNscaffold(object):
+class Integrator(object):
     """Neural Network object"""
 
     def __init__(self,
@@ -128,21 +128,20 @@ class NNscaffold(object):
                  architecture_path='architecture.json',
                  learning_rate=0.01,
                  batch_norm=False,
-                 model_path='../results/example',
-                 gating=False):
-        """Initiates a scaffold network with default values
+                 model_path='../results/example'):
+        """Initiates a decoder network with default values
 
         Args:
             :param config: parameters of data inputs and outputs [json file]
             :param architecture_path: (file name, default = 'architecture.json') parameters describing CNNs [json file]
             :param learning_rate: (floating point, default = 0.01) value correlated with training speed
             :param batch_norm: (boolean, default = False) whether or not batch normalization is implemented
-            :param model_path: (directory name, default = '../results/example') directory where NNscaffold model will be saved
+            :param model_path: (directory name, default = '../results/example') directory where Integrator model will be saved
         """
 
         print('Sanity check for configurations.json "Options": "Strand":', config['Options']['Strand'])
 
-        # define NNscaffold attributes
+        # define Integrator attributes
         self.config = config # copy in byteify-ied configurations.json file
         self.model_path = model_path # copy in directory destination for saved model
         self._parse_parameters(architecture_path) # parse in parameters defining architecture of neural network
@@ -153,24 +152,37 @@ class NNscaffold(object):
         self.representations = {}  # initializes representations dictionary
         self.tracks = {}  # initializes dictionary of key = input track, value = CNN Container
         self.inputs = {}  # initializes input dictionary of key = input track, value = inputs to corresponding CNN Container
-        self.gating = gating
-        self.common_predictor = CommonContainer(architecture=self.architecture,
-                                                dropout=self.dropout,
-                                                keep_prob_input=self.keep_prob_input,
-                                                inp_size=self.inp_size,
-                                                batch_norm=batch_norm,
-                                                strand=self.config['Options']['Strand'],
-                                                gating=gating)
-        # define NN itself
-        self.common_predictor = CommonContainer(self.architecture, self.dropout, self.keep_prob_input, self.inp_size, batch_norm, self.config['Options']['Strand'])
 
+        
+        self.router = Router() # router object gathers the representations from encoders (prev. known as 
+        # Convolutional Containers), then provides selected ones to the prediction decoders, 
+        # (previously, known as Decoder)
+        
         # stack representations of inputs into unified representation
         for track_name in self.architecture['Inputs']:
-            self.tracks[track_name] = ConvolutionalContainer(track_name, self.architecture)
+            with tf.variable_scope(track_name):
+                self.tracks[track_name] = Encoder(track_name, self.architecture)
             self.inputs[track_name] = self.tracks[track_name].input
-            self.common_predictor.stack_input(self.tracks[track_name].representation, track_name)
+            self.router.stack_input(self.tracks[track_name].representation, track_name)
 
-        # define NNscaffold attributes
+
+
+        self.decoders = {}
+        for track_name in self.architecture['Outputs']:
+            with tf.variable_scope(self.track_name):
+                self.decoders[track_name] = Decoder(architecture=self.architecture,
+                                                    dropout=self.dropout,
+                                                    keep_prob_input=self.keep_prob_input,
+                                                    inp_size=self.inp_size,
+                                                    batch_norm=batch_norm,
+                                                    strand=self.config['Options']['Strand'],
+                                                    name=track_name)
+                self.decoders[track_name].representations = self.router.route(block_list=[track_name])
+                self.decoders[track_name].combine_representations() # combines representations into convolutional layer
+
+
+
+        # define Integrator attributes
         self.output_tensor = {}  # initializes output_tensor
         self.outputs = {}  # initializes output dictionary
         self.cost_functions = {} # initializes cost functions dictionary
@@ -193,8 +205,7 @@ class NNscaffold(object):
                 self.cost_functions[key] = multi_softmax_classification
 
         #TODO: self.freeze ... is boolean?
-        self.freeze(self.config['Options']['Freeze']) # define whether model will be frozen at this point
-        self.common_predictor.combine_representations() # combines representations into convolutional layer
+        self.freeze() # define whether model will be frozen at this point
         self._create_loss_optimizer() # Define loss function gradient optimizer
 
     def _parse_parameters(self, architecture_path = 'architecture.json'):
@@ -208,7 +219,7 @@ class NNscaffold(object):
         with open(architecture_path) as fp:
             architecture_template = byteify(json.load(fp))
 
-        # define NNscaffold attributes
+        # define Integrator attributes
         if 'Inputs' in architecture_template.keys():
             self.architecture = architecture_template
         else:
@@ -231,7 +242,7 @@ class NNscaffold(object):
                             self.architecture['Modules'][key][key_key] = sub_val
 
     def initialize(self):
-        """Initialize the scaffold model either from scratch or from saved checkpoints (pre-trained)"""
+        """Initialize the decoder model either from scratch or from saved checkpoints (pre-trained)"""
 
         self.sess = tf.Session()
         init = tf.global_variables_initializer()
@@ -248,11 +259,13 @@ class NNscaffold(object):
         if not hasattr(self, 'sess'):
             self.sess = tf.Session()
         if ('all' in self.config['Options']['Reload']) or ('All' in self.config['Options']['Reload']):
-            load_list = self.architecture['Inputs'] + ['scaffold']
+            load_list = [track_name+'/encoder' for track_name in self.architecture['Inputs']]
+            load_list += [track_name+'/decoder' for track_name in self.architecture['Outputs']]
         else:
-            load_list = self.config['Options']['Reload']
-        for track_name in load_list:
-            loader = tf.train.Saver(tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope = track_name))
+            load_list = [track_name+'/encoder' for track_name in self.config['Options']['Reload']['Encoders']]
+            load_list += [track_name+'/decoder' for track_name in self.config['Options']['Reload']['Decoders']]
+        for scope in load_list:
+            loader = tf.train.Saver(tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope = scope )
             # loader = tf.train.import_meta_graph(os.path.join(self.model_path, track_name + '_model.ckpt.meta'))
             loader.restore(self.sess, os.path.join(self.model_path, track_name + '_model.ckpt'))
             print(track_name + ' model is loaded from pre-trained network')
@@ -263,48 +276,48 @@ class NNscaffold(object):
         Args:
             :param freeze_list: (list, default = empty) tracks not incorporated in training
         """
-
+        freeze_list += [track_name + '/encoder' for track_name in self.config['Options']['Freeze']['Encoders']]
+        freeze_list += [track_name + '/decoder' for track_name in self.config['Options']['Freeze']['Decoders']]
         self.trainables = []
-        for key in self.architecture['Inputs'] + ['scaffold']:
-            if key not in freeze_list:
-                self.trainables += tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope = key)
+        for key in self.architecture['Inputs']:
+            scope = key + '/encoder'
+            if scope not in freeze_list:
+                self.trainables += tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope = scope)
+
+        for key in self.architecture['Outputs']:
+            scope = key + '/decoder'
+            if scope not in freeze_list:
+                self.trainables += tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope = scope)
 
     def _create_loss_optimizer(self):
         """Define loss function based on variational upper-bound and corresponding gradient optimizer"""
 
-        # define NNscaffold attributes
+        # define Integrator attributes
         self.global_step = tf.Variable(0, name = 'globalStep', trainable = False)
         self.accuracy = {}
         self.cost = 0
 
-        # define NNscaffold cost and loss
+        # define Integrator cost and loss
         for key in self.architecture['Outputs']:
-            if key != 'dnaseq':
-                # apply cost function between output probability distribution and NN predictions
-                self.cost += self.cost_functions[key](self.output_tensor[key], self.common_predictor.predictions[key])
-                # determine % accuracy of sequencing peak recalls
-                self.accuracy[key] = average_peak_distance(self.output_tensor[key], self.common_predictor.predictions[key])
-                TRAIN_FETCHES.update({'Average_peak_distance': self.accuracy[key]})
-                VALIDATION_FETCHES.update({'Average_peak_distance': self.accuracy[key]})
-                # self.performance[key] = self.performance_measures[key](self.output_tensor[key], self.common_predictor.predictions[key])
-            else:
-                #TODO: implement for DNA seq ... but is necessary??
-                self.loss = tf.reduce_sum(tf.multiply(self.output_tensor[key] + 1e-10,
-                                          tf.subtract(tf.log(self.output_tensor[key] + 1e-10),
-                                          tf.log(self.common_predictor.predictions[key] + 1e-10))),
-                                          [1, 2])
 
-        # define NNscaffold gradient optimizer
-        beta = 1. #TODO: not being used...?
+            # apply cost function between output probability distribution and NN predictions
+            self.cost += self.cost_functions[key](self.output_tensor[key], self.decoders[key].prediction)
+            # determine % accuracy of sequencing peak recalls
+            self.accuracy[key] = average_peak_distance(self.output_tensor[key], self.decoders[key].prediction)
+            TRAIN_FETCHES.update({'Average_peak_distance': self.accuracy[key]})
+            VALIDATION_FETCHES.update({'Average_peak_distance': self.accuracy[key]})
+            # self.performance[key] = self.performance_measures[key](self.output_tensor[key], self.decoders[key].prediction)
+
+        # define Integrator gradient optimizer
         self.optimizer = tf.train.AdamOptimizer(learning_rate = self.learning_rate). \
-                         minimize(self.cost, # + beta * self.common_predictor.gates_regularization,
+                         minimize(self.cost,
                                   global_step = self.global_step,
                                   var_list = self.trainables)
         TRAIN_FETCHES.update({'_':self.optimizer, 'cost':self.cost})
         VALIDATION_FETCHES.update({'cost': self.cost})
 
     # TODO: accuracy not utilized ... remove?
-    def train(self, train_data, accuracy = None, inp_dropout = 0.1, batch_size = 128, gating = False):
+    def train(self, train_data, accuracy = None, inp_dropout = 0.1, batch_size = 128):
         """Trains model based on mini-batch of input data, calculates cost of mini-batch input
 
         Args:
@@ -312,13 +325,10 @@ class NNscaffold(object):
             :param accuracy: (boolean, default = None) ...?
             :param inp_dropout: (double, default = 0.1) probability of hidden unit dropout
             :param batch_size: (int, default = 128) number of inputted data units
-            :param gating: (boolean, default = False) ...?
 
         Returns:
             Cost of mini-batch of training data in dictionary format
 
-        Todo:
-            define gating utilization
 
         """
 
@@ -328,12 +338,6 @@ class NNscaffold(object):
         else:
             train_feed = {self.outputs[key]: train_data[key] for key in self.architecture['Outputs']}
             train_feed.update({self.inputs[key]: train_data[key] for key in self.architecture['Inputs']})
-            if self.gating:
-                train_feed.update({self.common_predictor.all_gates:
-                                   np.random.randint(2, size=[batch_size, len(self.architecture['Inputs'])]) + 0.})
-                train_feed.update({self.common_predictor.all_gates:
-                                       np.ones((batch_size,
-                                                len(self.architecture['Inputs']))) + 0.})
 
 
         train_feed.update({
@@ -361,10 +365,6 @@ class NNscaffold(object):
         if not hasattr(self, 'test_feed'):
             self.test_feed = {self.outputs[key]: validation_data[key] for key in self.architecture['Outputs']}
             self.test_feed.update({ self.inputs[key]: validation_data[key] for key in self.architecture['Inputs']})
-            if self.gating:
-                self.test_feed.update( {self.common_predictor.all_gates:
-                                            np.ones((validation_data.values()[0].shape[0], len(self.architecture['Inputs']))) + 0.})
-
             self.test_feed.update({
                 self.dropout: 1.,
                 self.keep_prob_input: 1.,
@@ -387,10 +387,6 @@ class NNscaffold(object):
 
         pred_feed = {}
         pred_feed.update({ self.inputs[key]: predict_data[key] for key in self.architecture['Inputs'] })
-        if self.gating:
-            pred_feed.update({self.common_predictor.all_gates:
-                                  np.ones((predict_data.values()[0].shape[0], len(self.architecture['Inputs']))) + 0.})
-
         pred_feed.update({
             self.dropout: 1.,
             self.keep_prob_input: 1.,
@@ -398,7 +394,7 @@ class NNscaffold(object):
             K.learning_phase(): 0
         })
 
-        PREDICTION_FETCHES.update({key: val for key, val in self.common_predictor.predictions.items()})
+        PREDICTION_FETCHES.update({key: self.decoders[key].prediction for key in self.decoders.keys()})
         return_dict = self._run(PREDICTION_FETCHES, pred_feed)
         return return_dict
 
@@ -426,8 +422,8 @@ class NNscaffold(object):
         })
 
         fetches = {}
-        fetches.update({key: val for key, val in self.common_predictor.representations.items()})
-        fetches.update({'scaffold': self.common_predictor.scaffold_representation})
+        fetches.update(self.router.representations)
+        fetches.update({'decoder_'+key: self.decoders[key].decoder_representation for key in self.decoders.keys()})
 
         return_dict = self._run(fetches, pred_feed)
         return return_dict
@@ -513,7 +509,7 @@ class NNscaffold(object):
         self.savers_dict = {}
         for key in self.architecture['Inputs']:
             self.savers_dict[key] = tf.train.Saver(tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope = key))
-        self.savers_dict['scaffold'] = tf.train.Saver(tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope = 'scaffold'))
+        self.savers_dict['decoder'] = tf.train.Saver(tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope = 'decoder'))
 
 class BaseTrackContainer(object):
     #TODO: this?
@@ -543,7 +539,9 @@ class BaseTrackContainer(object):
     def save(self):
         pass
 
-class ConvolutionalContainer(BaseTrackContainer):
+class Encoder(BaseTrackContainer):
+    '''Previously known as ConvolutionalContainer'''
+
     def __init__(self, track_name, architecture, batch_norm=False):
         BaseTrackContainer.__init__(self, track_name)
         self.track_name = track_name
@@ -560,7 +558,7 @@ class ConvolutionalContainer(BaseTrackContainer):
         self._build()
 
     def _build(self):
-        with tf.variable_scope(self.track_name):
+        with tf.variable_scope('encoder'):
             net = Conv2D(
                 self.architecture['Modules'][self.track_name]['Layer1']
                 ['number_of_filters'], [
@@ -612,7 +610,7 @@ class ConvolutionalContainer(BaseTrackContainer):
                     'representation_width'],
                 name='representation')(net)
 
-class CommonContainer():
+class Decoder():
 
     def __init__(self, architecture, dropout=1.,
                  keep_prob_input=None,
@@ -620,7 +618,7 @@ class CommonContainer():
                  batch_norm=False,
                  strand='Single',
                  unified=True,
-                 gating=False):
+                 name=None):
 
         self.architecture = architecture
         self.dropout = dropout
@@ -629,56 +627,40 @@ class CommonContainer():
         self.batch_norm = batch_norm
         self.strand = strand
         self.unified = unified
-        self.gating = gating
         self.representations = {}
+        self.scope = name
 
-    def stack_input(self, new_representation, track_name):
-        self.representations[track_name] = new_representation
+
 
     def combine_representations(self):
-        """Concatenates tensors in representations list to either a convolution or fully connected representation"""
+        """Concatenates representation tensors """
 
-        self.scaffold_height = len(self.representations)
-        self.scaffold_width = self.architecture['Modules'].values()[0]['representation_width']
-        self.gates = {}
+        self.decoder_height = len(self.representations)
+        self.decoder_width = self.architecture['Modules'].values()[0]['representation_width']
         repr_list = []
         activation_type = None
 
-        with tf.variable_scope('scaffold'):
+        with tf.variable_scope('decoder'):
             ix = 0
             ix_dict = {}
             for track_name, val in self.representations.items():
                 ix_dict[track_name] = ix
                 repr_list.append(val)
                 ix += 1
-            tmp_comb_repr = tf.concat(repr_list, 1)
-            if self.gating:
-
-                self.all_gates = tf.placeholder(tf.float32, [None, self.scaffold_height])
-                for track_name in self.representations.keys():
-                    self.gates[track_name] = self.all_gates[:, ix_dict[track_name]]
-                    TRAIN_FETCHES.update({track_name+'_gates': self.gates[track_name]})
-                    # VALIDATION_FETCHES.update({track_name + '_gates': self.gates[track_name]})
-                    PREDICTION_FETCHES.update({track_name + '_gates': self.gates[track_name]})
-                self.combined_representation = tf.multiply(tf.reshape(self.all_gates, [-1, self.scaffold_height, 1, 1]),
-                                                           tf.reshape(tmp_comb_repr, shape = [-1, self.scaffold_height, self.scaffold_width, 1]))
-            else:
-                self.combined_representation = tf.reshape(tmp_comb_repr, shape = [-1, self.scaffold_height, self.scaffold_width, 1])
+            self.combined_representation = tf.reshape(tf.concat(repr_list, 1), shape = [-1, self.decoder_height, self.decoder_width, 1])
         self._encapsulate_models()
 
     def _encapsulate_models(self):
         """Semi private continuation of combine_representation method"""
-
-        with tf.variable_scope('scaffold', reuse = False):
+        with tf.variable_scope('decoder'):
             # Modality-wise dropout
-            # net = tf.nn.dropout(tf.identity(self.combined_representation), self.keep_prob_input, noise_shape = [self.inp_size, self.scaffold_height, 1, 1])
+            # net = tf.nn.dropout(tf.identity(self.combined_representation), self.keep_prob_input, noise_shape = [self.inp_size, self.decoder_height, 1, 1])
             net = tf.identity(self.combined_representation)
             if self.unified:
                 conv_height = 1
                 net = tf.reduce_sum(net, 1, keep_dims = True)
             else:
-                conv_height = self.scaffold_height
-            # net = tf.divide(net, tf.reshape(tf.reduce_sum(self.all_gates, 1), [-1, 1, 1, 1]))
+                conv_height = self.decoder_height
 
             # 2 dimensional convolutional operation
             numFilt = self.architecture['Scaffold']['Layer1']['number_of_filters']
@@ -698,29 +680,34 @@ class CommonContainer():
             # flatten and apply activation( input * kernel + bias )
             net = Flatten()(net)
             represenWidth = self.architecture['Scaffold']['representation_width']
-            self.scaffold_representation = Dense(represenWidth, activation = 'linear', name = 'representation')(net)
+            self.decoder_representation = Dense(represenWidth, activation = 'linear', name = 'representation')(net)
 
             # apply fully connected layer and softmax
-            self.predictions = {}
-            for key in self.architecture['Outputs']:
-                inpWidth = self.architecture['Modules'][key]['input_width']
 
-                # define fully connected layer
-                if (self.strand == 'Single') and (key != 'dnaseq'):
-                    net = Dense(inpWidth, activation = 'linear', name = 'final_FC')(self.scaffold_representation)
-                elif (self.strand == 'Double') or (key == 'dnaseq'):
-                    inpHeight = self.architecture['Modules'][key]['input_height']
-                    net = Dense(inpHeight * inpWidth, activation = 'linear', name = 'final_FC')(self.scaffold_representation)
-                else:
-                    #TODO: perhaps raise ConfigurationParsingError earlier in main.py?
-                    raise ConfigurationParsingError('Configuration file should have Strand field as either Single or Double')
+            inpWidth = self.architecture['Modules'][self.scope]['input_width']
 
-                # define output type dependent softmax
-                if key == 'dnaseq':
-                    self.dna_before_softmax = tf.reshape(net, [-1, 4, self.architecture['Modules']['dnaseq']['input_width'], 1])
-                    self.predictions[key] = multi_softmax(self.dna_before_softmax, axis = 1, name = 'multiSoftmax')
-                else:
-                    self.predictions[key] = tf.nn.softmax(net, name = 'softmax')
+            # define fully connected layer
+            if (self.strand == 'Single'):
+                net = Dense(inpWidth, activation = 'linear', name = 'final_FC')(self.decoder_representation)
+            elif (self.strand == 'Double'):
+                inpHeight = self.architecture['Modules'][self.scope]['input_height']
+                net = Dense(inpHeight * inpWidth, activation = 'linear', name = 'final_FC')(self.decoder_representation)
+            else:
+                #TODO: perhaps raise ConfigurationParsingError earlier in main.py?
+                raise ConfigurationParsingError('Configuration file should have Strand field as either Single or Double')
+
+            self.prediction = tf.nn.softmax(net, name = 'softmax')
+
+
+class Router(object):
+    def __init__(self):
+        self.representations = {}
+
+    def stack_input(self, new_representation, track_name):
+        self.representations[track_name] = new_representation
+
+    def route(self, block_list):
+        return {key: val for key, val in self.representations.items() if key not in block_list}
 
 ################################################################################
 #                     Loss Functions and Performance Measures                  #

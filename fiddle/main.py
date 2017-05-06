@@ -30,7 +30,6 @@ FLAGS:
     --resultsDir            '../results'            directory where results from runName will be stored
     --inputs                'None'                  inputs
     --outputs               'None'                  outputs
-    --gating                False                   modality-wise gating to be applied at scaffold [True or False]
 """
 
 from __future__ import absolute_import
@@ -68,11 +67,9 @@ flags.DEFINE_float('learningRate', 0.001, 'initial learning rate.')
 flags.DEFINE_string('resultsDir', '../results', 'directory where results from runName will be stored')
 flags.DEFINE_string('inputs', 'None', 'inputs')
 flags.DEFINE_string('outputs', 'None', 'outputs')
-flags.DEFINE_boolean('gating', False, 'modality-wise gating to be applied at scaffold [True or False]')
 FLAGS = flags.FLAGS
 
-if FLAGS.gating:
-    import pandas as pd
+
 
 def main(_):
     """Read in data, launch graph, train neural network"""
@@ -107,11 +104,10 @@ def main(_):
 
     # define neural network
 
-    model = NNscaffold(config=config,
+    model = Integrator(config=config,
                        architecture_path=FLAGS.architecture,
                        learning_rate=FLAGS.learningRate,
-                       model_path=FLAGS.savePath,
-                       gating=FLAGS.gating)
+                       model_path=FLAGS.savePath)
 
 
     # save resulting modified architecture and configuration
@@ -192,8 +188,7 @@ def main(_):
         print('Input dropout probability: ' + str(inputDropout))
 
         t_batcher, t_trainer = 0, 0
-        if FLAGS.gating:
-            df = pd.DataFrame()
+
         for iterationNo in tq(range(10)):
             with Timer() as t:
                 train_batch = batcher.next()
@@ -202,8 +197,7 @@ def main(_):
                 return_dict = model.train(train_batch, accuracy=True, inp_dropout=inputDropout, batch_size=FLAGS.batchSize)
 
                 train_summary = return_dict['summary']
-                if FLAGS.gating:
-                    df = df.append(get_delta_KL(return_dict, model.architecture['Inputs'], step))
+
             t_trainer += t.secs
             if iterationNo==0:
                 return_dict_train = return_dict.copy()
@@ -213,10 +207,6 @@ def main(_):
                 return_dict_train.update({key: val for key, val in return_dict.items() if val is type('string')})
             step += 1
 
-        if FLAGS.gating:
-            header_tf = True if it==0 else None
-            mode_tf = 'w' if it==0 else 'a'
-            df.to_csv(FLAGS.savePath + '/deltaKL.txt', header=header_tf, index=None, mode=mode_tf, sep='\t')
 
         print('Batcher time: ' + "%.3f" % t_batcher)
         print('Trainer time: ' + "%.3f" % t_trainer)
@@ -292,30 +282,6 @@ def write_to_txt(return_dict, batch_size = FLAGS.batchSize, datatype = 'train', 
     with open((FLAGS.savePath + "/" + datatype + ".txt"), "a") as fp:
         fp.write(line_to_write + '\n')
 
-def get_delta_KL(return_dict, track_list, iter_no):
-    """Creates dataframe of difference in KL divergence between loss and accuracy
-    of considered track list
-
-    Args:
-        :param return_dict: (dictionary) typically of loss and accuracy of datasets
-        :param track_list: (list) list of tracks in consideration
-
-    Returns:
-        Dataframe of difference in KL divergence between keys and values of inputted dictionary
-
-    Todo:
-        clarify this method and gating in general - if implemented
-    """
-
-    column_list = []
-    column_list.append('Iter_no')
-    column_list += track_list + ['DeltaKL']
-    df = pd.DataFrame(columns=column_list)
-    df['DeltaKL'] = return_dict['DeltaKL']
-    for track_name in track_list:
-        df[track_name] = return_dict[track_name + '_gates']
-    df['Iter_no'] = iter_no
-    return df
 
 if __name__ == '__main__':
     try:
