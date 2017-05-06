@@ -1,0 +1,29 @@
+{ "Genome": "hg19",
+  "Tracks": {
+    "netseq": {
+      "id": "ns",
+      "input_height": 2
+    },
+    "dnaseseq": {
+      "id": "dh",
+      "input_height": 1
+    },
+    "hismarks": {
+      "id": "hm",
+      "input_height": 3
+    },
+    "dnaseq": {
+      "id": "ds",
+      "input_height": 4
+    }
+  },
+  "Options": {
+
+    "Inputs":["dnaseq","hismarks"],
+    "Outputs":["dnaseseq"],
+    "Freeze":[],
+    "Reload":[],
+    "Strand":"Single",
+    "DataName":"dh_h3k27ac_h3k4me1_h3k27me3_ds_ns_a_i"
+  }
+}

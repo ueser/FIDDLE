@@ -30,11 +30,16 @@
     }
   },
   "Options": {
-
-    "Inputs":["dnaseq","rnaseq","chipseq","netseq","mnaseseq"],
-    "Outputs":["tssseq"],
-    "Freeze":[],
-    "Reload":[],
+    "Inputs":["dnaseq","rnaseq","chipseq","netseq","mnaseseq","tssseq"],
+    "Outputs":["tssseq","netseq","chipseq","rnaseq","mnaseseq"],
+    "Freeze":{
+      "Encoders":[],
+      "Decoders":[]
+      },
+    "Reload":{
+      "Encoders":[],
+      "Decoders":[]
+      },
     "Strand":"Single",
     "DataName":"NSMSDSRSCSTSRI_500bp"
   }

@@ -29,3 +29,62 @@ echo performing fasta extraction
 bedtools getfasta -fi ../../data/sacCer3.fa -bed ${f_name}-sorted.pos.bed -fo sense.fa
 bedtools getfasta -fi ../../data/sacCer3.fa -bed ${f_name}-sorted.neg.bed -fo asense_tbf.fa
 
+
+### for human enhancers
+
+
+
+f_name='enhancer_strided'
+python generate_regions.py chr_size ${f_name}.bed ../../data/FANTOM/regions/all_peaks_enhancer_custom_track.bed
+cd ~/Projects/FIDDLE/data/regions
+echo Sorting
+bedtools sort -i ${f_name}.bed> ${f_name}-sorted.bed
+
+
+echo performing on dnaseseq
+bwtool matrix 250:250 ${f_name}-sorted.bed ../../data/FANTOM/dnase_hela*.bigwig dnaseseq.tsv
+
+echo performing on h3k4me1
+bwtool matrix 250:250 ${f_name}-sorted.bed ../../data/FANTOM/h3k4me1_hela*.bigwig h3k4me1.tsv
+
+echo performing on h3k27ac
+bwtool matrix 250:250 ${f_name}-sorted.bed ../../data/FANTOM/h3k27ac_hela*.bigwig h3k27ac.tsv
+
+echo performing on h3k27me3
+bwtool matrix 250:250 ${f_name}-sorted.bed ../../data/FANTOM/h3k27me3_hela*.bigwig h3k27me3.tsv
+
+echo performing on netseq
+bwtool matrix 250:250 ${f_name}-sorted.bed ../../data/FANTOM/netseq_hela_signal.pos.bw,../../data/FANTOM/netseq_hela_signal.neg.bw netseq_pos_neg.tsv
+
+
+echo performing fasta extraction
+bedtools getfasta -fi ~/Projects/genome/data/annotation/hg19/hg19.fa -bed ${f_name}-sorted.bed -fo enhancers.fa
+
+
+#### active vs inactive for testing
+
+for f_name in 'active_enhancers' 'inactive_enhancers'
+do
+    python ~/Projects/FIDDLE/fiddle/data_prep/generate_regions.py chr_size ${f_name}.bed ${f_name}_.bed
+    echo Sorting
+    bedtools sort -i ${f_name}.bed> ${f_name}-sorted.bed
+    echo performing on dnaseseq
+    bwtool matrix 250:250 ${f_name}-sorted.bed ../../data/FANTOM/dnase_hela*.bigwig dnaseseq_${f_name}.tsv
+
+    echo performing on h3k4me1
+    bwtool matrix 250:250 ${f_name}-sorted.bed ../../data/FANTOM/h3k4me1_hela*.bigwig h3k4me1_${f_name}.tsv
+
+    echo performing on h3k27ac
+    bwtool matrix 250:250 ${f_name}-sorted.bed ../../data/FANTOM/h3k27ac_hela*.bigwig h3k27ac_${f_name}.tsv
+
+    echo performing on h3k27me3
+    bwtool matrix 250:250 ${f_name}-sorted.bed ../../data/FANTOM/h3k27me3_hela*.bigwig h3k27me3_${f_name}.tsv
+
+    echo performing on netseq
+    bwtool matrix 250:250 ${f_name}-sorted.bed ../../data/FANTOM/netseq_hela_signal.pos.bw,../../data/FANTOM/netseq_hela_signal.neg.bw netseq_pos_neg_${f_name}.tsv
+
+
+    echo performing fasta extraction
+    bedtools getfasta -fi ~/Projects/genome/data/annotation/hg19/hg19.fa -bed ${f_name}-sorted.bed -fo enhancers_${f_name}.fa
+
+done
