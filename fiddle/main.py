@@ -140,8 +140,6 @@ def main(_):
     model.create_monitor_variables(show_filters=False)
     model.saver()
 
-    pdb.set_trace()
-
     # instantiate training and validation log files
     header_str = 'Loss'
     for key in model.architecture['Outputs']:

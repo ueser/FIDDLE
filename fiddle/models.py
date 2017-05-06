@@ -169,7 +169,7 @@ class Integrator(object):
 
         self.decoders = {}
         for track_name in self.architecture['Outputs']:
-            with tf.variable_scope(self.track_name):
+            with tf.variable_scope(track_name):
                 self.decoders[track_name] = Decoder(architecture=self.architecture,
                                                     dropout=self.dropout,
                                                     keep_prob_input=self.keep_prob_input,
@@ -265,8 +265,9 @@ class Integrator(object):
             load_list = [track_name+'/encoder' for track_name in self.config['Options']['Reload']['Encoders']]
             load_list += [track_name+'/decoder' for track_name in self.config['Options']['Reload']['Decoders']]
         for scope in load_list:
-            loader = tf.train.Saver(tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope = scope )
+            loader = tf.train.Saver(tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope = scope ))
             # loader = tf.train.import_meta_graph(os.path.join(self.model_path, track_name + '_model.ckpt.meta'))
+            track_name = scope.split('/')[0]+'_'+scope.split('/')[1]
             loader.restore(self.sess, os.path.join(self.model_path, track_name + '_model.ckpt'))
             print(track_name + ' model is loaded from pre-trained network')
 
@@ -505,11 +506,15 @@ class Integrator(object):
 
     def saver(self):
         """Allows saving of checkpoint versions of tf.graph"""
-
         self.savers_dict = {}
         for key in self.architecture['Inputs']:
-            self.savers_dict[key] = tf.train.Saver(tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope = key))
-        self.savers_dict['decoder'] = tf.train.Saver(tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope = 'decoder'))
+            self.savers_dict[key+'_encoder'] = tf.train.Saver(tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope = key+'/encoder'))
+
+        for key in self.architecture['Outputs']:
+            self.savers_dict[key+'_decoder'] = tf.train.Saver(
+                tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=key+'/decoder'))
+
+
 
 class BaseTrackContainer(object):
     #TODO: this?
