@@ -300,20 +300,21 @@ class Integrator(object):
         # define Integrator attributes
         self.global_step = tf.Variable(0, name = 'globalStep', trainable = False)
         self.accuracy = {}
+        self.losses = {}
         self.cost = 0
 
         # define Integrator cost and loss
         for key in self.architecture['Outputs']:
 
             # apply cost function between output probability distribution and NN predictions
-            cst = self.cost_functions[key](self.output_tensor[key], self.decoders[key].prediction)
-            TRAIN_FETCHES.update({key + '_loss': cst})
-            VALIDATION_FETCHES.update({key + '_loss': cst})
-            self.cost += cst
+            self.losses[key] = self.cost_functions[key](self.output_tensor[key], self.decoders[key].prediction)
+            TRAIN_FETCHES.update({key + '_loss': self.losses[key]})
+            VALIDATION_FETCHES.update({key + '_loss': self.losses[key]})
+            self.cost += self.losses[key]
             # determine % accuracy of sequencing peak recalls
-            self.accuracy[key] = average_peak_distance(self.output_tensor[key], self.decoders[key].prediction)
-            TRAIN_FETCHES.update({key+ '_average_peak_distance': self.accuracy[key]})
-            VALIDATION_FETCHES.update({key+ 'Average_peak_distance': self.accuracy[key]})
+            # self.accuracy[key] = average_peak_distance(self.output_tensor[key], self.decoders[key].prediction)
+            # TRAIN_FETCHES.update({key+ '_average_peak_distance': self.accuracy[key]})
+            # VALIDATION_FETCHES.update({key+ 'Average_peak_distance': self.accuracy[key]})
 
             # self.performance[key] = self.performance_measures[key](self.output_tensor[key], self.decoders[key].prediction)
 
@@ -468,9 +469,13 @@ class Integrator(object):
                 grid = put_kernels_on_grid(weights[0])
                 tf.summary.image(track_name + '/conv1/features', grid)
 
-        tf.summary.scalar('KL divergence', self.cost)
+        tf.summary.scalar('Total cost', self.cost)
         for key, val in self.accuracy.items():
             tf.summary.scalar(key + '/Accuracy', val)
+
+        for key, val in self.losses.items():
+            tf.summary.scalar(key + '/KL_Loss', val)
+
         self.summary_op = tf.summary.merge_all()
         self.summary_writer_train = tf.summary.FileWriter(self.model_path + '/training', self.sess.graph)
         self.summary_writer_valid = tf.summary.FileWriter(self.model_path + '/validation', self.sess.graph)

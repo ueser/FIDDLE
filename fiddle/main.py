@@ -123,7 +123,7 @@ def main(_):
     batcher = data.batcher()
 
     to_size = min(validation_h5_handle.values()[0].shape[0], 1000)
-    print('Storing validation data to the memory')
+    print('Storing validation data to the memory\n\n')
     try:
         all_keys = list(set(model.architecture['Inputs'] + model.architecture['Outputs']))
         validation_data = {key: validation_h5_handle[key][:to_size] for key in all_keys}
