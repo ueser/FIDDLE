@@ -1,3 +1,4 @@
+import pdb, traceback, sys
 from matplotlib import pylab as pl
 import numpy as np
 import h5py
@@ -9,17 +10,16 @@ from tqdm import tqdm as tq
 import cPickle as pickle
 import tensorflow as tf
 
-
 ### FIDDLE specific tools ###
 sys.path.append('../dev/')
 from viz_sequence import *
 #############################
 
-
 ################################################################################
 # Main
 ################################################################################
 def main():
+
     flags = tf.app.flags
     flags.DEFINE_string('runName', 'experiment', 'Running name.')
     flags.DEFINE_string('resultsDir', '../results', 'Directory for results data')
@@ -27,18 +27,14 @@ def main():
     flags.DEFINE_boolean('makePng', True, 'Make png from saved prediction pickles')
     flags.DEFINE_string('vizType', 'dnaseq', 'data type to be vizualized')
     flags.DEFINE_integer('startFrom', 0, 'minimum iteration number to start plotting')
-
     FLAGS = flags.FLAGS
-
     save_dir = os.path.join(FLAGS.resultsDir,FLAGS.runName)
 
     if FLAGS.makePng:
         pckl_files = [fname for fname in os.listdir(save_dir) if 'pred_viz' in fname]
         orig_file = [fname for fname in os.listdir(save_dir) if 'original_outputs.pck' in fname]
         pred_dict = pickle.load(open(os.path.join(save_dir, pckl_files[0]), 'r'))
-
         if ('dna_before_softmax' in pred_dict.keys()):
-
             qq=0
             for f_ in tq(pckl_files):
                 pred_dict = pickle.load(open(os.path.join(save_dir, f_),'r'))
@@ -64,16 +60,14 @@ def main():
                     continue
                 qq += 1
                 # print('\nplotting {} of {}'.format(qq, len(pckl_files)))
-
-                if (qq==1) and (pred_dict.values()[0].shape[1]==2*orig_output.values()[0].shape[2]):
-                    strand = 'Double'
-                # pdb.set_trace()
+                #if (qq==1) and (pred_dict.values()[0].shape[1]==2*orig_output.values()[0].shape[2]):
+                    #strand = 'Double'
+                strand = 'Double'
                 plot_prediction(pred_dict, orig_output,
                             name='iteration_{}'.format(iter_no),
                             save_dir=save_dir,
                             strand=strand,
                             title=iter_no)
-
         else:
             raise NotImplementedError
 
@@ -89,45 +83,36 @@ def main():
             images.append(imageio.imread(filename))
         imageio.mimsave(os.path.join(save_dir,'prediction_viz.gif'), images)
 
-
-
-
 ################################################################################
 # Auxilary Functions
 ################################################################################
 
 def plot_prediction(pred_vec, orig_vec=None, save_dir='../results/', name='profile_prediction', strand='Single',title='profile'):
     pl.ioff()
-    if len(pred_vec)==1:
-        # pdb.set_trace()
+    pred_vec = {'tssseq': pred_vec['tssseq']} # EDIT
+    if len(pred_vec) == 1:
         fig, axarr = pl.subplots(pred_vec.values()[0].shape[0])
         if strand == 'Double':
             to_size = pred_vec.values()[0].shape[1] / 2
             for ix in range(pred_vec.values()[0].shape[0]):
                 for jx, key in enumerate(pred_vec.keys()):
                     if orig_vec is not None:
-                        # pdb.set_trace()
-                        axarr[ix].plot(orig_vec[key][ix, 0, :] / np.max(orig_vec[key][ix, :, :] + 1e-7),
-                                           label=key + '_Original', color='g')
-                        axarr[ix].plot(-orig_vec[key][ix, 1, :] / np.max(orig_vec[key][ix, :, :] + 1e-7), color='g')
-                    axarr[ix].plot(pred_vec[key][ix, :to_size]/np.max(pred_vec[key][ix, :]), label=key + '_Prediction', color='r')
-                    axarr[ix].plot(-pred_vec[key][ix, to_size:]/np.max(pred_vec[key][ix, :]), color='r')
+                        axarr[ix].plot(orig_vec[key][ix, 0, :] / np.max(orig_vec[key][ix, :, :] + 1e-7), label = key + '_Original', color = 'g')
+                        axarr[ix].plot(-orig_vec[key][ix, 1, :] / np.max(orig_vec[key][ix, :, :] + 1e-7), color = 'g')
+                    axarr[ix].plot(pred_vec[key][ix, :to_size] / np.max(pred_vec[key][ix, :]), label = key + '_Prediction', color = 'r')
+                    axarr[ix].plot(-pred_vec[key][ix, to_size:] / np.max(pred_vec[key][ix, :]), color = 'r')
                     axarr[ix].axis('off')
-            axarr[0].set_title(pred_vec.keys()[0]+'_'+str(title))
+            axarr[0].set_title(pred_vec.keys()[0] + '_' + str(title))
         else:
             for ix in range(pred_vec.values()[0].shape[0]):
                 for jx, key in enumerate(pred_vec.keys()):
                     if orig_vec is not None:
-                        # pdb.set_trace()
-                        axarr[ix].plot(orig_vec[key][ix, 0, :] / np.max(orig_vec[key][ix, 0, :] + 1e-7),
-                                           label=key + '_Original', color='g')
-                    axarr[ix].plot(pred_vec[key][ix, :] / np.max(pred_vec[key][ix, :]), label=key + '_Prediction',
-                                       color='r')
+                        pdb.set_trace()
+                        axarr[ix].plot(orig_vec[key][ix, 0, :] / np.max(orig_vec[key][ix, 0, :] + 1e-7), label=key + '_Original', color='g')
+                    axarr[ix].plot(pred_vec[key][ix, :] / np.max(pred_vec[key][ix, :]), label=key + '_Prediction', color='r')
                     axarr[ix].axis('off')
-
                     axarr[0].set_title(pred_vec.keys()[0] + '_' + str(title))
     else:
-
         fig, axarr = pl.subplots(pred_vec.values()[0].shape[0],len(pred_vec))
         pred_keys = [key for key in pred_vec.keys() if 'gates' not in key]
 
@@ -136,7 +121,6 @@ def plot_prediction(pred_vec, orig_vec=None, save_dir='../results/', name='profi
             for ix in range(pred_vec.values()[0].shape[0]):
                 for jx, key in enumerate(pred_keys):
                     if orig_vec is not None:
-                        # pdb.set_trace()
                         axarr[ix, jx].plot(orig_vec[key][ix, 0, :]/np.sum(orig_vec[key][ix,:,:]+ 1e-7), label=key+'_Original', color='g')
                         axarr[ix, jx].plot(-orig_vec[key][ix, 1, :]/np.sum(orig_vec[key][ix,:,:]+ 1e-7), color='g')
                     axarr[ix, jx].plot(pred_vec[key][ix, :to_size], label=key+'_Prediction', color='r')
@@ -144,29 +128,24 @@ def plot_prediction(pred_vec, orig_vec=None, save_dir='../results/', name='profi
                     axarr[ix, jx].axis('off')
             axarr[0, 0].set_title(pred_vec.keys()[0])
             axarr[0, 1].set_title(pred_vec.keys()[1])
-
-
         else:
             for ix in range(pred_vec.values()[0].shape[0]):
                 for jx, key in enumerate(pred_vec.keys()):
                     if orig_vec is not None:
-                        # pdb.set_trace()
-                        axarr[ix, jx].plot(orig_vec[key][ix,0, :] / np.max(orig_vec[key][ix,0, :] + 1e-7),
-                                           label=key + '_Original', color='g')
-                    axarr[ix, jx].plot(pred_vec[key][ix, :]/np.max(pred_vec[key][ix, :]), label=key + '_Prediction', color='r')
+                        pdb.set_trace()
+                        axarr[ix, jx].plot(orig_vec[key][ix,0, :] / np.max(orig_vec[key][ix,0, :] + 1e-7), label = key + '_Original', color = 'g')
+                    axarr[ix, jx].plot(pred_vec[key][ix, :]/np.max(pred_vec[key][ix, :]), label = key + '_Prediction', color = 'r')
                     axarr[ix, jx].axis('off')
-
             axarr[0, 1].set_title(pred_vec.keys()[0])
             axarr[0, 1].set_title(pred_vec.keys()[1])
 
-    pl.savefig(os.path.join(save_dir,name+'.png'),format='png')
+    pl.savefig(os.path.join(save_dir, name + '.png'), format = 'png')
     pl.close(fig)
 
 
 
 def put_kernels_on_grid(kernel, pad = 1):
-
-    ''' modified from @kukuruza: https://gist.github.com/kukuruza/03731dc494603ceab0c5
+    """modified from @kukuruza: https://gist.github.com/kukuruza/03731dc494603ceab0c5
     Visualize conv. features as an image (mostly for the 1st layer).
     Place kernel into a grid, with some paddings between adjacent filters.
     Args:
@@ -176,7 +155,8 @@ def put_kernels_on_grid(kernel, pad = 1):
       pad:               number of black pixels around each filter (between them)
     Return:
       Tensor of shape [(Y+2*pad)*grid_Y, (X+2*pad)*grid_X, NumChannels, 1].
-    '''
+    """
+
     # get shape of the grid. NumKernels == grid_Y * grid_X
     def factorization(n):
         for i in range(int(sqrt(float(n))), 0, -1):
@@ -266,4 +246,8 @@ def visualize_dna(weigths, pred_vec, save_dir='../results/', name='dna_predictio
 
 
 if __name__=='__main__':
-    main()
+    try:
+        main()
+    except:
+        type, value, tb = sys.exc_info()
+        traceback.print_exc()
