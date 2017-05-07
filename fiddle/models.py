@@ -276,6 +276,7 @@ class Integrator(object):
         Args:
             :param freeze_list: (list, default = empty) tracks not incorporated in training
         """
+        pdb.set_trace()
         freeze_list += [track_name + '/encoder' for track_name in self.config['Options']['Freeze']['Encoders']]
         freeze_list += [track_name + '/decoder' for track_name in self.config['Options']['Freeze']['Decoders']]
         self.trainables = []

@@ -38,6 +38,7 @@ import cPickle as pickle
 import pandas as pd
 import os
 
+
 ### FIDDLE specific tools ###
 from models import *
 #############################
@@ -60,36 +61,53 @@ def main(_):
 
 
     #### temporary ####
-    # test_h5_handle = h5py.File(os.path.join(FLAGS.dataDir, config['Options']['DataName'], 'test.h5'), 'r')
-    test_h5_handle = h5py.File(os.path.join(FLAGS.dataDir, config['Options']['DataName'], 'for_viz.h5'), 'r')
-    model = NNscaffold(config=config,
+    test_h5_handle = h5py.File(os.path.join(FLAGS.dataDir, 'test.h5'), 'r')
+    # test_h5_handle = h5py.File(os.path.join(FLAGS.dataDir, config['Options']['DataName'], 'for_viz.h5'), 'r')
+    model = Integrator(config=config,
                        architecture_path=os.path.join(project_directory, 'architecture.json'),
-                       model_path=project_directory,
-                       gating=False)
+                       model_path=project_directory)
 
     model.config['Options']['Reload'] = 'all'
-    test_data = {key: test_h5_handle[key][:] for key in model.inputs}
+    data_size = test_h5_handle.values()[0].shape[0]
+    chunk_size = 50
+    qq=0
+    test_data_list=[]
+    while (qq+chunk_size)<=data_size:
+        test_data_list.append({key: test_h5_handle[key][qq:(qq+chunk_size)] for key in model.inputs})
+        qq+=chunk_size
+    test_data_list.append({key: test_h5_handle[key][qq:] for key in model.inputs})
     model.initialize()
 
+    print('Generating representations')
+    repr_h5_handle = h5py.File(os.path.join(project_directory, 'representations.h5'), 'w')
     # get representations for each tracks and scaffolds.
-    reprDict = model.get_representations(test_data)
-    if FLAGS.saveDataForLater:
-        repr_h5_handle = h5py.File(os.path.join(project_directory, 'representations.h5'),'w')
-        for key, val in reprDict.items():
-            f_ = repr_h5_handle.create_dataset(key, (reprDict[key].shape))
-            f_[:] = reprDict[key][:]
+    f_ = {}
+    reprDict = model.get_representations({key:val[:5] for key,val in test_data_list[0]})
+    for key, val in reprDict.items():
+        f_[key] = repr_h5_handle.create_dataset(key, (data_size,) + reprDict[key].shape[1:])
+    qq = 0
+    for test_data in tq(test_data_list):
+        reprDict = model.get_representations(test_data)
+        f_[key][qq:(qq+reprDict[key].shape[0])] = reprDict[key][:]
+        qq += reprDict[key].shape[0]
         repr_h5_handle.close()
 
         #TODO: 2.dimensionality reduction and visualization (t-SNE, PCA etc.)
-
-    # get predictions
-    pred_dict = model.predict(test_data)
-    if FLAGS.saveDataForLater:
-        pred_h5_handle = h5py.File(os.path.join(project_directory, 'predictions.h5'), 'w')
-        for key, val in pred_dict.items():
-            f_ = pred_h5_handle.create_dataset(key, (pred_dict[key].shape))
-            f_[:] = pred_dict[key][:]
+    print('Saving representations')
+    pred_h5_handle = h5py.File(os.path.join(project_directory, 'predictions.h5'), 'w')
+    # get representations for each tracks and scaffolds.
+    print('Generating predictions')
+    f_ = {}
+    reprDict = model.predict({key: val[:5] for key, val in test_data_list[0]})
+    for key, val in reprDict.items():
+        f_[key] = pred_h5_handle.create_dataset(key, (data_size,) + reprDict[key].shape[1:])
+    qq = 0
+    for test_data in tq(test_data_list):
+        reprDict = model.predict(test_data)
+        f_[key][qq:(qq + reprDict[key].shape[0])] = reprDict[key][:]
+        qq += reprDict[key].shape[0]
         pred_h5_handle.close()
+    print('Saving presentations')
     #TODO: filter visualization
     model.sess.close()
 
