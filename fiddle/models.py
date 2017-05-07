@@ -122,7 +122,6 @@ class ConfigurationParsingError(Exception):
 ################################################################################
 class Integrator(object):
     """Neural Network object"""
-
     def __init__(self,
                  config,
                  architecture_path='architecture.json',
@@ -302,7 +301,7 @@ class Integrator(object):
         self.accuracy = {}
         self.losses = {}
         self.cost = 0
-
+        self.optimizer = {}
         # define Integrator cost and loss
         for key in self.architecture['Outputs']:
 
@@ -317,14 +316,18 @@ class Integrator(object):
             # VALIDATION_FETCHES.update({key+ 'Average_peak_distance': self.accuracy[key]})
 
             # self.performance[key] = self.performance_measures[key](self.output_tensor[key], self.decoders[key].prediction)
+            trnbls = [var for var in self.trainables if ((key in var.name)&('decoder' in var.name))|('encoder' in var.name)]
+            # define Integrator gradient optimizer
+            self.optimizer[key] = tf.train.AdamOptimizer(learning_rate=self.learning_rate). \
+                minimize(self.cost,
+                         global_step=self.global_step,
+                         var_list=trnbls)
+            TRAIN_FETCHES.update({key+'_': self.optimizer[key]})
 
-        # define Integrator gradient optimizer
-        self.optimizer = tf.train.AdamOptimizer(learning_rate = self.learning_rate). \
-                         minimize(self.cost,
-                                  global_step = self.global_step,
-                                  var_list = self.trainables)
-        TRAIN_FETCHES.update({'_':self.optimizer, 'cost':self.cost})
+        TRAIN_FETCHES.update({'cost': self.cost})
         VALIDATION_FETCHES.update({'cost': self.cost})
+
+
 
     # TODO: accuracy not utilized ... remove?
     def train(self, train_data, accuracy = None, inp_dropout = 0.1, batch_size = 128):
