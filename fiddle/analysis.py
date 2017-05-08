@@ -80,16 +80,23 @@ def main(_):
     print('Generating representations')
     repr_h5_handle = h5py.File(os.path.join(project_directory, 'representations.h5'), 'w')
     # get representations for each tracks and scaffolds.
-    f_ = {}
+    tmp_dct = {}
     #pdb.set_trace()
-    reprDict = model.get_representations({key:val[:5] for key,val in test_data_list[0].items()})
+    reprDict = model.get_representations({key:val[:2] for key,val in test_data_list[0].items()})
     for key, val in reprDict.items():
-        f_[key] = repr_h5_handle.create_dataset(key, (data_size,) + reprDict[key].shape[1:])
+        tmp_dct[key] = np.zeros((data_size,) + reprDict[key].shape[1:])
     qq = 0
     for test_data in tq(test_data_list):
         reprDict = model.get_representations(test_data)
-        f_[key][qq:(qq+reprDict[key].shape[0])] = reprDict[key][:]
-        qq += reprDict[key].shape[0]
+        # pdb.set_trace()
+        for key,val in reprDict.items():
+            tmp_dct[key][qq:(qq+val.shape[0]),:] = val[:]
+        qq += val.shape[0]
+
+    for key, val in reprDict.items():
+        tmp = repr_h5_handle.create_dataset(key, tmp_dct[key].shape)
+        tmp[:] = tmp_dct[key][:]
+
     repr_h5_handle.close()
 
         #TODO: 2.dimensionality reduction and visualization (t-SNE, PCA etc.)
@@ -97,15 +104,22 @@ def main(_):
     pred_h5_handle = h5py.File(os.path.join(project_directory, 'predictions.h5'), 'w')
     # get representations for each tracks and scaffolds.
     print('Generating predictions')
-    f_ = {}
-    reprDict = model.predict({key: val[:5] for key, val in test_data_list[0].items()})
+    tmp_dct = {}
+    reprDict = model.get_representations({key: val[:2] for key, val in test_data_list[0].items()})
     for key, val in reprDict.items():
-        f_[key] = pred_h5_handle.create_dataset(key, (data_size,) + reprDict[key].shape[1:])
+        tmp_dct[key] = np.zeros((data_size,) + reprDict[key].shape[1:])
     qq = 0
+
     for test_data in tq(test_data_list):
         reprDict = model.predict(test_data)
-        f_[key][qq:(qq + reprDict[key].shape[0])] = reprDict[key][:]
+        for key,val in reprDict.items():
+            tmp_dct[key][qq:(qq + val.shape[0]),:] = val[:]
         qq += reprDict[key].shape[0]
+
+    for key, val in reprDict.items():
+        tmp = pred_h5_handle.create_dataset(key, tmp_dct[key].shape)
+        tmp[:] = tmp_dct[key][:]
+
     pred_h5_handle.close()
     print('Saving presentations')
     #TODO: filter visualization

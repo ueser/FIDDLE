@@ -203,8 +203,7 @@ class Integrator(object):
                 self.output_tensor[key] = self.outputs[key]
                 self.cost_functions[key] = multi_softmax_classification
 
-        #TODO: self.freeze ... is boolean?
-        self.freeze() # define whether model will be frozen at this point
+        self.freeze() # Looks at the configurations.json and freezes the weight updates for particular modules 
         self._create_loss_optimizer() # Define loss function gradient optimizer
 
     def _parse_parameters(self, architecture_path = 'architecture.json'):
