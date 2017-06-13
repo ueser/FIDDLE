@@ -15,36 +15,39 @@ Thanks to [Dylan Marshall](https://github.com/DylanM-Marshall) for documentation
 
 ## Installation and Quick Start
 
-Docker image to be made in the near future. For now ... 
+Docker image to be made eventually, for now:
 
-### 1) copy & paste the below:
+### 1) Set up FIDDLE environment
 
-_note: requires python 2.7 and pip:_
+_NOTE: Requires python 2.7 and pip. Anaconda can be a nuisance, make sure to comment it out in your ~/.bash_profile:_
 
 ```markdown 
 sudo easy_install pip 
 sudo pip install virtualenv
 ```
 
-```markdown
+```markdown 
 git clone https://github.com/ueser/FIDDLE.git 
-cd FIDDLE/
-virtualenv ../venv/
-source ../venv/bin/activate
+sudo virtualenv venvFIDDLE
+source venvFIDDLE/bin/activate
 pip install -r requirements.txt
-mkdir data/
-cd data/
-mkdir hdf5datasets/
+cd FIDDLE/
+mkdir -p data/hdf5datasets/
 ```
-_note: Keras comes with default Theano backend. Change keras backend configuration to Tensorflow:_  
+
+_NOTE: Keras comes with default Theano backend. Change keras backend configuration to Tensorflow:_  
+
 ```markdown
 vim ~/.keras/keras.json
 ```
+
 Then change "backend":"theano" --> "backend":"tensorflow"
 
-### 2) download training, validation and test hdf5 datasets and place into 'data/hdf5datasets/':
+### 2) Download training/validation/test datasets:
 
-_warning: several gb of data_
+Place the following datasets in /FIDDLE/data/hdf5datasets/
+
+_WARNING: several gb of data_
 
 [training.h5](https://drive.google.com/file/d/0B9aDFb1Ds4IzWWZ5aWhtTkVUWE0/view?usp=sharing)
 
@@ -54,7 +57,7 @@ _warning: several gb of data_
 
 ### 3) Run it:
 
-Change directories to FIDDLE/fiddle/
+Change directories to /FIDDLE/fiddle/
 
 ```markdown
 python main.py
@@ -74,4 +77,4 @@ Change directories to FIDDLE/results/experiment/, open up the gif in a browser.
 
 ### Documentation...
 
-on it's way
+On its way
