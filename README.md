@@ -6,9 +6,14 @@ Based on: [http://biorxiv.org/content/early/2016/10/17/081380.full.pdf]
 
 Thanks to [Dylan Marshall](https://github.com/DylanM-Marshall) for documentation & organization.
 
-<img src="https://cloud.githubusercontent.com/assets/25555398/22895505/c1247cc4-f1ea-11e6-85ef-0e81183a636d.png" title="Architecture" />
+
+<img src="https://ibb.co/mAGCoQ" title="Architecture" />
+<img src="https://ibb.co/ieYghk title="case study" />
 
 ![alt text](https://cloud.githubusercontent.com/assets/1741502/24565878/28229be6-1625-11e7-88e5-555508e3e25c.gif)
+
+<img src="https://ibb.co/b9Crhk title="interpretation" />
+
 
 ## Installation and Quick Start
 
