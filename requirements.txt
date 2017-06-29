@@ -8,3 +8,4 @@ six==1.10.0
 tensorflow==1.0.1
 tqdm==4.11.2
 imageio==2.1.2
+defopt==3.2.0
