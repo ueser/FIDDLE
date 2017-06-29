@@ -8,12 +8,12 @@ sequencing data type.
 
 Example:
     Assuming instructions for directory setup and file installation on the
-    github page have been followed, DEFAULT flags and the following command will
+    github page have been followed, default flags and the following command will
     create a results directory "FIDDLE/results/experiment/" with an example
     prediction of TSSseq data from DNA sequence, RNA-seq, CHiP-seq, NET-seq,
     and MNase-seq data.
 
-        $ python main.py
+        $ python main.py --runName your_experiment --maxEpoch 100
 
 FLAGS:
     flag:                   default:                description:
@@ -23,7 +23,7 @@ FLAGS:
     --configuration         'configurations.json'   parameters of data inputs and outputs [json file]
     --architecture          'architecture.json'     parameters describing CNNs [json file]
     --visualizePrediction   'offline'               prediction profiles to be plotted [online or offline]
-    --savePredictionFreq    50                      frequency of profile saving w.r.t. number of iterations through batched data
+    --savePredictionFreq    20                      frequency of profile saving w.r.t. number of iterations through batched data
     --maxEpoch              1000                    total number of epochs through training data
     --batchSize             20                      batch size of training data
     --learningRate          0.001                   initial learning rate
@@ -60,7 +60,7 @@ flags.DEFINE_string('dataDir', '../data/hdf5datasets', '(DEFAULT: ../data/hdf5da
 flags.DEFINE_string('configuration', 'configurations.json', '(DEFAULT: configurations.json) - parameters of data inputs and outputs [json file]')
 flags.DEFINE_string('architecture', 'architecture.json', '(DEFAULT: architecture.json) - parameters describing CNNs [json file]')
 flags.DEFINE_string('visualizePrediction', 'offline', '(DEFAULT: offline) - prediction profiles to be plotted [online or offline] ')
-flags.DEFINE_integer('savePredictionFreq', 50, '(DEFAULT: 50) - frequency of profile saving w.r.t. number of iterations through batched data')
+flags.DEFINE_integer('savePredictionFreq', 20, '(DEFAULT: 20) - frequency of profile saving w.r.t. number of iterations through batched data')
 flags.DEFINE_integer('maxEpoch', 1000, '(DEFAULT: 1000) - total number of epochs through training data')
 flags.DEFINE_integer('batchSize', 20, '(DEFAULT: 20) - batch size of training data')
 flags.DEFINE_float('learningRate', 0.001, '(DEFAULT: 0.001) - initial learning rate.')
@@ -168,8 +168,7 @@ def main(_):
     print('Pre-train validation run:')
     return_dict = model.validate(validation_data, accuracy=True)
     print("Pre-train validation loss: " + str(return_dict['cost']))
-    # print("Pre-train validation accuracy (%): " + str(return_dict['accuracy_' + key] / validation_data.values()[0].shape[0]))
-    totalIterations = 1000
+    totalIterations = 100
 
     for it in range(totalIterations):
 

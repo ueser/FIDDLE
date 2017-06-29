@@ -31,7 +31,7 @@
   },
   "Options": {
     "Inputs":["dnaseq","rnaseq","chipseq","netseq","mnaseseq","tssseq"],
-    "Outputs":["tssseq","netseq","chipseq","rnaseq","mnaseseq"],
+    "Outputs":["tssseq"],
     "Freeze":{
       "Encoders":[],
       "Decoders":[]
