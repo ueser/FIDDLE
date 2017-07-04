@@ -1,3 +1,37 @@
+"""Author: Umut Eser
+Documentation: Dylan Marshall
+
+FIDDLE (Flexible Integration of Data with Deep LEarning) is an open source
+data-agnostic flexible integrative framework that learns a unified
+representation from multiple sequencing data types to infer another
+sequencing data type.
+
+Example:
+    Assuming instructions for directory setup and file installation on the
+    github page have been followed, DEFAULT flags and the following command will
+    create a results directory "FIDDLE/results/experiment/" with an example
+    prediction of TSSseq data from DNA sequence, RNA-seq, CHiP-seq, NET-seq,
+    and MNase-seq data.
+
+        $ python main.py --runName your_experiment --maxEpoch 100
+
+FLAGS:
+    flag:                   default:                description:
+
+    --runName               'experiment'            name of run
+    --dataDir               '../data/hdf5datasets'  directory where hdf5datasets are stored
+    --configuration         'configurations.json'   parameters of data inputs and outputs [json file]
+    --architecture          'architecture.json'     parameters describing CNNs [json file]
+    --visualizePrediction   'offline'               prediction profiles to be plotted [online or offline]
+    --savePredictionFreq    50                      frequency of profile saving w.r.t. number of iterations through batched data
+    --maxEpoch              1000                    total number of epochs through training data
+    --batchSize             20                      batch size of training data
+    --learningRate          0.001                   initial learning rate
+    --resultsDir            '../results'            directory where results from runName will be stored
+    --inputs                'None'                  inputs
+    --outputs               'None'                  outputs
+"""
+
 import pdb, traceback, sys
 from matplotlib import pylab as pl
 import numpy as np
@@ -25,7 +59,7 @@ def main():
     flags.DEFINE_string('resultsDir', '../results', 'Directory for results data')
     flags.DEFINE_boolean('makeGif', True, 'Make gif from png files')
     flags.DEFINE_boolean('makePng', True, 'Make png from saved prediction pickles')
-    flags.DEFINE_string('vizType', 'dnaseq', 'data type to be vizualized')
+    flags.DEFINE_string('vizType', 'tssseq', 'data type to be vizualized')
     flags.DEFINE_integer('startFrom', 0, 'minimum iteration number to start plotting')
     FLAGS = flags.FLAGS
     save_dir = os.path.join(FLAGS.resultsDir,FLAGS.runName)

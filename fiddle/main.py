@@ -13,7 +13,7 @@ Example:
     prediction of TSSseq data from DNA sequence, RNA-seq, CHiP-seq, NET-seq,
     and MNase-seq data.
 
-        $ python main.py
+        $ python main.py --runName your_experiment --maxEpoch 100
 
 FLAGS:
     flag:                   default:                description:
@@ -23,7 +23,7 @@ FLAGS:
     --configuration         'configurations.json'   parameters of data inputs and outputs [json file]
     --architecture          'architecture.json'     parameters describing CNNs [json file]
     --visualizePrediction   'offline'               prediction profiles to be plotted [online or offline]
-    --savePredictionFreq    50                      frequency of saving prediction profiles to be plotted
+    --savePredictionFreq    20                      frequency of profile saving w.r.t. number of iterations through batched data
     --maxEpoch              1000                    total number of epochs through training data
     --batchSize             20                      batch size of training data
     --learningRate          0.001                   initial learning rate
@@ -36,7 +36,6 @@ from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import division
 
-import pdb, traceback, sys
 import tensorflow as tf
 import numpy as np
 from tqdm import tqdm as tq
@@ -46,6 +45,7 @@ import os
 import h5py
 import json
 import cPickle as pickle
+import defopt
 
 #############################
 # FIDDLE specific tools
@@ -55,24 +55,22 @@ import visualization as viz
 #############################
 
 flags = tf.app.flags
-flags.DEFINE_string('runName', 'experiment', 'name of run')
-flags.DEFINE_string('dataDir', '../data/hdf5datasets', 'directory where hdf5datasets are stored')
-flags.DEFINE_string('configuration', 'configurations.json', 'parameters of data inputs and outputs [json file]')
-flags.DEFINE_string('architecture', 'architecture.json', 'parameters describing CNNs [json file]')
-flags.DEFINE_string('visualizePrediction', 'offline', 'prediction profiles to be plotted [online or offline] ')
-flags.DEFINE_integer('savePredictionFreq', 50, 'frequency of saving prediction profiles to be plotted')
-flags.DEFINE_integer('maxEpoch', 1000, 'total number of epochs through training data')
-flags.DEFINE_integer('batchSize', 20, 'batch size.')
-flags.DEFINE_float('learningRate', 0.001, 'initial learning rate.')
-flags.DEFINE_string('resultsDir', '../results', 'directory where results from runName will be stored')
-flags.DEFINE_string('inputs', 'None', 'inputs')
-flags.DEFINE_string('outputs', 'None', 'outputs')
+flags.DEFINE_string('runName', 'experiment', '(DEFAULT: experiment) - name of run')
+flags.DEFINE_string('dataDir', '../data/hdf5datasets', '(DEFAULT: ../data/hdf5datasets) - directory where hdf5datasets are stored')
+flags.DEFINE_string('configuration', 'configurations.json', '(DEFAULT: configurations.json) - parameters of data inputs and outputs [json file]')
+flags.DEFINE_string('architecture', 'architecture.json', '(DEFAULT: architecture.json) - parameters describing CNNs [json file]')
+flags.DEFINE_string('visualizePrediction', 'offline', '(DEFAULT: offline) - prediction profiles to be plotted [online or offline] ')
+flags.DEFINE_integer('savePredictionFreq', 20, '(DEFAULT: 20) - frequency of profile saving w.r.t. number of iterations through batched data')
+flags.DEFINE_integer('maxEpoch', 1000, '(DEFAULT: 1000) - total number of epochs through training data')
+flags.DEFINE_integer('batchSize', 20, '(DEFAULT: 20) - batch size of training data')
+flags.DEFINE_float('learningRate', 0.001, '(DEFAULT: 0.001) - initial learning rate.')
+flags.DEFINE_string('resultsDir', '../results', '(DEFAULT: ../results) - directory where results from runName will be stored')
+flags.DEFINE_string('inputs', 'None', '(DEFAULT: None) - inputs')
+flags.DEFINE_string('outputs', 'None', '(DEFAULTs: None) - outputs')
 FLAGS = flags.FLAGS
 
-
-
 def main(_):
-    """Read in data, launch graph, train neural network"""
+    """Read in data, launch graph, train neural network."""
 
     ############################################################################
     #                           Read data to graph                             #
@@ -170,8 +168,7 @@ def main(_):
     print('Pre-train validation run:')
     return_dict = model.validate(validation_data, accuracy=True)
     print("Pre-train validation loss: " + str(return_dict['cost']))
-    # print("Pre-train validation accuracy (%): " + str(return_dict['accuracy_' + key] / validation_data.values()[0].shape[0]))
-    totalIterations = 1000
+    totalIterations = 100
 
     for it in range(totalIterations):
 
@@ -259,10 +256,10 @@ def write_to_txt(return_dict, batch_size = FLAGS.batchSize, datatype = 'train', 
     """Writes to text file the contents of return_dict, saves in FLAGS.savePath
 
     Args:
-        :param return_dict: (dictionary) typically {key=loss, value=accuracy} of datasets
-        :param batch_size: (int, default = FLAGS.batchSize) size of inputted data batches
-        :param datatype: (string, default = 'train') type of data in return_dict
-        :param verbose: (boolean, default = True) level of information displayed
+        :param return_dict: of datasets {key=loss, value=accuracy}
+        :param batch_size: size of inputed data batches
+        :param datatype: representation of data type in return_dict
+        :param verbose: level of information displayed
     """
 
     line_to_write = ''
@@ -282,8 +279,4 @@ def write_to_txt(return_dict, batch_size = FLAGS.batchSize, datatype = 'train', 
 
 
 if __name__ == '__main__':
-    try:
-        tf.app.run()
-    except:
-        type, value, tb = sys.exc_info()
-        traceback.print_exc()
+    defopt.run(tf.app.run())

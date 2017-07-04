@@ -6,42 +6,64 @@ Based on: [http://biorxiv.org/content/early/2016/10/17/081380.full.pdf]
 
 Thanks to [Dylan Marshall](https://github.com/DylanM-Marshall) for documentation & organization.
 
-<img src="https://cloud.githubusercontent.com/assets/25555398/22895505/c1247cc4-f1ea-11e6-85ef-0e81183a636d.png" title="Architecture" />
+<img src="https://preview.ibb.co/iDo3v5/FIDDLE_001.jpg" title="Architecture" />
+<img src="https://preview.ibb.co/eSebF5/FIDDLE_002.jpg" title="case study" />
 
 ![alt text](https://cloud.githubusercontent.com/assets/1741502/24565878/28229be6-1625-11e7-88e5-555508e3e25c.gif)
 
-## Installation and Quick Start
+<img src="https://preview.ibb.co/mwc2oQ/FIDDLE_003.jpg" title="interpretation" />
 
-Docker image to be made in the near future. For now ... 
+# Installation and Quick Start (can be done on a local machine)
 
-### 1) copy & paste the below:
+## 1) Set up FIDDLE environment:
 
-_note: requires python 2.7 and pip:_
+_NOTE: Requires python 2.7 and pip. Anaconda can be a nuisance, make sure to comment out any "export PATH"s to Anaconda in your ~/.bash_profile or ~/.bashrc and then re-source it (or even restart current terminal session):_
+
+### a) Install Python package manager pip:
 
 ```markdown 
 sudo easy_install pip 
+```
+
+### b) Install isolated Python environments:
+
+```markdown
 sudo pip install virtualenv
 ```
 
-```markdown
+### c) Clone this repository to an appropriate location (for instance ~/Desktop):
+
+```markdown 
 git clone https://github.com/ueser/FIDDLE.git 
-cd FIDDLE/
-virtualenv ../venv/
-source ../venv/bin/activate
-pip install -r requirements.txt
-mkdir data/
-cd data/
-mkdir hdf5datasets/
 ```
-_note: Keras comes with default Theano backend. Change keras backend configuration to Tensorflow:_  
+
+### d) Instantiate FIDDLE virtual environment, source it:
+
 ```markdown
-vim ~/.keras/keras.json
+sudo virtualenv venvFIDDLE
+source venvFIDDLE/bin/activate
 ```
-Then change "backend":"theano" --> "backend":"tensorflow"
 
-### 2) download training, validation and test hdf5 datasets and place into 'data/hdf5datasets/':
+### e) Install necessary Python packages to FIDDLE virtual environment:
 
-_warning: several gb of data_
+```markdown
+pip install -r requirements.txt
+```
+
+## 2) Download training/validation/test datasets:
+
+### a) Create data directory:
+
+```markdown
+cd FIDDLE/
+mkdir -p data/hdf5datasets/
+```
+
+### b) Download quickstart datasets: 
+
+Place the following datasets in /FIDDLE/data/hdf5datasets/
+
+_WARNING: several gb of data_
 
 [training.h5](https://drive.google.com/file/d/0B9aDFb1Ds4IzWWZ5aWhtTkVUWE0/view?usp=sharing)
 
@@ -49,26 +71,52 @@ _warning: several gb of data_
 
 [test.h5](https://drive.google.com/file/d/0B9aDFb1Ds4IzT05wTTZVQmFvcG8/view?usp=sharing)
 
-### 3) Run it:
+## 3) Run FIDDLE!
 
-Change directories to FIDDLE/fiddle/
+```markdown
+cd fiddle
+```
+
+### * Documentation Interlude *
+
+There are two (of many) methods to examine FIDDLE's internal documentation and docstrings:
+
+#### a) Instantiating a Python session and using the help() function:
+
+```markdown
+python
+import main # or any other FIDDLE Python script
+help(main)
+```
+
+#### b) Employing the --help flag (only shows information about flags):
+
+```markdown
+python main.py --help
+```
+
+### * *
 
 ```markdown
 python main.py
 ```
 
-_note: solution to matplotlib RuntimeError: http://stackoverflow.com/questions/21784641/installation-issue-with-matplotlib-python_
-
-### 4) Create visualization of training:
+## 4) Create visualization of training:
 
 ```markdown
-python visualization.py --vizType tssseq
+python visualization.py
 ```
 
-### 5) Check out training trajectory:
+## 5) Create representations and predictions datasets:
 
-Change directories to FIDDLE/results/experiment/, open up the gif in a browser.
+```markdown
+python analysis.py
+```
 
-### Documentation...
+## 6) Examine results:
 
-on it's way
+Change directories to FIDDLE/results/ < --runName (default = experiment) > /. The training trajectory visualization files (.png and .gif) are found in this directory. The representations and predictions created in step 5 are found in the hdf5 files "representations.h5" and "predictions.h5".
+
+# Installation and Quick Start on HMS Orchestra
+
+On its way...
