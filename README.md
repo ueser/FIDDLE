@@ -13,63 +13,65 @@ Thanks to [Dylan Marshall](https://github.com/DylanM-Marshall) for documentation
 
 <img src="https://preview.ibb.co/mwc2oQ/FIDDLE_003.jpg" title="interpretation" />
 
-### Installation and Quick Start (can be done on a local machine)
+-------------------------------------------------------------
+Installation and Quick Start (can be done on a local machine)
+-------------------------------------------------------------
 
-		#### 1) Set up FIDDLE environment:
+1. Set up FIDDLE environment:
 
 _NOTE: Requires python 2.7 and pip. Anaconda can be a nuisance, make sure to comment out any "export PATH"s to Anaconda in your ~/.bash_profile or ~/.bashrc and then re-source it (or even restart current terminal session):_
 
-		##### a) Install Python package manager pip:
+	1. Install Python package manager pip:
 
-```markdown 
-$ sudo easy_install pip 
-```
+	```markdown 
+	$ sudo easy_install pip 
+	```
+	
+	2. Install isolated Python environments:
+	
+	```markdown
+	$ sudo pip install virtualenv
+	```
+	
+	3. Clone this repository to an appropriate location (for instance ~/Desktop):
+	
+	```markdown 
+	$ git clone https://github.com/ueser/FIDDLE.git 
+	```
+	
+	4. Instantiate FIDDLE virtual environment, source it:
 
-		##### b) Install isolated Python environments:
+	```markdown
+	$ sudo virtualenv venvFIDDLE
+	$ source venvFIDDLE/bin/activate
+	```
+	
+	5. Install necessary Python packages to FIDDLE virtual environment:
 
-```markdown
-$ sudo pip install virtualenv
-```
+	```markdown
+	$ pip install -r requirements.txt
+	```
 
-##### c) Clone this repository to an appropriate location (for instance ~/Desktop):
+2. Download training/validation/test datasets:
 
-```markdown 
-$ git clone https://github.com/ueser/FIDDLE.git 
-```
+	1. Create data directory:
 
-##### d) Instantiate FIDDLE virtual environment, source it:
-
-```markdown
-$ sudo virtualenv venvFIDDLE
-$ source venvFIDDLE/bin/activate
-```
-
-##### e) Install necessary Python packages to FIDDLE virtual environment:
-
-```markdown
-$ pip install -r requirements.txt
-```
-
-#### 2) Download training/validation/test datasets:
-
-##### a) Create data directory:
-
-```markdown
-$ cd FIDDLE/
-$ mkdir -p data/hdf5datasets/
-```
-
-##### b) Download quickstart datasets: 
-
-Place the following datasets in /FIDDLE/data/hdf5datasets/
-
-_WARNING: several gb of data_
-
-[training.h5](https://drive.google.com/file/d/0B9aDFb1Ds4IzWWZ5aWhtTkVUWE0/view?usp=sharing)
-
-[validation.h5](https://drive.google.com/file/d/0B9aDFb1Ds4IzZ3JrLXp3SEY5aGs/view?usp=sharing)
-
-[test.h5](https://drive.google.com/file/d/0B9aDFb1Ds4IzT05wTTZVQmFvcG8/view?usp=sharing)
+	```markdown
+	$ cd FIDDLE/
+	$ mkdir -p data/hdf5datasets/
+	```
+	
+	2. Download quickstart datasets: 
+	
+	Place the following datasets in /FIDDLE/data/hdf5datasets/
+	
+	_WARNING: several gb of data_
+	
+	[training.h5](https://drive.google.com/file/d/0B9aDFb1Ds4IzWWZ5aWhtTkVUWE0/view?usp=sharing)
+	
+	[validation.h5](https://drive.google.com/file/d/0B9aDFb1Ds4IzZ3JrLXp3SEY5aGs/view?usp=sharing)
+	
+	[test.h5](https://drive.google.com/file/d/0B9aDFb1Ds4IzT05wTTZVQmFvcG8/view?usp=sharing)
 
 #### 3) Run FIDDLE!
 
