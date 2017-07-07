@@ -22,32 +22,32 @@ _NOTE: Requires python 2.7 and pip. Anaconda can be a nuisance, make sure to com
 ##### a) Install Python package manager pip:
 
 ```markdown 
-sudo easy_install pip 
+$ sudo easy_install pip 
 ```
 
-### b) Install isolated Python environments:
+##### b) Install isolated Python environments:
 
 ```markdown
-sudo pip install virtualenv
+$ sudo pip install virtualenv
 ```
 
 ##### c) Clone this repository to an appropriate location (for instance ~/Desktop):
 
 ```markdown 
-git clone https://github.com/ueser/FIDDLE.git 
+$ git clone https://github.com/ueser/FIDDLE.git 
 ```
 
 ##### d) Instantiate FIDDLE virtual environment, source it:
 
 ```markdown
-sudo virtualenv venvFIDDLE
-source venvFIDDLE/bin/activate
+$ sudo virtualenv venvFIDDLE
+$ source venvFIDDLE/bin/activate
 ```
 
 ##### e) Install necessary Python packages to FIDDLE virtual environment:
 
 ```markdown
-pip install -r requirements.txt
+$ pip install -r requirements.txt
 ```
 
 #### 2) Download training/validation/test datasets:
@@ -55,8 +55,8 @@ pip install -r requirements.txt
 ##### a) Create data directory:
 
 ```markdown
-cd FIDDLE/
-mkdir -p data/hdf5datasets/
+$ cd FIDDLE/
+$ mkdir -p data/hdf5datasets/
 ```
 
 ##### b) Download quickstart datasets: 
@@ -74,10 +74,10 @@ _WARNING: several gb of data_
 #### 3) Run FIDDLE!
 
 ```markdown
-cd fiddle
+$ cd fiddle
 ```
 ___
-**_ Documentation Interlude _**
+**Documentation Interlude**
 
 There are two (of many) methods to examine FIDDLE's internal documentation and docstrings:
 
@@ -92,24 +92,24 @@ $ python
 ##### b) Employing the --help (or -h) flag (only shows information about flags):
 
 ```markdown
-python main.py --help
+$ python main.py --help
 ```
 ___
 
 ```markdown
-python main.py
+$ python main.py
 ```
 
 #### 4) Create visualization of training:
 
 ```markdown
-python visualization.py
+$ python visualization.py
 ```
 
 #### 5) Create representations and predictions datasets:
 
 ```markdown
-python analysis.py
+$ python analysis.py
 ```
 
 #### 6) Examine training trajectory:
