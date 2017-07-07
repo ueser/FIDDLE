@@ -57,7 +57,7 @@ fiddle/*.pyc
 *.fa
 *.fasta
 *.ckpt*
-*.ipynb
+#*.ipynb
 # OS generated files #
 ######################
 .DS_Store

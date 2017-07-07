@@ -32,12 +32,10 @@ FLAGS:
     --outputs               'None'                  outputs
 """
 
-import pdb, traceback, sys
 from matplotlib import pylab as pl
 import numpy as np
 import h5py
 import os, io, sys
-import pdb
 from math import sqrt
 import tensorflow as tf
 from tqdm import tqdm as tq
@@ -141,7 +139,6 @@ def plot_prediction(pred_vec, orig_vec=None, save_dir='../results/', name='profi
             for ix in range(pred_vec.values()[0].shape[0]):
                 for jx, key in enumerate(pred_vec.keys()):
                     if orig_vec is not None:
-                        pdb.set_trace()
                         axarr[ix].plot(orig_vec[key][ix, 0, :] / np.max(orig_vec[key][ix, 0, :] + 1e-7), label=key + '_Original', color='g')
                     axarr[ix].plot(pred_vec[key][ix, :] / np.max(pred_vec[key][ix, :]), label=key + '_Prediction', color='r')
                     axarr[ix].axis('off')
@@ -166,7 +163,6 @@ def plot_prediction(pred_vec, orig_vec=None, save_dir='../results/', name='profi
             for ix in range(pred_vec.values()[0].shape[0]):
                 for jx, key in enumerate(pred_vec.keys()):
                     if orig_vec is not None:
-                        pdb.set_trace()
                         axarr[ix, jx].plot(orig_vec[key][ix,0, :] / np.max(orig_vec[key][ix,0, :] + 1e-7), label = key + '_Original', color = 'g')
                     axarr[ix, jx].plot(pred_vec[key][ix, :]/np.max(pred_vec[key][ix, :]), label = key + '_Prediction', color = 'r')
                     axarr[ix, jx].axis('off')
@@ -280,8 +276,4 @@ def visualize_dna(weigths, pred_vec, save_dir='../results/', name='dna_predictio
 
 
 if __name__=='__main__':
-    try:
-        main()
-    except:
-        type, value, tb = sys.exc_info()
-        traceback.print_exc()
+    main()
