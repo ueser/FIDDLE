@@ -6,6 +6,12 @@ Based on: [http://biorxiv.org/content/early/2016/10/17/081380.full.pdf]
 
 Thanks to [Dylan Marshall](https://github.com/DylanM-Marshall) for documentation & organization.
 
+On this page:
+---------------
+1. Installation and Quick Start
+2. Further Details 
+3. HMS Orchestra HPC Instructions
+
 <img src="https://preview.ibb.co/iDo3v5/FIDDLE_001.jpg" title="Architecture" />
 <img src="https://preview.ibb.co/eSebF5/FIDDLE_002.jpg" title="case study" />
 
@@ -127,6 +133,56 @@ To download Jupyter Notebook, start here: http://jupyter.readthedocs.io/en/lates
 $ jupyter notebook
 ```
 
-Further:
---------
-For additional instruction on file types and FIDDLE's work flow, open up the 'guide.ipynb' jupyter notebook. 
+Further Details:
+---------------------
+For more complete instructions on file types and FIDDLE's work flow, open up the 'guide.ipynb' jupyter notebook. 
+
+```markdown
+cd FIDDLE/fiddle
+$ jupyter notebook
+```
+
+HMS Orchestra HPC Instructions:
+-------------------------------
+
+##### 1) Start interactive session, enter FIDDLE directory:
+
+```markdown
+$ bsub -Is -q interactive bash
+$ cd FIDDLE/
+```
+
+##### 2) Load correct Tensorflow module
+
+```markdown
+$ module load dev/tensorflow/1.0-GPU
+```
+
+##### 3) Set up virtual environment
+
+###### a) Orchestra's Tensorflow module does not play nice with virtual environments, the module above _must_ be loaded before instantiating and then sourcing a virtual environment. More here: https://wiki.med.harvard.edu/Orchestra/PersonalPythonPackages
+
+```markdown
+$ virtualenv venvFIDDLE --system-site-packages
+$ source venvFIDDLE/bin/activate
+```
+
+###### b) Comment out the 'tensorflow==1.0.1' line in the requirements.txt file:
+
+```markdown
+$ vim requirements.txt
+tensorflow==1.0.1 --> #tensorflow==1.0.1
+```
+
+###### c) pip install remaining requirements:
+
+```markdown
+$ pip install -r requirements.txt
+```
+
+##### 4) Put those dwindling GPUs on blast... A template for submission lies in FIDDLE/fiddle/, modify accordingly. More on GPU usage here: https://wiki.med.harvard.edu/Orchestra/OrchestraNvidiaGPUs
+
+```markdown
+$ vim orchestra_job_submit.sh
+$ bash orchestra_job_submit.sh
+```
