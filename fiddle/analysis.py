@@ -7,9 +7,9 @@ predictions hdf5 datasets and other interpretable mediums.
 Example:
     Assuming instructions for directory setup and file installation on the
     github page have been followed, default flags and the following command will
-    output the datasets to a results directory "FIDDLE/results/experiment/"
+    output the datasets to a results directory "FIDDLE/results/experiment/".
 
-        $ python analysis.py
+        $ python analysis.py --runName your_experiment
 
 FLAGS:
     flag:                   default:                description:
