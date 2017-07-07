@@ -13,13 +13,13 @@ Thanks to [Dylan Marshall](https://github.com/DylanM-Marshall) for documentation
 
 <img src="https://preview.ibb.co/mwc2oQ/FIDDLE_003.jpg" title="interpretation" />
 
-# Installation and Quick Start (can be done on a local machine)
+### Installation and Quick Start (can be done on a local machine)
 
-## 1) Set up FIDDLE environment:
+#### 1) Set up FIDDLE environment:
 
 _NOTE: Requires python 2.7 and pip. Anaconda can be a nuisance, make sure to comment out any "export PATH"s to Anaconda in your ~/.bash_profile or ~/.bashrc and then re-source it (or even restart current terminal session):_
 
-### a) Install Python package manager pip:
+##### a) Install Python package manager pip:
 
 ```markdown 
 sudo easy_install pip 
@@ -31,35 +31,35 @@ sudo easy_install pip
 sudo pip install virtualenv
 ```
 
-### c) Clone this repository to an appropriate location (for instance ~/Desktop):
+##### c) Clone this repository to an appropriate location (for instance ~/Desktop):
 
 ```markdown 
 git clone https://github.com/ueser/FIDDLE.git 
 ```
 
-### d) Instantiate FIDDLE virtual environment, source it:
+##### d) Instantiate FIDDLE virtual environment, source it:
 
 ```markdown
 sudo virtualenv venvFIDDLE
 source venvFIDDLE/bin/activate
 ```
 
-### e) Install necessary Python packages to FIDDLE virtual environment:
+##### e) Install necessary Python packages to FIDDLE virtual environment:
 
 ```markdown
 pip install -r requirements.txt
 ```
 
-## 2) Download training/validation/test datasets:
+#### 2) Download training/validation/test datasets:
 
-### a) Create data directory:
+##### a) Create data directory:
 
 ```markdown
 cd FIDDLE/
 mkdir -p data/hdf5datasets/
 ```
 
-### b) Download quickstart datasets: 
+##### b) Download quickstart datasets: 
 
 Place the following datasets in /FIDDLE/data/hdf5datasets/
 
@@ -71,52 +71,57 @@ _WARNING: several gb of data_
 
 [test.h5](https://drive.google.com/file/d/0B9aDFb1Ds4IzT05wTTZVQmFvcG8/view?usp=sharing)
 
-## 3) Run FIDDLE!
+#### 3) Run FIDDLE!
 
 ```markdown
 cd fiddle
 ```
-
-### * Documentation Interlude *
+___
+**_ Documentation Interlude _**
 
 There are two (of many) methods to examine FIDDLE's internal documentation and docstrings:
 
-#### a) Instantiating a Python session and using the help() function:
+##### a) Instantiating a Python session and using the help() function:
 
 ```markdown
-python
-import main # or any other FIDDLE Python script
-help(main)
+$ python
+>>> import main # or any other FIDDLE Python script
+>>> help(main)
 ```
 
-#### b) Employing the --help flag (only shows information about flags):
+##### b) Employing the --help (or -h) flag (only shows information about flags):
 
 ```markdown
 python main.py --help
 ```
-
-### * *
+___
 
 ```markdown
 python main.py
 ```
 
-## 4) Create visualization of training:
+#### 4) Create visualization of training:
 
 ```markdown
 python visualization.py
 ```
 
-## 5) Create representations and predictions datasets:
+#### 5) Create representations and predictions datasets:
 
 ```markdown
 python analysis.py
 ```
 
-## 6) Examine results:
+#### 6) Examine training trajectory:
 
 Change directories to FIDDLE/results/ < --runName (default = experiment) > /. The training trajectory visualization files (.png and .gif) are found in this directory. The representations and predictions created in step 5 are found in the hdf5 files "representations.h5" and "predictions.h5".
 
-# Installation and Quick Start on HMS Orchestra
+#### 7) Plot results:
 
-On its way...
+Change directories to FIDDLE/fiddle and instantiate a jupter notebook session, start up the 'predictions_visualization.ipynb' and follow the instructions outlined in the Markdown cells.
+
+To download Jupyter Notebook, start here: http://jupyter.readthedocs.io/en/latest/install.html.
+
+```markdown
+$ jupyter notebook
+```
