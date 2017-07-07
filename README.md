@@ -9,7 +9,7 @@ Thanks to [Dylan Marshall](https://github.com/DylanM-Marshall) for documentation
 On this page:
 ---------------
 1. Installation and Quick Start
-2. Further Details 
+2. Input File Details
 3. HMS Orchestra HPC Instructions
 
 <img src="https://preview.ibb.co/iDo3v5/FIDDLE_001.jpg" title="Architecture" />
@@ -133,12 +133,12 @@ To download Jupyter Notebook, start here: http://jupyter.readthedocs.io/en/lates
 $ jupyter notebook
 ```
 
-Further Details:
+Input File Details:
 ---------------------
 For more complete instructions on file types and FIDDLE's work flow, open up the 'guide.ipynb' jupyter notebook. 
 
 ```markdown
-cd FIDDLE/fiddle
+$ cd FIDDLE/fiddle
 $ jupyter notebook
 ```
 
@@ -180,7 +180,9 @@ tensorflow==1.0.1 --> #tensorflow==1.0.1
 $ pip install -r requirements.txt
 ```
 
-##### 4) Put those dwindling GPUs on blast... A template for submission lies in FIDDLE/fiddle/, modify accordingly. More on GPU usage here: https://wiki.med.harvard.edu/Orchestra/OrchestraNvidiaGPUs
+##### 4) Put those dwindling GPUs on blast... 
+
+A template for submission lies in FIDDLE/fiddle/, modify accordingly. More on GPU usage here: https://wiki.med.harvard.edu/Orchestra/OrchestraNvidiaGPUs
 
 ```markdown
 $ vim orchestra_job_submit.sh
