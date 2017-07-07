@@ -15,17 +15,17 @@ Thanks to [Dylan Marshall](https://github.com/DylanM-Marshall) for documentation
 
 ### Installation and Quick Start (can be done on a local machine)
 
-#### 1) Set up FIDDLE environment:
+		#### 1) Set up FIDDLE environment:
 
 _NOTE: Requires python 2.7 and pip. Anaconda can be a nuisance, make sure to comment out any "export PATH"s to Anaconda in your ~/.bash_profile or ~/.bashrc and then re-source it (or even restart current terminal session):_
 
-##### a) Install Python package manager pip:
+		##### a) Install Python package manager pip:
 
 ```markdown 
 $ sudo easy_install pip 
 ```
 
-##### b) Install isolated Python environments:
+		##### b) Install isolated Python environments:
 
 ```markdown
 $ sudo pip install virtualenv
