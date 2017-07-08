@@ -72,7 +72,7 @@ Thumbs.db
 *allRecords.txt
 # Folders to untrack ##
 #analysis/*
-hidden/*
+#hidden/*
 data/*
 visualization*
 results/*

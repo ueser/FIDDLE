@@ -1,12 +1,12 @@
 # FIDDLE
 
-An integrative deep learning framework for functional genomic data inference.
+An integrative deep learning framework for functional genomic data inference. A project from the [Churchman Lab](http://churchman.med.harvard.edu/), Harvard Medical School Department of Genetics.
 
 Based on: [http://biorxiv.org/content/early/2016/10/17/081380.full.pdf]
 
-FIDDLE's code base is highly experimental - there are some bugs. Feedback is welcome! @ [Dylan Marshall](https://github.com/DylanM-Marshall)
+FIDDLE's code base is highly experimental - there are some bugs. Feedback is ~~welcome~~ expected: @ [Dylan Marshall](https://github.com/DylanM-Marshall)
 
-Ongoing:
+##### Ongoing:
 1. Generalized data preparation pipeline
 2. GUI interface
 
@@ -23,8 +23,10 @@ On this page:
 
 <img src="https://preview.ibb.co/mwc2oQ/FIDDLE_003.jpg" title="interpretation" />
 
-Installation and Quick Start (can be done on a local machine)
--------------------------------------------------------------
+Installation and Quick Start 
+----------------------------
+
+The quick start can be done on a local machine, an HPC environment is more desirable however.
 
 ##### 1. Set up FIDDLE environment:
 
