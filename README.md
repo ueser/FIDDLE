@@ -6,7 +6,7 @@ A project from the [Churchman Lab](http://churchman.med.harvard.edu/), Harvard M
 
 Based on: [http://biorxiv.org/content/early/2016/10/17/081380.full.pdf]
 
-FIDDLE's code base is highly experimental - there are some bugs. Feedback is ~~welcome~~ expected: @ [Dylan Marshall](https://github.com/DylanM-Marshall)
+FIDDLE's code base is highly experimental - there are some bugs. Feedback is ~~welcome~~ requested: @ [Dylan Marshall](https://github.com/DylanM-Marshall)
 
 Ongoing:
 1. Generalized data preparation pipeline
