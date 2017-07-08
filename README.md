@@ -4,7 +4,11 @@ An integrative deep learning framework for functional genomic data inference.
 
 Based on: [http://biorxiv.org/content/early/2016/10/17/081380.full.pdf]
 
-Thanks to [Dylan Marshall](https://github.com/DylanM-Marshall) for documentation & organization.
+FIDDLE's code base is highly experimental - there are some bugs. Feedback is welcome! @ [Dylan Marshall](https://github.com/DylanM-Marshall)
+
+Ongoing:
+1. Generalized data preparation pipeline
+2. GUI interface
 
 On this page:
 ---------------
@@ -180,9 +184,9 @@ tensorflow==1.0.1 --> #tensorflow==1.0.1
 $ pip install -r requirements.txt
 ```
 
-##### 4) Put those dwindling GPUs on blast... 
+##### 4) Put those dwindling GPUs on blast:
 
-A template for submission lies in FIDDLE/fiddle/, modify accordingly. More on GPU usage here: https://wiki.med.harvard.edu/Orchestra/OrchestraNvidiaGPUs
+A template for submission lies in FIDDLE/fiddle/, modify accordingly. More on GPU usage here: https://wiki.med.harvard.edu/Orchestra/OrchestraNvidiaGPUs.
 
 ```markdown
 $ vim orchestra_job_submit.sh
