@@ -168,7 +168,9 @@ $ module load dev/tensorflow/1.0-GPU
 
 ##### 3) Set up virtual environment
 
-###### a) Orchestra's Tensorflow module does not play nice with virtual environments, the module above _must_ be loaded before instantiating and then sourcing a virtual environment. More here: https://wiki.med.harvard.edu/Orchestra/PersonalPythonPackages
+Orchestra's Tensorflow module does not play nice with virtual environments, the module above _must_ be loaded before instantiating and then sourcing a virtual environment. More here: https://wiki.med.harvard.edu/Orchestra/PersonalPythonPackages
+
+###### a) Instantiate, then source the virtual environment:
 
 ```markdown
 $ virtualenv venvFIDDLE --system-site-packages
