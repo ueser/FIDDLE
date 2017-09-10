@@ -43,8 +43,8 @@
       "data_dir": "../data/mmaped/TSSseq",
       "orig_files": {
         "type": "bigwig",
-        "pos": "../data/bigwigs/tssseq_2_pos.bw",
-        "neg": "../data/bigwigs/tssseq_2_neg.bw"
+        "pos": "../data/tssseq_1_pos.bw",
+        "neg": "../data/tssseq_1_neg.bw"
       },
       "input_height": 2
     }

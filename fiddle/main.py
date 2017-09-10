@@ -25,6 +25,7 @@ FLAGS:
     --visualizePrediction   'offline'               prediction profiles to be plotted [online or offline]
     --savePredictionFreq    20                      frequency of profile saving w.r.t. number of iterations through batched data
     --maxEpoch              1000                    total number of epochs through training data
+    --totalIterations       1000                    total number of batched training examples
     --batchSize             20                      batch size of training data
     --learningRate          0.001                   initial learning rate
     --resultsDir            '../results'            directory where results from runName will be stored
@@ -62,6 +63,7 @@ flags.DEFINE_string('architecture', 'architecture.json', '(DEFAULT: architecture
 flags.DEFINE_string('visualizePrediction', 'offline', '(DEFAULT: offline) - prediction profiles to be plotted [online or offline] ')
 flags.DEFINE_integer('savePredictionFreq', 20, '(DEFAULT: 20) - frequency of profile saving w.r.t. number of iterations through batched data')
 flags.DEFINE_integer('maxEpoch', 1000, '(DEFAULT: 1000) - total number of epochs through training data')
+flags.DEFINE_integer('totalIterations', 1000, '(DEFAULT: 1000) - total number of batched training examples')
 flags.DEFINE_integer('batchSize', 20, '(DEFAULT: 20) - batch size of training data')
 flags.DEFINE_float('learningRate', 0.001, '(DEFAULT: 0.001) - initial learning rate.')
 flags.DEFINE_string('resultsDir', '../results', '(DEFAULT: ../results) - directory where results from runName will be stored')
@@ -101,7 +103,6 @@ def main(_):
         tf.gfile.MakeDirs(FLAGS.savePath)
 
     # define neural network
-
     model = Integrator(config=config,
                        architecture_path=FLAGS.architecture,
                        learning_rate=FLAGS.learningRate,
@@ -165,12 +166,12 @@ def main(_):
     step = 0
     train_size = train_h5_handle.values()[0].shape[0]
 
-    print('Pre-train validation run:')
-    return_dict = model.validate(validation_data, accuracy=True)
-    print("Pre-train validation loss: " + str(return_dict['cost']))
-    totalIterations = 100
+    # print('Pre-train validation run:')
+    # return_dict = model.validate(validation_data, accuracy=True)
+    # print("Pre-train validation loss: " + str(return_dict['cost']))
+    # totalIterations = 1000
 
-    for it in range(totalIterations):
+    for it in range(FLAGS.totalIterations):
 
         # Multimodal Dropout Regularizer:
         # linearly decreasing dropout probability from 20% (@ 1st iteration) to 0% (@ 1% of total iterations)
