@@ -36,9 +36,4 @@
     "dropout":0.5,
     "input_dropout":0.8
   },
-  "MNaseseq": {
-    "Layer1":{
-      "filter_width": 15
-    }
-  }
 }
