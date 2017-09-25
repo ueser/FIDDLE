@@ -1,4 +1,4 @@
-{
+
   "Modules":{
         "input_height": 4,
         "input_width": 500,
@@ -35,5 +35,5 @@
         },
     "dropout":0.5,
     "input_dropout":0.8
-  },
+  }
 }
