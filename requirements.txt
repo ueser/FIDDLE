@@ -2,7 +2,7 @@ h5py==2.7.0
 imagesize==0.7.1
 Keras==2.0.2
 matplotlib==2.0.0
-numpy==1.12.1
+numpy==1.21.0
 scipy==0.19.0
 six==1.10.0
 tensorflow==1.0.1
